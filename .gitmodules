@@ -16,3 +16,12 @@
 [submodule "helix_translate"]
 	path = helix_translate
 	url = git@github.com:HelixDevelopment/HelixTranslate.git
+[submodule "port_prefix"]
+	path = port_prefix
+	url = git@github.com:vasic-digital/port_prefix.git
+[submodule "code_workspace"]
+	path = code_workspace
+	url = git@github.com:vasic-digital/code_workspace.git
+[submodule "vscode_profile_sync"]
+	path = vscode_profile_sync
+	url = git@github.com:vasic-digital/vscode_profile_sync.git
