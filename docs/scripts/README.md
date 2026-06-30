@@ -1,0 +1,94 @@
+# HelixCode operator scripts
+
+**Revision:** 1 · **Last modified:** 2026-06-30 · **Last verified:** 2026-06-30
+
+Companion documentation (constitution §11.4.18) for every script under
+`scripts/`. Each script also carries an in-source documentation block. Run any
+script from the repo root, e.g. `scripts/start.sh`.
+
+## Quick start
+
+```bash
+scripts/doctor.sh        # preflight checks
+scripts/setup.sh         # wizard → writes deploy/.env
+scripts/start.sh         # bring the stack up
+scripts/status.sh        # verify it's reachable
+# … work in the browser at https://<host>:52443 …
+scripts/stop.sh          # bring it down
+```
+
+To run on boot: `scripts/install-service.sh` (rootless systemd user service).
+
+---
+
+## `lib.sh`
+- **Overview:** Shared helper library sourced by the other scripts (repo-root
+  resolution, runtime detection, `.env` loading, a compose wrapper, logging).
+- **Prerequisites:** bash. Not executed directly — it is sourced.
+- **Usage:** `. scripts/lib.sh`
+- **Internal behaviour:** exports `HC_ROOT`, `HC_DEPLOY`; provides `hc_runtime`,
+  `hc_compose`, `hc_load_env`, `hc_prefix`, `hc_require_env`, `hc_info/warn/err`.
+- **Related:** all other scripts.
+
+## `setup.sh`
+- **Overview:** Interactive setup wizard (CLI by default, whiptail TUI with
+  `--tui`). Collects port prefix, projects, and login password; writes
+  `deploy/.env` (mode 600, never committed).
+- **Prerequisites:** bash; optional `whiptail` for the TUI.
+- **Usage:** `scripts/setup.sh` · `scripts/setup.sh --tui` ·
+  `CODE_SERVER_PASSWORD=… PROJECTS=… scripts/setup.sh --non-interactive`
+- **Edge cases:** rejects a port prefix where `PREFIX*1000+999 > 65535`; requires
+  a non-empty, confirmed password; falls back to CLI if whiptail is absent.
+- **Related:** `deploy/.env.example`, `start.sh`.
+
+## `start.sh`
+- **Overview:** Brings the Caddy + code-server stack up (builds on first run),
+  mounting `$PROJECTS` from `deploy/.env`. Prints the access URL.
+- **Prerequisites:** `deploy/.env` (run `setup.sh` first); podman or docker.
+- **Usage:** `scripts/start.sh`
+- **Edge cases:** exits with guidance if `deploy/.env` is missing; first run
+  pulls images.
+- **Related:** `deploy/up.sh`, `stop.sh`, `status.sh`.
+
+## `stop.sh`
+- **Overview:** Tears the stack down. `--volumes` also removes named volumes.
+  Host project files are never touched (they are bind mounts).
+- **Usage:** `scripts/stop.sh` · `scripts/stop.sh --volumes`
+- **Related:** `start.sh`.
+
+## `restart.sh`
+- **Overview:** `stop.sh` then `start.sh` — use after editing `deploy/.env`.
+- **Usage:** `scripts/restart.sh`
+- **Related:** `start.sh`, `stop.sh`.
+
+## `status.sh`
+- **Overview:** Reports container status, exposed-port listeners (`ss`), and a
+  TLS reachability probe (`openssl`). Exit 0 only if HTTPS answers.
+- **Prerequisites:** podman/docker; `ss`; `openssl` (optional).
+- **Usage:** `scripts/status.sh`
+- **Related:** `start.sh`, `logs.sh`.
+
+## `logs.sh`
+- **Overview:** Tails container logs. Optional service filter + `-f` to follow.
+- **Usage:** `scripts/logs.sh` · `scripts/logs.sh caddy -f` ·
+  `scripts/logs.sh code-server`
+- **Related:** `status.sh`.
+
+## `doctor.sh`
+- **Overview:** Preflight checklist (runtime present, `.env` valid, ports free,
+  disk/memory). Exit 0 only if no FAIL.
+- **Usage:** `scripts/doctor.sh`
+- **Related:** `setup.sh`.
+
+## `install-service.sh`
+- **Overview:** Installs a systemd unit so the stack starts on boot. Rootless
+  **user** service by default (enables linger); `--system` for a root unit.
+- **Prerequisites:** systemd; `deploy/.env`.
+- **Usage:** `scripts/install-service.sh` · `scripts/install-service.sh --system`
+- **Edge cases:** warns if linger can't be enabled (service may stop on logout).
+- **Related:** `uninstall-service.sh`, `start.sh`, `stop.sh`.
+
+## `uninstall-service.sh`
+- **Overview:** Stops, disables, and removes the systemd unit.
+- **Usage:** `scripts/uninstall-service.sh` · `scripts/uninstall-service.sh --system`
+- **Related:** `install-service.sh`.
