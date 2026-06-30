@@ -1,6 +1,14 @@
 # CONTINUATION — HelixCode web-IDE platform
 
-**Revision:** 1 · **Updated:** 2026-06-30 · **Status:** Phase 1 COMPLETE; Phases 2–7 PLANNED
+**Revision:** 2 · **Updated:** 2026-06-30 · **Status:** Phase 1 COMPLETE; Phase 2 CORE working+verified; P2-remaining + P3–7 PLANNED
+
+**Phase 2 core (DONE, verified — `deploy/`):** Caddy edge + code-server stack boots
+on Podman; `0.0.0.0:52443` (TLS1.3, openssl Verify=0) + `0.0.0.0:52080` (→301
+HTTPS); code-server login HTML served (2621 B); `$PROJECTS` bind-mounted at
+`/home/coder/projects/<name>`. Run via `deploy/up.sh` (parses `$PROJECTS`, podman
+compose up). Client note: GnuTLS-curl can't handshake Caddy TLS1.3 (use browser/
+openssl). P2-remaining: Open VSX mirror service, BuildKit warm image, generalize
+into the `code_workspace` renderer.
 
 Read FIRST on any fresh session: this file, then `git fetch --all`, then the spec
 and plan below. This is the §12.10 / §11.4.131 standing resumption anchor.

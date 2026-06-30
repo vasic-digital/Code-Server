@@ -1,0 +1,28 @@
+# HelixCode stack — Caddy edge (52443/52080 on 0.0.0.0) -> code-server.
+# Project bind-mounts are injected by up.sh into compose.projects.yml ($PROJECTS).
+services:
+  code-server:
+    image: docker.io/codercom/code-server:latest
+    environment:
+      - PASSWORD=${CODE_SERVER_PASSWORD}
+    expose:
+      - "8080"
+    volumes:
+      - cs-config:/home/coder/.config
+    restart: unless-stopped
+  caddy:
+    image: docker.io/library/caddy:2
+    ports:
+      - "0.0.0.0:52443:443"
+      - "0.0.0.0:52080:80"
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:Z
+      - caddy-data:/data
+      - caddy-config:/config
+    depends_on:
+      - code-server
+    restart: unless-stopped
+volumes:
+  cs-config:
+  caddy-data:
+  caddy-config:

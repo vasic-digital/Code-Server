@@ -1,0 +1,11 @@
+{
+	auto_https disable_redirects
+}
+:443 {
+	tls internal
+	encode zstd gzip
+	reverse_proxy code-server:8080
+}
+:80 {
+	redir https://{host}:52443{uri} permanent
+}
