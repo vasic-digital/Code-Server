@@ -1,3 +1,18 @@
 [submodule "constitution"]
 	path = constitution
 	url = git@github.com:HelixDevelopment/HelixConstitution.git
+[submodule "docs_chain"]
+	path = docs_chain
+	url = git@github.com:vasic-digital/docs_chain.git
+[submodule "challenges"]
+	path = challenges
+	url = git@github.com:vasic-digital/Challenges.git
+[submodule "containers"]
+	path = containers
+	url = git@github.com:vasic-digital/containers.git
+[submodule "helix_qa"]
+	path = helix_qa
+	url = git@github.com:HelixDevelopment/HelixQA.git
+[submodule "helix_translate"]
+	path = helix_translate
+	url = git@github.com:HelixDevelopment/HelixTranslate.git

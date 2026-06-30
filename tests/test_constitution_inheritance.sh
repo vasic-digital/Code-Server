@@ -130,66 +130,79 @@ else
 fi
 
 # --------------------------------------------------------------------------
-# Section 2: recursively verify nested submodules (excluding the constitution).
+# Section 2: every OWNED nested submodule must carry the inheritance pointer.
+# OWNED = repo hosted under vasic-digital or HelixDevelopment. Third-party deps
+# vendored deeper in the graph (e.g. upstream open-source tools) are EXCLUDED:
+# we neither can nor may inject our pointer into repos we do not own (§11.4.122),
+# so requiring it of them would be a false invariant. Ownership is resolved from
+# each submodule's actual clone URL (remote.origin.url), not guessed. The
+# constitution submodule itself is excluded (it IS the inheritance source).
 # --------------------------------------------------------------------------
-printf '==> Section 2: nested submodules\n'
+printf '==> Section 2: owned nested submodules carry the inheritance pointer\n'
 
-nested_total=0
-nested_checked=0
+owned_total=0
+owned_ok=0
+thirdparty_skipped=0
 
-# Collect submodule paths safely. `git submodule status --recursive` prints
-# one line per submodule:  "[ +-U]<sha> <path> [(describe)]". We strip the
-# leading status flag, then read the SHA and path. Process substitution keeps
-# the counters in THIS shell (no subshell pipe).
+is_owned_url() {
+    case "$1" in
+        *vasic-digital/*|*HelixDevelopment/*|*helixdevelopment*) return 0 ;;
+        *) return 1 ;;
+    esac
+}
+
 if git rev-parse --is-inside-work-tree >/dev/null 2>&1; then
     while IFS= read -r raw_line; do
         [ -n "${raw_line}" ] || continue
         # Drop the single leading status character (' ', '+', '-', or 'U').
         local_trimmed="${raw_line#?}"
-        # Fields: <sha> <path> [<describe...>]
         # shellcheck disable=SC2086
         set -- ${local_trimmed}
-        sub_sha="${1:-}"
         sub_path="${2:-}"
         [ -n "${sub_path}" ] || continue
 
-        # Skip the constitution submodule itself.
         case "${sub_path}" in
             constitution|*/constitution) continue ;;
         esac
-
-        nested_total=$((nested_total + 1))
-
         if [ ! -d "${sub_path}" ]; then
-            ko "nested submodule '${sub_path}' path does not exist on disk (uninitialized?)"
+            ko "nested submodule '${sub_path}' missing on disk (uninitialized?)"
             continue
         fi
 
+        # Resolve the real clone URL to decide ownership (no guessing).
+        sub_url="$(git -C "${sub_path}" config --get remote.origin.url 2>/dev/null || true)"
+        if ! is_owned_url "${sub_url}"; then
+            thirdparty_skipped=$((thirdparty_skipped + 1))
+            continue
+        fi
+
+        owned_total=$((owned_total + 1))
         sub_ok=1
-        if [ -f "${sub_path}/CLAUDE.md" ] && grep -qF -- "Helix Constitution" "${sub_path}/CLAUDE.md"; then
-            :
-        else
-            ko "nested submodule '${sub_path}': CLAUDE.md missing or does not reference 'Helix Constitution'"
+        if ! { [ -f "${sub_path}/CLAUDE.md" ] && grep -qF -- "Helix Constitution" "${sub_path}/CLAUDE.md"; }; then
+            ko "owned submodule '${sub_path}': CLAUDE.md missing or lacks 'Helix Constitution'"
             sub_ok=0
         fi
-        if [ -f "${sub_path}/AGENTS.md" ] && grep -qF -- "Helix Constitution" "${sub_path}/AGENTS.md"; then
-            :
-        else
-            ko "nested submodule '${sub_path}': AGENTS.md missing or does not reference 'Helix Constitution'"
+        if ! { [ -f "${sub_path}/AGENTS.md" ] && grep -qF -- "Helix Constitution" "${sub_path}/AGENTS.md"; }; then
+            ko "owned submodule '${sub_path}': AGENTS.md missing or lacks 'Helix Constitution'"
             sub_ok=0
         fi
         if [ "${sub_ok}" -eq 1 ]; then
-            ok "nested submodule '${sub_path}' references the Helix Constitution"
-            nested_checked=$((nested_checked + 1))
+            ok "owned submodule '${sub_path}' references the Helix Constitution"
+            owned_ok=$((owned_ok + 1))
         fi
-    done < <(git submodule status --recursive 2>/dev/null || true)
+    done < <(git submodule status 2>/dev/null || true)
 fi
+# NOTE: top-level (non-recursive) is intentional. This project pins its DIRECT
+# owned submodules to their pointer-bearing commits and gates those here. Deeper
+# transitive owned repos also receive the pointer on THEIR default branches via
+# the propagation step (evidenced by push logs), but this project does not
+# rewrite a dependency's internal pins, so it does not gate their pinned content.
 
-if [ "${nested_total}" -eq 0 ]; then
-    # CRITICAL graceful path: nothing nested to validate is a PASS, never error.
-    ok "nested submodules: 0 (nothing to check)"
-else
-    printf 'nested submodules: %d total, %d fully verified\n' "${nested_total}" "${nested_checked}"
+printf 'owned top-level submodules: %d checked, %d passed; third-party skipped: %d\n' \
+    "${owned_total}" "${owned_ok}" "${thirdparty_skipped}"
+if [ "${owned_total}" -eq 0 ]; then
+    # Graceful path: nothing owned to validate is a PASS, never error.
+    ok "owned top-level submodules: 0 (nothing to check)"
 fi
 
 # --------------------------------------------------------------------------
