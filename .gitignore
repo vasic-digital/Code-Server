@@ -39,3 +39,6 @@ go.work.sum
 !.env.example
 !.env.sample
 !.env.template
+
+# CodeGraph local index
+.codegraph/
