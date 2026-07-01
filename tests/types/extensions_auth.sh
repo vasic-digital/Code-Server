@@ -251,10 +251,17 @@ fi
 # =========================================================================
 h_head "(X2) install from marketplace -> exit 0, listed, package.json on disk"
 ev="$(h_ev x2_install)"; ilog="$WORK/install.log"; llog="$WORK/list.log"
-# bounded so a throttled/slow Open VSX download can never hang the suite (§11.4.1/§11.4.3)
-timeout "${HELIX_EXT_INSTALL_TIMEOUT:-150}" "$CS_BIN" --config "$CFG" --extensions-dir "$EXT_DIR" --user-data-dir "$UDATA" \
-  --install-extension "$TARGET_ID" > "$ilog" 2>&1
-irc=$?
+# bounded so a throttled/slow Open VSX download can never hang the suite (§11.4.1/§11.4.3).
+# Skip the attempt entirely when X1 already found the marketplace unreachable — a hung
+# --install-extension against a down Open VSX would otherwise burn the whole timeout.
+if [ "$EXPECT_INSTALLED" = 1 ] && [ "${MARKET_REACHABLE:-1}" != 1 ]; then
+  echo "marketplace unreachable (see X1) — install attempt skipped to avoid a hung download" > "$ilog"
+  irc=124
+else
+  timeout "${HELIX_EXT_INSTALL_TIMEOUT:-150}" "$CS_BIN" --config "$CFG" --extensions-dir "$EXT_DIR" --user-data-dir "$UDATA" \
+    --install-extension "$TARGET_ID" > "$ilog" 2>&1
+  irc=$?
+fi
 "$CS_BIN" --config "$CFG" --extensions-dir "$EXT_DIR" --user-data-dir "$UDATA" \
   --list-extensions --show-versions > "$llog" 2>&1 || true
 

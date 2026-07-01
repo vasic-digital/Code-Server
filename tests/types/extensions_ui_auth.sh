@@ -211,6 +211,24 @@ if [ "$MODE" = green ] && command -v curl >/dev/null 2>&1; then
   [ -n "$_dn" ] && EXPECT_NAME="$_dn"
 fi
 
+# --- preflight (§11.4.3): the UI marketplace journey (U3 search / U4 Install) needs a
+#     reachable Open VSX. If it is down/unreachable (transient EXTERNAL outage), SKIP the
+#     whole journey honestly rather than FAIL — the install+use CAPABILITY is proven by the
+#     CLI sibling tests/types/extensions_auth.sh (X2 install + X3 runtime load). Done BEFORE
+#     starting the throwaway instance so an outage costs no processes.
+if [ "$MODE" = green ]; then
+  _mkcode="$(curl -s -m 10 -o /dev/null -w '%{http_code}' "$OPENVSX_API/$TARGET_PUB/$TARGET_NAME" 2>/dev/null || echo 000)"
+  if [ "$_mkcode" != 200 ]; then
+    _ev="$(h_ev u0_market_unreachable)"
+    { echo "Open VSX API $OPENVSX_API/$TARGET_PUB/$TARGET_NAME -> HTTP $_mkcode (unreachable/non-200)";
+      echo "the UI marketplace journey (search -> Install) cannot run without a reachable marketplace;";
+      echo "this is a transient EXTERNAL outage, not a product defect — the install+use capability is";
+      echo "proven by the CLI sibling tests/types/extensions_auth.sh (X2 install + X3 load)."; } > "$_ev"
+    ab_skip_with_reason "UI marketplace journey: Open VSX unreachable (HTTP $_mkcode, external outage)" network_unreachable_external
+    h_summary; exit $?
+  fi
+fi
+
 # =========================================================================
 # Start ONE throwaway code-server (Open VSX gallery live) that U1..U5 share.
 # =========================================================================
