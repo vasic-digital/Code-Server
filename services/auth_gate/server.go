@@ -187,14 +187,25 @@ func (s *Server) handleHealthz(w http.ResponseWriter, _ *http.Request) {
 
 // handleAuth is the forward-auth check Caddy calls per request: a valid signed
 // session cookie yields 200 (plus X-Helix-User so Caddy can propagate the
-// identity to code-server via copy_headers), anything else 401. It never
-// redirects — Caddy owns the redirect-to-login behaviour.
+// identity to code-server via copy_headers). Unauthenticated:
+//   - a top-level BROWSER navigation (GET + Accept: text/html) is redirected to
+//     /login (303) so the user lands on the login form instead of a bare 401 —
+//     Caddy's forward_auth copies this response verbatim to the client, so the
+//     browser follows the redirect and sees the login page (the canonical
+//     forward-auth → login pattern used by Authelia/Authentik);
+//   - every OTHER request (XHR / fetch / asset / API — Accept without text/html,
+//     or a non-GET method) gets 401, so a programmatic caller never receives an
+//     HTML login page in place of its expected payload.
 func (s *Server) handleAuth(w http.ResponseWriter, r *http.Request) {
 	if _, ok := s.sessionUser(r); ok {
 		// The session subject is always the configured account; advertise it so
 		// the reverse proxy can attach it downstream.
 		w.Header().Set("X-Helix-User", s.cfg.Account)
 		w.WriteHeader(http.StatusOK)
+		return
+	}
+	if r.Method == http.MethodGet && strings.Contains(r.Header.Get("Accept"), "text/html") {
+		http.Redirect(w, r, "/login", http.StatusSeeOther)
 		return
 	}
 	w.WriteHeader(http.StatusUnauthorized)

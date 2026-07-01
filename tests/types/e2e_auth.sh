@@ -81,19 +81,29 @@ fi
 # =========================================================================
 # (B) unauthenticated GET / -> redirect to login (or 401 via the gate).
 # =========================================================================
-h_head "(B) unauthenticated GET / -> denied (login redirect or 401)"
-ev="$(h_ev unauth_root)"; hdr="$WORK/unauth.hdr"
-curl -k -s -D "$hdr" -o /dev/null --max-time 15 "$HC_BASE/" 2>/dev/null || true
+h_head "(B) unauthenticated GET / -> browser redirected to /login; API stays 401"
+ev="$(h_ev unauth_root)"; hdr="$WORK/unauth.hdr"; ahdr="$WORK/unauth_api.hdr"
+# Browser NAVIGATION (Accept: text/html) MUST land on the login form, not a bare,
+# bodyless 401 — regression guard for the "This page isn't working" failure where
+# browsing the site root died on an un-redirected 401.
+curl -k -s -D "$hdr" -o /dev/null --max-time 15 -H 'Accept: text/html,application/xhtml+xml' "$HC_BASE/" 2>/dev/null || true
 code="$(awk 'toupper($1)~/^HTTP/{c=$2} END{print c+0}' "$hdr" 2>/dev/null)"
 loc="$(grep -i '^location:' "$hdr" 2>/dev/null | tail -1 | tr -d '\r' | awk '{print $2}')"
-{ echo "assert: an unauthenticated request to the app root is NOT served the editor";
-  echo "GET / -> http_code=$code ; Location=${loc:-<none>}"; } > "$ev"
-if { [ "$code" = 302 ] || [ "$code" = 303 ] || [ "$code" = 307 ]; } && printf '%s' "$loc" | grep -qi 'login'; then
-  ab_pass_with_evidence "unauth GET / -> $code redirect to login (auth enforced at the edge)" "$ev"
-elif [ "$code" = 401 ]; then
-  ab_pass_with_evidence "unauth GET / -> 401 (gate fail-closed, editor not served)" "$ev"
+# API/XHR/asset (Accept: */*) MUST stay 401 — a programmatic caller must never be
+# served an HTML login page in place of its expected payload.
+curl -k -s -D "$ahdr" -o /dev/null --max-time 15 -H 'Accept: */*' "$HC_BASE/" 2>/dev/null || true
+apicode="$(awk 'toupper($1)~/^HTTP/{c=$2} END{print c+0}' "$ahdr" 2>/dev/null)"
+{ echo "assert: unauth browser GET / -> /login redirect; unauth API GET / -> 401 (editor NEVER served)";
+  echo "browser (Accept: text/html) -> http_code=$code ; Location=${loc:-<none>}";
+  echo "api     (Accept: */*)       -> http_code=$apicode"; } > "$ev"
+browser_login_redirect=0
+{ [ "$code" = 302 ] || [ "$code" = 303 ] || [ "$code" = 307 ]; } && printf '%s' "$loc" | grep -qi 'login' && browser_login_redirect=1
+if [ "$browser_login_redirect" = 1 ] && [ "$apicode" = 401 ]; then
+  ab_pass_with_evidence "unauth GET /: browser -> $code redirect to /login, API -> 401 (auth enforced, editor not served)" "$ev"
+elif [ "$code" = 401 ] && [ "$apicode" = 401 ]; then
+  ab_pass_with_evidence "unauth GET / -> 401 for both browser + API (gate fail-closed, editor not served)" "$ev"
 else
-  ab_fail "unauth GET / not protected (code=$code loc=${loc:-none}) [ev: ${ev#$HC_ROOT/}]"
+  ab_fail "unauth GET / not properly protected (browser=$code loc=${loc:-none} api=$apicode) [ev: ${ev#$HC_ROOT/}]"
 fi
 
 # =========================================================================

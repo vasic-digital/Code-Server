@@ -392,6 +392,46 @@ func TestAuthWithoutCookie(t *testing.T) {
 	}
 }
 
+// Regression guard (§11.4.135) for the "This page isn't working" failure: an
+// unauthenticated top-level BROWSER navigation (GET + Accept: text/html) must be
+// redirected to /login (303), which Caddy's forward_auth copies to the client so
+// the browser lands on the login form instead of a bare, bodyless 401.
+func TestAuthBrowserNavigationRedirectsToLogin(t *testing.T) {
+	srv := newTestServer(t, acceptAllVerifier{})
+	rec := httptest.NewRecorder()
+	req := httptest.NewRequest(http.MethodGet, "/auth", nil)
+	req.Header.Set("Accept", "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8")
+	srv.Handler().ServeHTTP(rec, req)
+
+	if rec.Code != http.StatusSeeOther {
+		t.Fatalf("status = %d, want 303 (browser -> /login redirect)", rec.Code)
+	}
+	if loc := rec.Header().Get("Location"); loc != "/login" {
+		t.Errorf("Location = %q, want /login", loc)
+	}
+	if got := rec.Header().Get("X-Helix-User"); got != "" {
+		t.Errorf("X-Helix-User leaked on unauthenticated redirect: %q", got)
+	}
+}
+
+// The redirect is ONLY for HTML navigations: a programmatic caller (XHR / fetch /
+// asset / API — an Accept without text/html) must stay 401 so it never receives an
+// HTML login page in place of its expected payload.
+func TestAuthNonBrowserRequestsStay401(t *testing.T) {
+	srv := newTestServer(t, acceptAllVerifier{})
+	for _, accept := range []string{"*/*", "application/json", ""} {
+		rec := httptest.NewRecorder()
+		req := httptest.NewRequest(http.MethodGet, "/auth", nil)
+		if accept != "" {
+			req.Header.Set("Accept", accept)
+		}
+		srv.Handler().ServeHTTP(rec, req)
+		if rec.Code != http.StatusUnauthorized {
+			t.Fatalf("Accept %q: status = %d, want 401", accept, rec.Code)
+		}
+	}
+}
+
 func TestAuthWithTamperedCookie(t *testing.T) {
 	srv := newTestServer(t, acceptAllVerifier{})
 	token, _, err := srv.codec.Sign("milosvasic", fixedNow)
