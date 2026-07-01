@@ -251,7 +251,8 @@ fi
 # =========================================================================
 h_head "(X2) install from marketplace -> exit 0, listed, package.json on disk"
 ev="$(h_ev x2_install)"; ilog="$WORK/install.log"; llog="$WORK/list.log"
-"$CS_BIN" --config "$CFG" --extensions-dir "$EXT_DIR" --user-data-dir "$UDATA" \
+# bounded so a throttled/slow Open VSX download can never hang the suite (§11.4.1/§11.4.3)
+timeout "${HELIX_EXT_INSTALL_TIMEOUT:-150}" "$CS_BIN" --config "$CFG" --extensions-dir "$EXT_DIR" --user-data-dir "$UDATA" \
   --install-extension "$TARGET_ID" > "$ilog" 2>&1
 irc=$?
 "$CS_BIN" --config "$CFG" --extensions-dir "$EXT_DIR" --user-data-dir "$UDATA" \
@@ -279,8 +280,9 @@ installed_ok=0
 if [ "$EXPECT_INSTALLED" = 1 ]; then
   if [ "$installed_ok" = 1 ]; then
     ab_pass_with_evidence "installed $TARGET_ID@${inst_ver:-?} from Open VSX: exit 0, listed, valid package.json on disk" "$ev"
-  elif [ "$MARKET_REACHABLE" = 0 ]; then
-    ab_skip_with_reason "install $TARGET_ID: marketplace unreachable (offline) — cannot download" network_unreachable_external
+  elif [ "$MARKET_REACHABLE" = 0 ] || [ "$irc" = 124 ] || grep -qiE 'timed out|ETIMEDOUT|ECONNRESET|ENOTFOUND|getaddrinfo|socket hang|EAI_AGAIN|429|rate.?limit|too many|network error|unable to download' "$ilog" 2>/dev/null; then
+    X2_NETWORK_SKIP=1
+    ab_skip_with_reason "install $TARGET_ID: Open VSX unreachable/throttled/too-slow (rc=$irc) — cannot download" network_unreachable_external
   else
     ab_fail "install $TARGET_ID failed (rc=$irc listed=$listed disk=$disk_ok json=$json_ok) [ev: ${ev#$HC_ROOT/}]"
   fi
@@ -311,8 +313,8 @@ h_head "(X3a) manifest+entry: valid package.json, real contributes, entry file o
 ev="$(h_ev x3a_manifest)"
 if [ "$installed_ok" != 1 ] || [ -z "$pjson" ] || [ ! -f "$pjson" ]; then
   { echo "no installed package.json to inspect (install did not complete — see X2)"; } > "$ev"
-  if [ "$MARKET_REACHABLE" = 0 ]; then
-    ab_skip_with_reason "manifest proof: extension not installed (marketplace offline)" network_unreachable_external
+  if [ "$MARKET_REACHABLE" = 0 ] || [ "${X2_NETWORK_SKIP:-0}" = 1 ]; then
+    ab_skip_with_reason "manifest proof: extension not installed (Open VSX offline/throttled — see X2)" network_unreachable_external
   else
     ab_fail "manifest proof: extension not installed, cannot inspect manifest [ev: ${ev#$HC_ROOT/}]"
   fi
@@ -339,7 +341,10 @@ else
   reg="$EXT_DIR/extensions.json"
   reg_names=0; [ -f "$reg" ] && grep -q "$TARGET_ID" "$reg" 2>/dev/null && reg_names=1
   PORT="$(hc_free_port)"
-  if [ -z "$PORT" ]; then
+  if [ "$installed_ok" != 1 ]; then
+    { echo "extension not installed (X2 network SKIP / not downloaded) — no runtime load to verify"; } > "$ev"
+    ab_skip_with_reason "runtime load: extension not installed (Open VSX offline/throttled — see X2)" network_unreachable_external
+  elif [ -z "$PORT" ]; then
     { echo "could not allocate a free TCP port (need python3 or ss)"; } > "$ev"
     ab_skip_with_reason "runtime load: no free-port mechanism (python3/ss) available" topology_unsupported
   else

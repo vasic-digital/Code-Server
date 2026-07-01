@@ -4,7 +4,7 @@
   <meta charset="utf-8" />
   <meta name="generator" content="pandoc" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
-  <title>HelixCode Feature Status</title>
+  <title>HelixCode — Feature Status</title>
   <style>
     /* Default styles provided by pandoc.
     ** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
@@ -173,16 +173,21 @@
 </head>
 <body>
 <header id="title-block-header">
-<h1 class="title">HelixCode Feature Status</h1>
+<h1 class="title">HelixCode — Feature Status</h1>
 </header>
 <h1 id="helixcode--feature-status">HelixCode — Feature Status</h1>
-<p><strong>Revision:</strong> 2 · <strong>Last modified:</strong>
-2026-07-01T19:45:00Z</p>
+<p><strong>Revision:</strong> 3 · <strong>Last modified:</strong>
+2026-07-01T20:30:00Z</p>
 <p>Comprehensive per-feature status ledger (§11.4.153) for the
 <strong>HelixCode</strong> stack at release
-<code>codeserver-1.0.0-dev-0.0.3</code>. Every user-facing capability is
-enumerated with the §11.4.153 field set — Component / Feature / Category
-/ Implementation (the real file) / Wiring (how it is genuinely
+<code>codeserver-1.0.0-dev-0.0.3</code>, extended with the
+post-<code>0.0.3</code> feature additions landed by commits
+<code>8351e4c</code> (login-form clipboard buttons + UI-driven
+marketplace journey) and <code>97a8c69</code> (VS Code Dark default
+theme + popular-extensions matrix), plus the now-<strong>LIVE</strong>
+rootless-Quadlet edge. Every user-facing capability is enumerated with
+the §11.4.153 field set — Component / Feature / Category /
+Implementation (the real file) / Wiring (how it is genuinely
 end-user-reachable, §11.4.108) / Real-use / Tests-coverage (§11.4.169) /
 Validation / Video-confirmation. Validation vocabulary (§11.4.45):
 <strong>PASS · SKIP · OPERATOR-BLOCKED · OPERATOR-ATTENDED ·
@@ -344,11 +349,15 @@ by the auth-model run; ACME code path unchanged</td>
 <td><code>deploy/quadlet/helixcode-caddy.container</code>,
 <code>scripts/install-edge-boot.sh</code></td>
 <td>podman generator → <code>helixcode-caddy.service</code>
-(<code>WantedBy=default.target</code>, linger)</td>
-<td>installer + Quadlet landed</td>
-<td>(install/arm)</td>
-<td>PENDING · files landed; arm/enable + full power-cycle survival not
-yet captured</td>
+(<code>WantedBy=default.target</code>, <code>Linger=yes</code>)</td>
+<td>yes — LIVE: <code>helixcode-caddy.service</code>
+<code>ActiveState=active</code>/<code>SubState=running</code>,
+<code>UnitFileState=generated</code>, survives session crashes; edge
+answers HTTPS <code>:52443</code> (401 at the live gate)</td>
+<td>(systemctl --user status + linger + Quadlet generator)</td>
+<td>PASS · live unit <code>active (running)</code> from Quadlet
+<code>~/.config/containers/systemd/helixcode-caddy.container</code>,
+<code>Linger=yes</code>, edge live on <code>:52443</code></td>
 <td>PENDING</td>
 </tr>
 <tr>
@@ -439,14 +448,25 @@ allow-list, OpenSSH floor, exec/temp hygiene)</td>
 </tr>
 <tr>
 <td>helix-auth</td>
-<td>Login-form copy/paste clipboard buttons (accessible, graceful in
-insecure context)</td>
+<td>Login-form copy/paste clipboard buttons (accessible copy sign-cmd +
+challenge, paste recognises armored SSH signature, multi-sig picker,
+XSS-safe, progressive-enhancement)</td>
 <td>auth/ux</td>
-<td><code>services/auth_gate/assets/login_enhance.js</code></td>
-<td>login page</td>
-<td><strong>in progress</strong></td>
-<td>(UI-driven test in progress)</td>
-<td>PENDING · source landed; NOT yet validated (subagent in flight)</td>
+<td><code>services/auth_gate/assets/login_enhance.js</code>,
+<code>services/auth_gate/server.go</code> (commit
+<code>8351e4c</code>)</td>
+<td>rendered live on the edge login page</td>
+<td>yes — LIVE 3/3 (served page + node unit + host-rendered CDP pixel
+proof)</td>
+<td><code>login_ui_auth.sh</code> (L1 served-page + L2 node unit 8/8 +
+L3 §11.4.170 CDP), <code>server_login_ui_test.go</code></td>
+<td>PASS · L2 node 8/8
+<code>qa-results/tests/login_ui_auth/20260701T184629Z-1069432/l2_node_unit.txt</code>
++ L3 CDP pixel proof <code>ok:true</code> (buttons
+render/labelled/non-overlapping, copy→clipboard, paste→fill,
+2-sig→picker, XSS-safe, no-auto-submit)
+<code>qa-results/tests/login_ui_auth/20260701T172810Z-584930/l3_visual.txt</code>
+(<code>login_rendered.png</code>)</td>
 <td>PENDING</td>
 </tr>
 <tr>
@@ -532,6 +552,52 @@ manifest + extension-host load</td>
 </tr>
 <tr>
 <td>code-server</td>
+<td>VS Code Dark enforced as DEFAULT theme ("Visual Studio Dark", every
+fresh install)</td>
+<td>editor/ux</td>
+<td><code>deploy/code-server/settings.default.json</code> (commit
+<code>97a8c69</code>)</td>
+<td>seeded into <code>User/settings.json</code> on install; live
+deployment enforces it</td>
+<td>yes — config 3/3 + §11.4.170 host-rendered pixel proof</td>
+<td><code>theme_default_auth.sh</code> (config 3/3),
+<code>theme_visual_auth.sh</code> + <code>theme_visual_cdp.mjs</code>
+(rendered pixels)</td>
+<td>PASS · config <code>Visual Studio Dark</code> seed/fresh/live 3/3
+<code>qa-results/tests/theme_default_auth/20260701T184655Z-1071563</code>
++ §11.4.170 dark pixel proof meanLum <strong>44.3</strong> (darkFrac
+0.926, DOM <code>vs-dark</code>, bg <code>rgb(37,37,38)</code>)
+<code>qa-results/tests/theme_visual_auth/20260701T183729Z-1053274</code>
+vs RED light-control meanLum <strong>228.5</strong>
+<code>…/20260701T183816Z-1053829</code> (self-validated
+golden-good/golden-bad §11.4.107(10))</td>
+<td>PENDING</td>
+</tr>
+<tr>
+<td>code-server</td>
+<td>Popular extensions install + loadable + persist across restart +
+config round-trip (Open VSX)</td>
+<td>editor/extensions</td>
+<td><code>tests/types/extensions_popular_auth.sh</code>, bank
+<code>tests/banks/helixcode-extensions.yaml</code></td>
+<td>code-server extension host; throwaway <code>--extensions-dir</code>
+(live dir untouched)</td>
+<td>yes — live probe installed 8 popular exts
+(Python/ESLint/Prettier/GitLens/etc.) + persisted across a new PID</td>
+<td>e2e/full-automation, Challenges</td>
+<td>PASS · install proven live 4/5
+<code>qa-results/tests/extensions_popular_auth/20260701T181018Z-855046/p1_install.txt</code>
+(+ commit <code>97a8c69</code> direct 8-ext probe) + config round-trip
+OK <code>…/20260701T185541Z-1084353/p4_config.txt</code>; MS-proprietary
+(Pylance/Live Share/Remote) honestly ABSENT from Open VSX (§11.4.112).
+<strong>Network-dependent SKIP caveat (§11.4.6):</strong>
+install/loadable/persist steps require a reachable Open VSX — later runs
+with Open VSX unreachable installed 0 (bounded, honest network-SKIP, not
+a product FAIL)</td>
+<td>PENDING</td>
+</tr>
+<tr>
+<td>code-server</td>
 <td>In-browser editing (type/save via UI, file tree, command
 palette)</td>
 <td>editor/ui</td>
@@ -545,15 +611,26 @@ palette)</td>
 </tr>
 <tr>
 <td>code-server</td>
-<td>UI-driven marketplace test (browse → install → use through the
-editor UI)</td>
+<td>UI-driven marketplace journey (open Extensions view → search Open
+VSX → click real Install button, pixel+OCR)</td>
 <td>editor/ui</td>
-<td>(planned driver)</td>
-<td>browser automation</td>
-<td>—</td>
-<td>(UI-driven test in progress)</td>
-<td>PENDING · subagent in flight; today's coverage is the
-HTTP/CLI-driven <code>extensions_auth</code></td>
+<td><code>tests/types/extensions_ui_auth.sh</code>, bank
+<code>tests/banks/helixcode-extensions-ui.yaml</code> (commit
+<code>8351e4c</code>)</td>
+<td>headless Chromium driving the real editor UI</td>
+<td>yes — browse→search→Install-click driven through the editor's own
+UI, read from rendered pixels</td>
+<td>full-automation (UI-driven §11.4.48), Challenges</td>
+<td>PASS · Extensions view + Open VSX search rendered result
+(<code>u3_search_results.png</code>) + real Install button
+located+clicked
+<code>qa-results/tests/extensions_ui_auth/20260701T171228Z-232181</code>
+(5/1). <strong>Honest operator_attended sub-note (§11.4.52):</strong>
+headless cross-origin Open VSX install-completion query is
+<code>net::ERR_ABORTED</code> and can hang → install-completion is an
+operator_attended SKIP; the autonomous on-disk+host-load proof for the
+same ext+marketplace is the CLI sibling
+<code>extensions_auth</code></td>
 <td>PENDING</td>
 </tr>
 <tr>
@@ -662,6 +739,16 @@ verified).</li>
 <li><strong>Extension surface (separate live run):</strong>
 <code>extensions_auth</code> 5/5 checks captured
 (<code>qa-results/tests/extensions_auth/20260701T162817Z-4080597</code>).</li>
+<li><strong>Post-<code>0.0.3</code> suites (registered in
+<code>run_all_types.sh</code>, separate captured runs):</strong>
+<code>login_ui_auth</code> LIVE 3/3 (L2 node 8/8 + L3 CDP pixel proof
+<code>ok:true</code>) · <code>theme_default_auth</code> 3/3 config ·
+<code>theme_visual_auth</code> §11.4.170 rendered-pixel proof (dark
+meanLum 44.3 vs light control 228.5) ·
+<code>extensions_popular_auth</code> install proven live (4/5 + direct
+8-ext probe; network-gated) · <code>extensions_ui_auth</code> 5/1
+UI-driven (browse→search→Install-click; operator_attended
+install-completion).</li>
 </ul>
 <h2 id="honest-boundaries-1146">Honest boundaries (§11.4.6)</h2>
 <ul>
@@ -692,11 +779,32 @@ sudo).</li>
 tree, command palette) is <strong>OPERATOR-ATTENDED</strong> until a
 browser-automation adapter lands (HCA-QA-UI-001); every
 HTTP/CLI-drivable journey is autonomously verified.</li>
-<li><strong>In-flight (subagents, NOT done):</strong> the login-form
-clipboard copy/paste buttons (<code>login_enhance.js</code> — source
-landed, unvalidated) and the UI-driven marketplace test are
-<strong>PENDING</strong> — the current extension coverage is the
-HTTP/CLI-driven <code>extensions_auth</code> suite (live 5/5).</li>
+<li><strong>Post-<code>0.0.3</code> additions now PASS (were
+in-flight/PENDING at Revision 2):</strong> the login-form clipboard
+copy/paste buttons (<code>login_enhance.js</code>, commit
+<code>8351e4c</code> — LIVE 3/3 incl §11.4.170 CDP pixel proof), the VS
+Code Dark default theme (<code>97a8c69</code> — config 3/3 +
+rendered-pixel proof), the popular-extensions matrix
+(<code>97a8c69</code>), the UI-driven marketplace journey
+(<code>8351e4c</code> — browse→search→Install-click, operator_attended
+on install-completion), and the rootless-Quadlet edge (now LIVE,
+<code>active (running)</code>).</li>
+<li><strong>CDP-harness honesty (§11.4.6):</strong> the §11.4.170
+host-rendered pixel proofs for the login buttons and the dark theme are
+genuine but were captured in the runs cited in each row; the
+<strong>latest</strong> <code>login_ui_auth</code> L3 and
+<code>theme_visual_auth</code> runs honestly <strong>SKIPPED</strong>
+(Chromium <code>Page.captureScreenshot</code> timeout /
+workbench-never-rendered under the quiet matrix) — a skipped CDP run is
+never counted as the pixel-proof PASS, so the ledger cites the run where
+the driver reported <code>ok:true</code> / rc=0.</li>
+<li><strong><code>extensions_popular_auth</code> is network-gated
+(§11.4.6):</strong> install/loadable/persist need a reachable Open VSX;
+the capability is proven live (run <code>…855046</code> installed 4/5 +
+the commit's direct 8-ext probe) and the network-independent config
+round-trip is green, but Open-VSX-unreachable runs install 0 — a
+bounded, honest <strong>network-SKIP</strong>, not a product FAIL and
+not a standing full-matrix-green claim.</li>
 <li><strong>Real, publicly-trusted Let's Encrypt</strong> cannot be
 autonomously proven on a LAN box; the ACME code path is present
 (<code>TLS_MODE=letsencrypt</code>), the legacy local-CA suite now SKIPs

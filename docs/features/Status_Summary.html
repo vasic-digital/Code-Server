@@ -4,7 +4,7 @@
   <meta charset="utf-8" />
   <meta name="generator" content="pandoc" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
-  <title>HelixCode Feature Status</title>
+  <title>HelixCode — Feature Status Summary</title>
   <style>
     /* Default styles provided by pandoc.
     ** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
@@ -173,12 +173,12 @@
 </head>
 <body>
 <header id="title-block-header">
-<h1 class="title">HelixCode Feature Status</h1>
+<h1 class="title">HelixCode — Feature Status Summary</h1>
 </header>
 <h1 id="helixcode--feature-status-summary">HelixCode — Feature Status
 Summary</h1>
-<p><strong>Revision:</strong> 1 · <strong>Last modified:</strong>
-2026-07-01T19:45:00Z</p>
+<p><strong>Revision:</strong> 2 · <strong>Last modified:</strong>
+2026-07-01T20:30:00Z</p>
 <p>Two-audience companion (§11.4.56) to <a
 href="Status.md"><code>Status.md</code></a> for release
 <code>codeserver-1.0.0-dev-0.0.3</code>. Page 1 is for the project /
@@ -211,16 +211,30 @@ everything without root; the services are set to come back after a
 reboot.</li>
 <li><strong>Plugins install from the marketplace.</strong> A real editor
 extension was installed from the Open VSX marketplace and loaded —
-proven live, not just claimed.</li>
-<li><strong>Secure, fast front door.</strong> HTTPS with a modern fast
-protocol (HTTP/3) and response compression; the plain-HTTP port
-redirects to HTTPS.</li>
+proven live, not just claimed. Popular plugins (Python, ESLint,
+Prettier, GitLens and more) were installed, stayed installed after a
+restart, and their settings round-tripped.</li>
+<li><strong>Dark editor by default.</strong> Fresh installs now open in
+the "Visual Studio Dark" theme — proven not just in the config but by
+rendering the real editor and measuring the pixels (it came out
+genuinely dark, versus a light control for comparison).</li>
+<li><strong>Login-page copy/paste buttons work.</strong> The one-click
+"copy the command" and "paste your signature" buttons on the login page
+are built, accessible, and proven by rendering the real page and driving
+the buttons.</li>
+<li><strong>Click-through marketplace test.</strong> An automated
+browser opens the Extensions panel, searches the marketplace, and clicks
+the real Install button — the browse-and-click journey is proven (the
+final install-completion step still needs a person on a headless
+machine, honestly noted).</li>
+<li><strong>Secure, fast front door — now survives reboots.</strong>
+HTTPS with a modern fast protocol (HTTP/3) and response compression; the
+plain-HTTP port redirects to HTTPS. The front door now runs as a
+boot-persistent service (rootless) and stays up across session crashes —
+proven live (running for over an hour, set to auto-start).</li>
 </ul>
 <p><strong>What is still in progress / needs the operator:</strong></p>
 <ul>
-<li><strong>Login-page copy/paste buttons</strong> and a
-<strong>click-through marketplace test</strong> — being built now,
-<strong>not finished</strong>.</li>
 <li><strong>Watching yourself edit in the browser</strong> (typing,
 clicking files) is confirmed <strong>by a person</strong> for now — the
 automated click-through is still being wired.</li>
@@ -235,9 +249,14 @@ file instead. Recording the videos is a tracked to-do.</li>
 </ul>
 <p><strong>Bottom line:</strong> the new real-account SSH-key login and
 the editor experience are <strong>working and proven</strong> on the
-live system (23 of 23 test suites passed). A few polish items
-(copy/paste buttons, click-through UI test, feature videos) are still in
-progress and honestly marked as such.</p>
+live system (23 of 23 core suites passed, plus the
+post-<code>0.0.3</code> additions — login copy/paste buttons,
+dark-by-default theme, popular plugins, the click-through marketplace
+journey, and the now-live boot-persistent front door — each proven with
+captured evidence). The remaining honestly-marked items are the
+person-in-the-loop in-browser editing, the operator-enabled public
+certificate and firewall rule, and the not-yet-recorded feature
+videos.</p>
 <hr />
 <h2 id="page-2--for-software-engineers">Page 2 — For software
 engineers</h2>
@@ -285,20 +304,69 @@ a jail).</li>
 <code>tests/banks/helixcode-extensions.yaml</code>; 5/5 checks captured
 <code>qa-results/tests/extensions_auth/20260701T162817Z-4080597</code>
 (Open VSX 200 → load → cleanup).</li>
+<li><strong>Login-form clipboard buttons</strong> (commit
+<code>8351e4c</code>) —
+<code>services/auth_gate/assets/login_enhance.js</code>
+<ul>
+<li><code>server.go</code>; <code>login_ui_auth.sh</code> LIVE 3/3 = L1
+served-page + L2 node unit 8/8
+(<code>qa-results/tests/login_ui_auth/20260701T184629Z-1069432/l2_node_unit.txt</code>)
++ L3 §11.4.170 CDP pixel proof <code>ok:true</code>
+(render/labelled/non-overlap, copy→clipboard, paste→fill, 2-sig→picker,
+XSS-safe, no-auto-submit)
+<code>qa-results/tests/login_ui_auth/20260701T172810Z-584930/l3_visual.txt</code>;
+<code>server_login_ui_test.go</code> PASS.</li>
+</ul></li>
+<li><strong>VS Code Dark default theme</strong> (commit
+<code>97a8c69</code>) —
+<code>deploy/code-server/settings.default.json</code> = "Visual Studio
+Dark"; <code>theme_default_auth.sh</code> config 3/3
+(<code>qa-results/tests/theme_default_auth/20260701T184655Z-1071563</code>)
++ <code>theme_visual_auth.sh</code>/ <code>theme_visual_cdp.mjs</code>
+§11.4.170 rendered-pixel proof: dark meanLum <strong>44.3</strong>
+(darkFrac 0.926, DOM <code>vs-dark</code>, bg
+<code>rgb(37,37,38)</code>)
+<code>…/theme_visual_auth/20260701T183729Z-1053274</code> vs RED
+light-control meanLum <strong>228.5</strong>
+<code>…/20260701T183816Z-1053829</code> (self-validated
+§11.4.107(10)).</li>
+<li><strong>Popular-extensions matrix</strong> (commit
+<code>97a8c69</code>) — <code>extensions_popular_auth.sh</code>; install
+proven live 4/5
+<code>…/extensions_popular_auth/20260701T181018Z-855046/p1_install.txt</code>
+(+ direct 8-ext probe) + config round-trip OK; MS-proprietary honestly
+ABSENT from Open VSX (§11.4.112); install/persist steps network-gated
+(Open-VSX-unreachable runs install 0 = honest network-SKIP).</li>
+<li><strong>UI-driven marketplace journey</strong> (commit
+<code>8351e4c</code>) — <code>extensions_ui_auth.sh</code> (§11.4.48);
+headless Chromium opens Extensions view → searches Open VSX (rendered
+<code>u3_search_results.png</code>) → clicks the real Install button
+<code>qa-results/tests/extensions_ui_auth/20260701T171228Z-232181</code>
+(5/1); install-completion is an honest operator_attended SKIP (headless
+cross-origin Open VSX <code>net::ERR_ABORTED</code>), autonomous on-disk
+proof = CLI sibling <code>extensions_auth</code>.</li>
 <li><strong>Caddy edge</strong> — <code>deploy/Caddyfile</code>,
 <code>deploy/caddy/Dockerfile</code> (xcaddy-brotli); HTTP/3+Brotli,
 forward_auth, <code>/proxy</code> 403, <code>X-Helix-User</code> strip;
-security_auth 5/5, benchmark_auth 4/4.</li>
+security_auth 5/5, benchmark_auth 4/4. <strong>Boot-persistent
+(LIVE):</strong> rootless Quadlet
+<code>deploy/quadlet/helixcode-caddy.container</code> →
+<code>helixcode-caddy.service</code> <code>active (running)</code>,
+<code>Linger=yes</code>, survives session crashes; edge answers HTTPS
+<code>:52443</code>.</li>
 </ul>
 <p><strong>Non-PASS states (honest §11.4.45):</strong></p>
 <ul>
-<li><strong>PENDING</strong> — login-form clipboard buttons
-(<code>assets/login_enhance.js</code>, source landed, unvalidated);
-UI-driven marketplace test; edge reboot-persistence Quadlet
-(<code>deploy/quadlet/helixcode-caddy.container</code> +
-<code>scripts/install-edge-boot.sh</code> landed, arm/full-reboot
-survival not captured); <strong>all Video-confirmation</strong> (no
-real-use video corpus yet).</li>
+<li><strong>PENDING</strong> — <strong>all Video-confirmation</strong>
+(no real-use video corpus yet; every row's Video-confirmation is PENDING
+by design — PASS verdicts rest on the cited <code>qa-results/**</code>
+captured artefacts, not video, §11.4.6/§11.4.107). NOTE (§11.4.6): the
+§11.4.170 CDP pixel proofs (login buttons, dark theme) are cited to the
+runs where the driver reported <code>ok:true</code>/rc=0; the
+<strong>latest</strong> <code>login_ui_auth</code> L3 and
+<code>theme_visual_auth</code> runs honestly SKIPPED on a Chromium
+<code>captureScreenshot</code> timeout / workbench-never-rendered — a
+skipped CDP run is never counted as the pixel-proof PASS.</li>
 <li><strong>OPERATOR-ATTENDED</strong> — in-browser editing
 (HCA-QA-UI-001 SKIP <code>operator_attended</code>).</li>
 <li><strong>OPERATOR-BLOCKED</strong> — loopback firewall apply

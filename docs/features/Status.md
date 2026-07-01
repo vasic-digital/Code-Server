@@ -1,9 +1,12 @@
 # HelixCode — Feature Status
 
-**Revision:** 2 · **Last modified:** 2026-07-01T19:45:00Z
+**Revision:** 3 · **Last modified:** 2026-07-01T20:30:00Z
 
 Comprehensive per-feature status ledger (§11.4.153) for the **HelixCode** stack at
-release `codeserver-1.0.0-dev-0.0.3`. Every user-facing capability is enumerated
+release `codeserver-1.0.0-dev-0.0.3`, extended with the post-`0.0.3` feature additions
+landed by commits `8351e4c` (login-form clipboard buttons + UI-driven marketplace
+journey) and `97a8c69` (VS Code Dark default theme + popular-extensions matrix), plus
+the now-**LIVE** rootless-Quadlet edge. Every user-facing capability is enumerated
 with the §11.4.153 field set — Component / Feature / Category / Implementation
 (the real file) / Wiring (how it is genuinely end-user-reachable, §11.4.108) /
 Real-use / Tests-coverage (§11.4.169) / Validation / Video-confirmation. Validation
@@ -52,22 +55,24 @@ evidence under `qa-results/tests/<suite>/`.
 | Caddy edge | `/proxy` blocked (403) + client `X-Helix-User` stripped | edge/security | `deploy/Caddyfile` | edge | yes | security_auth | PASS · `qa-results/tests/security_auth/*` | PENDING |
 | Caddy edge | Let's Encrypt ACME issue/renew/rotation (local Pebble CA) | edge/tls | `deploy/.env` `TLS_MODE=letsencrypt`, `deploy/Caddyfile` | operator-enabled | code path present | tls_letsencrypt | SKIP · `topology_unsupported` — legacy suite superseded by the auth-model run; ACME code path unchanged | PENDING |
 | Caddy edge | Real public Let's Encrypt (public domain / DNS-01) | edge/tls | `docs/guides/TLS.md` | operator supplies domain/token | — | — | OPERATOR-BLOCKED · needs public domain + reachable `:80`/`:443` or DNS-01 token | PENDING |
-| Caddy edge | Edge reboot-persistence (rootless Quadlet) | edge/boot | `deploy/quadlet/helixcode-caddy.container`, `scripts/install-edge-boot.sh` | podman generator → `helixcode-caddy.service` (`WantedBy=default.target`, linger) | installer + Quadlet landed | (install/arm) | PENDING · files landed; arm/enable + full power-cycle survival not yet captured | PENDING |
+| Caddy edge | Edge reboot-persistence (rootless Quadlet) | edge/boot | `deploy/quadlet/helixcode-caddy.container`, `scripts/install-edge-boot.sh` | podman generator → `helixcode-caddy.service` (`WantedBy=default.target`, `Linger=yes`) | yes — LIVE: `helixcode-caddy.service` `ActiveState=active`/`SubState=running`, `UnitFileState=generated`, survives session crashes; edge answers HTTPS `:52443` (401 at the live gate) | (systemctl --user status + linger + Quadlet generator) | PASS · live unit `active (running)` from Quadlet `~/.config/containers/systemd/helixcode-caddy.container`, `Linger=yes`, edge live on `:52443` | PENDING |
 | helix-auth | SSH-key challenge-response login (verify vs `authorized_keys`, no password, nothing stored) | auth | `services/auth_gate/` (`challenge.go`, `verifier.go`, `cookie.go`, `server.go`), `deploy/systemd/helix-auth.service` | `systemd --user` gate behind Caddy `forward_auth` | yes — live valid login (303 + cookie + editor 200) | unit, integration, e2e_auth, security_auth, challenges_auth (CH1), helixqa_auth (QA-002/004), race | PASS · e2e_auth 5/5 + Go 70 tests `-race` 81.8% | PENDING |
 | helix-auth | Login redirect for browser navigations (303→`/login`; non-HTML/non-GET → 401) | auth | `services/auth_gate/server.go` `handleAuth` (commit `75e2d9b`) | Caddy `forward_auth` copies the 303 verbatim | yes | `server_test.go` `TestAuthBrowserNavigationRedirectsToLogin`, e2e_auth (B) | PASS · `qa-results/tests/e2e_auth/20260701T151318Z-3186224/unauth_root.txt` | PENDING |
 | helix-auth | Auth fails CLOSED (gate down/errored → denied, never bypassed) | auth/security | `services/auth_gate/server.go`, `deploy/Caddyfile` | Caddy denies on gate failure | yes — live kill+recover | stress_chaos_auth, security_auth, challenges_auth (CH2), e2e_auth (E), helixqa_auth (QA-003) | PASS · `stress_chaos_auth` 5/0/1 (live gate + code-server kill+recover) | PENDING |
 | helix-auth | Hardened session cookie (`__Host-` + HMAC + HttpOnly + Secure + `SameSite=Strict`, regen on login) | auth/security | `services/auth_gate/cookie.go` | gate | yes | unit, security_auth, e2e_auth (D) | PASS · `qa-results/tests/security_auth/*` | PENDING |
 | helix-auth | Rate-limit + CSRF double-submit + verify-spawn ceiling (DoS-hardened) | auth/security | `services/auth_gate/ratelimit.go`, `server.go` | gate | yes | security_auth, load_auth, concurrency_auth, race | PASS · `load_auth` 3/0/1, `concurrency_auth` 5/5, `race` 2/2 | PENDING |
 | helix-auth | Security hardening (server-pinned principal CVE-2026-35414, key-type allow-list, OpenSSH floor, exec/temp hygiene) | auth/security | `services/auth_gate/verifier.go`, `sshversion.go`, `config.go` | gate | yes | unit, integration, security_auth | PASS · Go gate 70 tests, `security_auth` 5/5 | PENDING |
-| helix-auth | Login-form copy/paste clipboard buttons (accessible, graceful in insecure context) | auth/ux | `services/auth_gate/assets/login_enhance.js` | login page | **in progress** | (UI-driven test in progress) | PENDING · source landed; NOT yet validated (subagent in flight) | PENDING |
+| helix-auth | Login-form copy/paste clipboard buttons (accessible copy sign-cmd + challenge, paste recognises armored SSH signature, multi-sig picker, XSS-safe, progressive-enhancement) | auth/ux | `services/auth_gate/assets/login_enhance.js`, `services/auth_gate/server.go` (commit `8351e4c`) | rendered live on the edge login page | yes — LIVE 3/3 (served page + node unit + host-rendered CDP pixel proof) | `login_ui_auth.sh` (L1 served-page + L2 node unit 8/8 + L3 §11.4.170 CDP), `server_login_ui_test.go` | PASS · L2 node 8/8 `qa-results/tests/login_ui_auth/20260701T184629Z-1069432/l2_node_unit.txt` + L3 CDP pixel proof `ok:true` (buttons render/labelled/non-overlapping, copy→clipboard, paste→fill, 2-sig→picker, XSS-safe, no-auto-submit) `qa-results/tests/login_ui_auth/20260701T172810Z-584930/l3_visual.txt` (`login_rendered.png`) | PENDING |
 | code-server | Host-native editor served (authed 200, `X-Helix-User: milosvasic`) | editor | `deploy/systemd/helix-code-server.service` | `systemd --user` as `milosvasic`, Caddy reverse_proxy | yes | e2e_auth (D), challenges_auth (CH1), helixqa_auth (QA-004) | PASS · editor loads (9 markers) `qa-results/tests/challenges_auth/20260701T151325Z-3188693/ch1_sshkey_login.txt` | PENDING |
 | code-server | Tarball install (`~/.local/lib`, non-root; npm fallback), pinned 4.117.0 | editor/install | `scripts/install-auth.sh` | user-level install → `systemd --user` units | install verified (live editor serves 4.117.0) | (install/live) | PASS · changelog install + live editor 200 | PENDING |
 | code-server | Projects served read-write; Explorer defaults to `$PROJECTS_ROOT` (convenience view, NOT a jail) | editor | `deploy/systemd/helix-code-server.service`, `deploy/.env` `PROJECTS_ROOT` | workspace/ExecStart | yes | challenges_auth (CH5), helixqa_auth | PASS · `qa-results/tests/challenges_auth/20260701T151325Z-3188693/ch5_projects_root_default.txt` | PENDING |
 | code-server | SSH-key git from the integrated terminal (host `~/.ssh`) | editor/env | host-native as real user | login shell inherits `~/.ssh` | yes — `git ls-remote` returned 5 refs | challenges_auth (CH3) | PASS · `qa-results/tests/challenges_auth/20260701T151325Z-3188693/ch3_git_lsremote.txt` | PENDING |
 | code-server | `.bashrc` / profile sourced in fresh terminal | editor/env | host-native as real user | login shell (`bash -l`) | yes — `$OSH` export present | challenges_auth (CH4) | PASS · `qa-results/tests/challenges_auth/20260701T151325Z-3188693/ch4_bashrc_exports.txt` | PENDING |
 | code-server | Extension (plugin) install + use from Open VSX marketplace | editor/extensions | `tests/types/extensions_auth.sh`, bank `tests/banks/helixcode-extensions.yaml` | code-server extension host; throwaway `--extensions-dir` (live dir untouched) | yes — live install (`redhat/vscode-yaml@1.24.…`), manifest + extension-host load | e2e/full-automation, Challenges | PASS · 5/5 checks captured `qa-results/tests/extensions_auth/20260701T162817Z-4080597` (x1 Open VSX 200 → x4 cleanup) | PENDING |
+| code-server | VS Code Dark enforced as DEFAULT theme ("Visual Studio Dark", every fresh install) | editor/ux | `deploy/code-server/settings.default.json` (commit `97a8c69`) | seeded into `User/settings.json` on install; live deployment enforces it | yes — config 3/3 + §11.4.170 host-rendered pixel proof | `theme_default_auth.sh` (config 3/3), `theme_visual_auth.sh` + `theme_visual_cdp.mjs` (rendered pixels) | PASS · config `Visual Studio Dark` seed/fresh/live 3/3 `qa-results/tests/theme_default_auth/20260701T184655Z-1071563` + §11.4.170 dark pixel proof meanLum **44.3** (darkFrac 0.926, DOM `vs-dark`, bg `rgb(37,37,38)`) `qa-results/tests/theme_visual_auth/20260701T183729Z-1053274` vs RED light-control meanLum **228.5** `…/20260701T183816Z-1053829` (self-validated golden-good/golden-bad §11.4.107(10)) | PENDING |
+| code-server | Popular extensions install + loadable + persist across restart + config round-trip (Open VSX) | editor/extensions | `tests/types/extensions_popular_auth.sh`, bank `tests/banks/helixcode-extensions.yaml` | code-server extension host; throwaway `--extensions-dir` (live dir untouched) | yes — live probe installed 8 popular exts (Python/ESLint/Prettier/GitLens/etc.) + persisted across a new PID | e2e/full-automation, Challenges | PASS · install proven live 4/5 `qa-results/tests/extensions_popular_auth/20260701T181018Z-855046/p1_install.txt` (+ commit `97a8c69` direct 8-ext probe) + config round-trip OK `…/20260701T185541Z-1084353/p4_config.txt`; MS-proprietary (Pylance/Live Share/Remote) honestly ABSENT from Open VSX (§11.4.112). **Network-dependent SKIP caveat (§11.4.6):** install/loadable/persist steps require a reachable Open VSX — later runs with Open VSX unreachable installed 0 (bounded, honest network-SKIP, not a product FAIL) | PENDING |
 | code-server | In-browser editing (type/save via UI, file tree, command palette) | editor/ui | code-server workbench | browser websocket | — | helixqa_auth (HCA-QA-UI-001) | OPERATOR-ATTENDED · SKIP `operator_attended` (browser-automation adapter tracked HCA-QA-UI-001) | PENDING |
-| code-server | UI-driven marketplace test (browse → install → use through the editor UI) | editor/ui | (planned driver) | browser automation | — | (UI-driven test in progress) | PENDING · subagent in flight; today's coverage is the HTTP/CLI-driven `extensions_auth` | PENDING |
+| code-server | UI-driven marketplace journey (open Extensions view → search Open VSX → click real Install button, pixel+OCR) | editor/ui | `tests/types/extensions_ui_auth.sh`, bank `tests/banks/helixcode-extensions-ui.yaml` (commit `8351e4c`) | headless Chromium driving the real editor UI | yes — browse→search→Install-click driven through the editor's own UI, read from rendered pixels | full-automation (UI-driven §11.4.48), Challenges | PASS · Extensions view + Open VSX search rendered result (`u3_search_results.png`) + real Install button located+clicked `qa-results/tests/extensions_ui_auth/20260701T171228Z-232181` (5/1). **Honest operator_attended sub-note (§11.4.52):** headless cross-origin Open VSX install-completion query is `net::ERR_ABORTED` and can hang → install-completion is an operator_attended SKIP; the autonomous on-disk+host-load proof for the same ext+marketplace is the CLI sibling `extensions_auth` | PENDING |
 | code-server | file-watcher fix (`files.watcherExclude` seeded to volume) | editor/env | persistent settings volume | code-server settings | yes | unit, integration, Challenges (guard) | PASS · prior-release guard (`CH4` watcher class) | PENDING |
 | Operator scripts | Loopback firewall (UID-scoped DROP to `:8080` for non-account UIDs) | security/host | `scripts/harden-loopback.sh` | root-applied nft/iptables rule (reads account+port from `deploy/.env`) | `--check` autonomous; `--apply` operator/root | (read-only check autonomous) | OPERATOR-BLOCKED · apply needs root (project never uses sudo); `--check` verified | PENDING |
 | Operator scripts | Boot-survival `systemd --user` units (linger, `WantedBy=default.target`) | boot | `scripts/install-auth.sh`, `deploy/systemd/*.service` | `systemctl --user enable` + `loginctl enable-linger` | install verified | (install/is-enabled) | PASS · install log + `is-enabled` + `Linger=yes` | PENDING |
@@ -91,6 +96,12 @@ Aggregate `qa-results/run_all/20260701T151300Z-3182121/summary.txt` — **23/23 
   "superseded by `<name>_auth`") — no false-FAIL (§11.4.1).
 - **Extension surface (separate live run):** `extensions_auth` 5/5 checks captured
   (`qa-results/tests/extensions_auth/20260701T162817Z-4080597`).
+- **Post-`0.0.3` suites (registered in `run_all_types.sh`, separate captured runs):**
+  `login_ui_auth` LIVE 3/3 (L2 node 8/8 + L3 CDP pixel proof `ok:true`) ·
+  `theme_default_auth` 3/3 config · `theme_visual_auth` §11.4.170 rendered-pixel proof
+  (dark meanLum 44.3 vs light control 228.5) · `extensions_popular_auth` install proven
+  live (4/5 + direct 8-ext probe; network-gated) · `extensions_ui_auth` 5/1 UI-driven
+  (browse→search→Install-click; operator_attended install-completion).
 
 ## Honest boundaries (§11.4.6)
 
@@ -112,10 +123,23 @@ Aggregate `qa-results/run_all/20260701T151300Z-3182121/summary.txt` — **23/23 
 - **Full in-browser editor interaction** (typing, file tree, command palette) is
   **OPERATOR-ATTENDED** until a browser-automation adapter lands (HCA-QA-UI-001);
   every HTTP/CLI-drivable journey is autonomously verified.
-- **In-flight (subagents, NOT done):** the login-form clipboard copy/paste buttons
-  (`login_enhance.js` — source landed, unvalidated) and the UI-driven marketplace
-  test are **PENDING** — the current extension coverage is the HTTP/CLI-driven
-  `extensions_auth` suite (live 5/5).
+- **Post-`0.0.3` additions now PASS (were in-flight/PENDING at Revision 2):** the
+  login-form clipboard copy/paste buttons (`login_enhance.js`, commit `8351e4c` — LIVE
+  3/3 incl §11.4.170 CDP pixel proof), the VS Code Dark default theme (`97a8c69` — config
+  3/3 + rendered-pixel proof), the popular-extensions matrix (`97a8c69`), the UI-driven
+  marketplace journey (`8351e4c` — browse→search→Install-click, operator_attended on
+  install-completion), and the rootless-Quadlet edge (now LIVE, `active (running)`).
+- **CDP-harness honesty (§11.4.6):** the §11.4.170 host-rendered pixel proofs for the
+  login buttons and the dark theme are genuine but were captured in the runs cited in
+  each row; the **latest** `login_ui_auth` L3 and `theme_visual_auth` runs honestly
+  **SKIPPED** (Chromium `Page.captureScreenshot` timeout / workbench-never-rendered under
+  the quiet matrix) — a skipped CDP run is never counted as the pixel-proof PASS, so the
+  ledger cites the run where the driver reported `ok:true` / rc=0.
+- **`extensions_popular_auth` is network-gated (§11.4.6):** install/loadable/persist
+  need a reachable Open VSX; the capability is proven live (run `…855046` installed 4/5 +
+  the commit's direct 8-ext probe) and the network-independent config round-trip is green,
+  but Open-VSX-unreachable runs install 0 — a bounded, honest **network-SKIP**, not a
+  product FAIL and not a standing full-matrix-green claim.
 - **Real, publicly-trusted Let's Encrypt** cannot be autonomously proven on a LAN box;
   the ACME code path is present (`TLS_MODE=letsencrypt`), the legacy local-CA suite now
   SKIPs as superseded, and the operator enables the public CA per `docs/guides/TLS.md`.

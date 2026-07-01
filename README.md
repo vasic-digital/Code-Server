@@ -1,6 +1,6 @@
 # HelixCode
 
-**Revision:** 2 · **Last modified:** 2026-07-01T00:00:00Z
+**Revision:** 3 · **Last modified:** 2026-07-01T19:06:08Z
 
 Containerized, network-exposed, browser-based **VS Code** (code-server) that
 mounts your host projects for immediate work — behind a **Caddy** TLS edge,
@@ -119,6 +119,26 @@ security, load (DDoS), stress+chaos, concurrency, race, memory, benchmark,
 Let's-Encrypt (local ACME CA), Challenges, HelixQA. Every PASS cites a captured
 evidence file (`qa-results/`). Feature ledger:
 [`docs/features/Status.md`](docs/features/Status.md).
+
+## Tracked-Items + Status Documents
+
+<!-- doc-link-section:begin -->
+Always-in-sync tracked-item + status documents (§11.4.57), each shown with its
+§11.4.44 **Revision** + **Last modified** (mirrored from the source header).
+HelixCode's workable items live in the SQLite single-source-of-truth (§11.4.93);
+this project ships no standalone `Issues`/`Fixed` Markdown trackers.
+
+| Document | Last modified | Revision | Markdown | HTML | PDF |
+|---|---|---|---|---|---|
+| README | 2026-07-01T19:06:08Z | 3 | [.md](README.md) | [.html](README.html) | [.pdf](README.pdf) |
+| CONTINUATION | 2026-07-01 | 5 | [.md](docs/CONTINUATION.md) | [.html](docs/CONTINUATION.html) | [.pdf](docs/CONTINUATION.pdf) |
+| Feature Status | 2026-07-01T19:45:00Z | 2 | [.md](docs/features/Status.md) | [.html](docs/features/Status.html) | [.pdf](docs/features/Status.pdf) |
+| Feature Status Summary | 2026-07-01T19:45:00Z | 1 | [.md](docs/features/Status_Summary.md) | [.html](docs/features/Status_Summary.html) | [.pdf](docs/features/Status_Summary.pdf) |
+| Changelog `codeserver-1.0.0-dev-0.0.4` | 2026-07-01T00:00:00Z | 1 | [.md](docs/changelogs/codeserver-1.0.0-dev-0.0.4.md) | [.html](docs/changelogs/codeserver-1.0.0-dev-0.0.4.html) | [.pdf](docs/changelogs/codeserver-1.0.0-dev-0.0.4.pdf) |
+| Extensions (plugins) guide | 2026-07-01T00:00:00Z | 1 | [.md](docs/guides/EXTENSIONS.md) | [.html](docs/guides/EXTENSIONS.html) | [.pdf](docs/guides/EXTENSIONS.pdf) |
+| Caddy edge boot-persistence guide | 2026-07-01T19:10:00Z | 1 | [.md](docs/guides/EDGE_BOOT.md) | [.html](docs/guides/EDGE_BOOT.html) | [.pdf](docs/guides/EDGE_BOOT.pdf) |
+| Auth-modernization research (deep-research) | 2026-07-01T18:26:19Z | 1 | [.md](docs/research/auth_modernization_20260701/FINDINGS.md) | [.html](docs/research/auth_modernization_20260701/FINDINGS.html) | [.pdf](docs/research/auth_modernization_20260701/FINDINGS.pdf) |
+<!-- doc-link-section:end -->
 
 ## Governance
 
