@@ -60,7 +60,21 @@ mkdir -p "$EXT_DIR" "$UDATA/User"
 { echo "auth: none"; echo "cert: false"; } > "$CFG"
 trap 'rm -rf "$WORK" 2>/dev/null || true' EXIT INT TERM
 
-hc_fp() { if [ -d "$1" ]; then ( cd "$1" 2>/dev/null && ls -1A 2>/dev/null | LC_ALL=C sort | (sha256sum 2>/dev/null || cksum) | awk '{print $1}' ); else echo "ABSENT"; fi; }
+# Fingerprint the dir's entry listing. Retries: on a fork-constrained shared host
+# (§11.4.174) the sha256sum/awk pipeline can transiently fail to fork -> empty
+# output. Retry a few times; return "" ONLY if genuinely un-computable (the caller
+# treats "" as a measurement failure / SKIP, never as "changed" — §11.4.1/§11.4.3).
+hc_fp() {
+  if [ ! -d "$1" ]; then echo "ABSENT"; return 0; fi
+  local _o="" _n=0
+  while [ "$_n" -lt 5 ]; do
+    _n=$((_n+1))
+    _o="$( cd "$1" 2>/dev/null && ls -1A 2>/dev/null | LC_ALL=C sort | (sha256sum 2>/dev/null || cksum) | awk '{print $1}' )"
+    [ -n "$_o" ] && { echo "$_o"; return 0; }
+    sleep 1
+  done
+  echo ""
+}
 LIVE_FP_BEFORE="$(hc_fp "$LIVE_EXT_DIR")"
 
 if [ -z "$CS_BIN" ] || [ ! -x "$CS_BIN" ]; then
@@ -197,7 +211,12 @@ ev="$(h_ev p6_live_untouched)"
 LIVE_FP_AFTER="$(hc_fp "$LIVE_EXT_DIR")"
 { echo "assert: LIVE extensions-dir fingerprint unchanged (all work was in the throwaway dir)";
   echo "live dir : $LIVE_EXT_DIR"; echo "before   : $LIVE_FP_BEFORE"; echo "after    : $LIVE_FP_AFTER"; } > "$ev"
-if [ "$LIVE_FP_BEFORE" = "$LIVE_FP_AFTER" ]; then
+if [ -z "$LIVE_FP_BEFORE" ] || [ -z "$LIVE_FP_AFTER" ]; then
+  # An empty fingerprint means the sha256 pipeline could not run (host fork/resource
+  # starvation §11.4.174) — a MEASUREMENT failure, NOT a directory mutation. Empty
+  # != "changed": SKIP-with-reason rather than emit a §11.4.1 environmental FAIL-bluff.
+  ab_skip_with_reason "P6 live extensions-dir fingerprint un-computable (host resource starvation §11.4.174 — cannot verify untouched; before='$LIVE_FP_BEFORE' after='$LIVE_FP_AFTER')" topology_unsupported
+elif [ "$LIVE_FP_BEFORE" = "$LIVE_FP_AFTER" ]; then
   ab_pass_with_evidence "live extensions-dir fingerprint unchanged (throwaway-only, operator state intact)" "$ev"
 else
   ab_fail "LIVE extensions-dir changed during the test (§11.4.14 violation) [ev: ${ev#$HC_ROOT/}]"

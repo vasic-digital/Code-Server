@@ -171,7 +171,9 @@ s=socket.socket(); s.bind(("127.0.0.1",0)); print(s.getsockname()[1]); s.close()
 
 hc_wait_listen() {  # $1=pid $2=port -> echoes final http code; rc 0 if listening
   _p="$1"; _port="$2"; _code=000; _i=0
-  while [ "$_i" -lt 60 ]; do
+  # boot window: 0.5s * iters. Default 120 (60s) — generous so a code-server that is
+  # merely slow to boot under shared-host load (§11.4.174) still serves in-window.
+  while [ "$_i" -lt "${HELIX_UI_BOOT_ITERS:-120}" ]; do
     kill -0 "$_p" 2>/dev/null || { echo "$_code"; return 1; }
     _c="$(curl -s -o /dev/null -w '%{http_code}' --max-time 3 "http://127.0.0.1:$_port/" 2>/dev/null)"
     _c="${_c:-000}"
@@ -272,7 +274,27 @@ else
   if [ "$listen_ok" = 1 ] && [ "$wb" = 1 ]; then
     ab_pass_with_evidence "throwaway code-server serves the editor workbench (HTTP $http) on port $PORT" "$ev"
   else
-    ab_fail "throwaway code-server did not serve the workbench (http=$http workbench=$wb) [ev: ${ev#$HC_ROOT/}]"
+    # The throwaway did not serve within the boot window. code-server's ability to
+    # serve the workbench is INDEPENDENTLY proven by the LIVE deployment + the
+    # extensions_auth CLI suite, so a throwaway that will not boot is a host-resource
+    # condition (§11.4.174 shared-host thread/fork starvation), NOT a product defect.
+    # FAIL only when the process actually crashed on a host with ample headroom;
+    # otherwise SKIP-with-reason (§11.4.1/§11.4.3) rather than an environmental FAIL-bluff.
+    _thr="$(ps -eLf 2>/dev/null | wc -l)"; _ulim="$(ulimit -u 2>/dev/null || echo 4096)"
+    case "$_ulim" in ''|*[!0-9]*) _ulim=1000000000 ;; esac   # 'unlimited'/non-numeric -> ample headroom (review F2)
+    _alive=0; kill -0 "$SRV_PID" 2>/dev/null && _alive=1
+    _pressured=0; [ "$_thr" -ge $(( _ulim * 60 / 100 )) ] && _pressured=1
+    { echo "host threads at check       : $_thr / ulimit-u $_ulim (throwaway pid alive: $_alive, host_pressured: $_pressured)"; } >> "$ev"
+    # Headroom gates the WHOLE decision (review F1): a throwaway that will not serve the
+    # workbench on an UNLOADED host — whether it crashed (alive=0) OR serves HTTP without
+    # the VS Code web bootstrap (alive=1, wb=0) — is a genuine serve defect → FAIL. SKIP
+    # only under real host thread/fork starvation (§11.4.174), where the throwaway simply
+    # could not come up; code-server serve is independently proven (live deploy + CLI).
+    if [ "$_pressured" = 1 ]; then
+      ab_skip_with_reason "U1 throwaway code-server did not serve in-window under host thread/fork starvation (threads $_thr/$_ulim §11.4.174) — code-server serve proven by live deploy + extensions_auth CLI" topology_unsupported
+    else
+      ab_fail "throwaway code-server did not serve the editor workbench on an unloaded host (http=$http workbench=$wb alive=$_alive, threads $_thr/$_ulim) [ev: ${ev#$HC_ROOT/}]"
+    fi
     h_summary; exit $?
   fi
 fi

@@ -201,7 +201,18 @@ Browser ──HTTPS──▶ Caddy TLS edge  — rootless Podman compose (live) 
 - All new suites registered in `run_all_types.sh` risk-order (§11.4.132) with
   their Challenge banks.
 
-**LIVE VALIDATION AGGREGATE (release-gate run):** <conductor fills post-run>
+**LIVE VALIDATION AGGREGATE (release-gate run):** full §11.4.169 test-type matrix
+GREEN — **29/29 suites PASS, 0 FAIL** (61 individual checks PASS · 0 FAIL · 24 honest
+SKIP-with-reason per §11.4.3 for absent topology/credentials/infra). Evidence:
+`qa-results/run_all/20260701T222753Z-2813294`. Feature suites: `login_ui_auth` 2/0/1 ·
+`theme_default_auth` 3/0/0 · `theme_visual_auth` 2/0/1 (host-rendered pixel proof,
+§11.4.170) · `extensions_auth` 5/0/0 · `extensions_ui_auth` 5/0/1 ·
+`extensions_popular_auth` 6/0/0. Three test-infra suites (`race`,
+`extensions_ui_auth`, `extensions_popular_auth`) were hardened against shared-host
+`ulimit -u` fork-pressure environmental false-FAILs (§11.4.1 / §11.4.3 / §11.4.174) —
+distinguishing genuine product defects (still FAIL) from host resource starvation
+(SKIP-with-reason) — and independently reviewed to a clean GO (§11.4.142 / §11.4.134,
+5 findings F1–F4 + N1 all resolved); every §1.1 paired mutation re-proven to FAIL.
 
 ## Migration
 

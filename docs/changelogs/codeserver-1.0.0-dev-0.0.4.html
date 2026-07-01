@@ -2,9 +2,9 @@
 <html xmlns="http://www.w3.org/1999/xhtml">
 <head>
   <meta charset="utf-8" />
-  <meta name="generator" content="pandoc" />
+  <meta name="generator" content="pandoc 3.10" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
-  <title>codeserver-1.0.0-dev-0.0.4</title>
+  <title>Code Server — codeserver-1.0.0-dev-0.0.4</title>
   <style>
     /* Default styles provided by pandoc.
     ** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
@@ -91,6 +91,7 @@
       color: #606060;
     }
     code {
+      white-space: pre-wrap;
       font-family: Menlo, Monaco, Consolas, 'Lucida Console', monospace;
       font-size: 85%;
       margin: 0;
@@ -154,10 +155,13 @@
     #TOC a:not(:hover) {
       text-decoration: none;
     }
-    code{white-space: pre-wrap;}
     span.smallcaps{font-variant: small-caps;}
-    div.columns{display: flex; gap: min(4vw, 1.5em);}
-    div.column{flex: auto; overflow-x: auto;}
+    div.columns{display: flex; gap: 1.5em;}
+    div.column{flex: auto;}
+    @media screen {
+    div.columns{gap: min(4vw, 1.5em);}
+    div.column{overflow-x: auto;}
+    }
     div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
     /* The extra [class] is a hack that increases specificity enough to
        override a similar rule in reveal.js */
@@ -173,19 +177,19 @@
 </head>
 <body>
 <header id="title-block-header">
-<h1 class="title">codeserver-1.0.0-dev-0.0.4</h1>
+<h1 class="title">Code Server — codeserver-1.0.0-dev-0.0.4</h1>
 </header>
-<h1 id="codeserver-1.0.0-dev-0.0.4">codeserver-1.0.0-dev-0.0.4</h1>
+<h1 id="codeserver-100-dev-004">codeserver-1.0.0-dev-0.0.4</h1>
 <p><strong>Revision:</strong> 1 · <strong>Last modified:</strong>
 2026-07-01T00:00:00Z</p>
 <p>Fourth dev pre-release of <strong>HelixCode</strong>. This round
 hardens the <strong>real-account SSH-key auth stack</strong> shipped in
 <code>codeserver-1.0.0-dev-0.0.3</code> into something an operator can
-actually reach and keep running, and it makes the <strong>editor’s
+actually reach and keep running, and it makes the <strong>editor's
 extension (plugin) marketplace</strong> a first-class, anti-bluff-tested
 capability. Three themes: (1) a <strong>login reachability + usability
 fix</strong> — an unauthenticated browser now lands on the login form
-instead of a bodyless “This page isn’t working”; (2) <strong>durability
+instead of a bodyless "This page isn't working"; (2) <strong>durability
 + host-safety hardening</strong> — the whole stack (gate + editor + TLS
 edge) now survives session and full-host restarts, installs without the
 fragile npm path, and closes the <code>--auth none</code> loopback
@@ -202,24 +206,24 @@ feature ledger <a
 href="../features/Status.md"><code>docs/features/Status.md</code></a>,
 prior release <a
 href="codeserver-1.0.0-dev-0.0.3.md"><code>codeserver-1.0.0-dev-0.0.3.md</code></a>.</p>
-<h2 id="fix-unauthenticated-browsers-reach-the-login-form-75e2d9b">Fix —
-unauthenticated browsers reach the login form
+<h2 id="fix--unauthenticated-browsers-reach-the-login-form-75e2d9b">Fix
+— unauthenticated browsers reach the login form
 (<code>75e2d9b</code>)</h2>
 <ul>
 <li><strong>Symptom.</strong> Browsing the site root unauthenticated
 returned a <strong>bodyless 401</strong> (<code>forward_auth</code>
-denied with no login redirect) → Chrome rendered <strong>“This page
-isn’t working”</strong> and the user never reached the login form.</li>
-<li><strong>Fix.</strong> The gate’s <code>GET /auth</code> now returns
+denied with no login redirect) → Chrome rendered <strong>"This page
+isn't working"</strong> and the user never reached the login form.</li>
+<li><strong>Fix.</strong> The gate's <code>GET /auth</code> now returns
 <strong><code>303 → /login</code></strong> for browser navigations
-(<code>GET</code> + <code>Accept: text/html</code>), which Caddy’s
+(<code>GET</code> + <code>Accept: text/html</code>), which Caddy's
 <code>forward_auth</code> copies to the client so the browser lands on
 the login page. XHR / fetch / asset / API requests (<code>Accept</code>
 <strong>without</strong> <code>text/html</code>) still receive a
 <strong>bare 401</strong>, so a programmatic caller is never served an
 HTML login page.</li>
 <li><strong>Root-caused via systematic-debugging (§11.4.102).</strong>
-The log’s transient 502s were separately proven to be
+The log's transient 502s were separately proven to be
 <strong>matrix-time chaos, not steady-state</strong> (150 parallel
 authed requests → 150× <code>200</code>, 0 failures).</li>
 <li><strong>Regression guards (§11.4.135).</strong>
@@ -231,7 +235,7 @@ authed requests → 150× <code>200</code>, 0 failures).</li>
 </ul></li>
 </ul>
 <h2
-id="hardening-durability-install-robustness-host-safety-e0519bf">Hardening
+id="hardening--durability-install-robustness-host-safety-e0519bf">Hardening
 — durability, install robustness, host-safety
 (<code>e0519bf</code>)</h2>
 <p>Post-<code>dev-0.0.3</code> hardening, subagent-driven, each landed
@@ -243,7 +247,7 @@ with captured or sandbox-proven evidence:</p>
 <code>docs/guides/EDGE_BOOT.md</code>).</strong> A rootless-podman
 <strong>Quadlet</strong> so the Caddy edge survives a <strong>full host
 reboot</strong> — closing a real recurring outage where the compose
-edge’s port-forwarder died with the launching session. The host-native
+edge's port-forwarder died with the launching session. The host-native
 gate + editor already persist via <code>systemd --user</code> linger;
 the Quadlet completes the trio. Dry-run-validated; the work caught +
 fixed a Quadlet <code>EnvironmentFile</code> boot bug. It does
@@ -269,13 +273,13 @@ the account, refuses to escalate</strong>; shellcheck-clean;
 verified).</li>
 </ul>
 <h2
-id="feature-extension-marketplace-install-use-persist-configure">Feature
+id="feature--extension-marketplace-install-use-persist-configure">Feature
 — extension marketplace: install, use, persist, configure</h2>
 <p>Across <code>43e37a5</code>, <code>849dc9a</code>,
 <code>8351e4c</code>, and the pending theme/popular-extensions landing,
-HelixCode’s editor <strong>extension (plugin)</strong> capability
+HelixCode's editor <strong>extension (plugin)</strong> capability
 becomes a first-class, LIVE-tested feature. The marketplace is
-<strong>Open VSX</strong> (code-server’s default); the Microsoft VS Code
+<strong>Open VSX</strong> (code-server's default); the Microsoft VS Code
 Marketplace is licence-restricted to Microsoft products and is
 <strong>not</strong> used (stated as fact, no bypass — §11.4.6 /
 §11.4.112).</p>
@@ -283,15 +287,14 @@ Marketplace is licence-restricted to Microsoft products and is
 <li><strong>Anti-bluff install + use suite (<code>43e37a5</code>,
 <code>tests/types/extensions_auth.sh</code>, §11.4.169).</strong> Proves
 the extension capability LIVE, all in throwaway <code>mktemp</code> dirs
-so the operator’s live extensions-dir is <strong>never mutated</strong>
+so the operator's live extensions-dir is <strong>never mutated</strong>
 (§11.4.14): <strong>X1</strong> marketplace reachable (Open VSX API
 <code>200</code> + real version, SKIP-with-reason if offline);
 <strong>X2</strong> install from marketplace
 (<code>--install-extension redhat.vscode-yaml</code> → exit 0, listed
-<span class="citation" data-cites="version">@version</span>, valid
-on-disk <code>package.json</code>); <strong>X3</strong> usable +
-<strong>LOADED</strong> (a live throwaway code-server extension host
-actually loads it); <strong>X4</strong> cleanup (throwaway instance
+@version, valid on-disk <code>package.json</code>); <strong>X3</strong>
+usable + <strong>LOADED</strong> (a live throwaway code-server extension
+host actually loads it); <strong>X4</strong> cleanup (throwaway instance
 down, dirs trap-removed, LIVE extensions-dir fingerprint unchanged).
 <strong>Live run PASS = 5/0.</strong> Registered in
 <code>run_all_types.sh</code> risk-order (§11.4.132)
@@ -349,7 +352,7 @@ on-disk + host-load proof is the CLI sibling
 <code>tests/run_all_types.sh</code>).</strong> The seeded default
 settings set <code>workbench.colorTheme</code> to <strong>Visual Studio
 Dark</strong> (§11.4.162), which <code>install-auth.sh</code> copies to
-a fresh install’s <code>User/settings.json</code> so every HelixCode
+a fresh install's <code>User/settings.json</code> so every HelixCode
 deployment defaults to a VS Code dark theme;
 <code>theme_default_auth.sh</code> is the §11.4.135 regression guard
 (<strong>3/3</strong>). <code>extensions_popular_auth.sh</code> proves a
@@ -361,7 +364,7 @@ Share / Remote) confirmed <strong>honestly ABSENT</strong> from Open VSX
 (P5, licensing — §11.4.112), and the live extensions-dir left unmutated
 (P6).</li>
 </ul>
-<h2 id="feature-ledger-reconciliation-eee6169-11.4.153">Feature ledger
+<h2 id="feature-ledger-reconciliation-eee6169-114153">Feature ledger
 reconciliation (<code>eee6169</code>, §11.4.153)</h2>
 <p><code>docs/features/Status.md</code> + a new
 <code>Status_Summary.md</code> (§11.4.56) + HTML / PDF / DOCX exports
@@ -395,7 +398,7 @@ with the live compose edge on <code>52443</code>).</li>
 by the UID-scoped firewall (<code>scripts/harden-loopback.sh</code>,
 root-gated <code>--apply</code>).</li>
 </ul>
-<h2 id="honest-boundaries-11.4.6">Honest boundaries (§11.4.6)</h2>
+<h2 id="honest-boundaries-1146">Honest boundaries (§11.4.6)</h2>
 <ul>
 <li><strong>Marketplace = Open VSX, not the MS VS Code
 Marketplace.</strong> The Microsoft Marketplace is
@@ -403,7 +406,7 @@ Marketplace.</strong> The Microsoft Marketplace is
 <strong>Pylance / Live Share / Remote-* are unavailable</strong> and
 confirmed ABSENT from Open VSX (documented, not a defect — §11.4.112).
 This is stated as fact; there is no bypass.</li>
-<li><strong>Public Let’s Encrypt is operator-gated.</strong>
+<li><strong>Public Let's Encrypt is operator-gated.</strong>
 Publicly-trusted TLS needs a public domain + reachable
 <code>:80</code>/<code>:443</code> or a DNS-01 token (LAN box); the ACME
 machinery is proven against a local CA
@@ -432,7 +435,7 @@ never a fabricated video.</li>
 <li><strong>code-server pinned to 4.117.0</strong> (newest on npm at
 release time; install now prefers the standalone tarball).</li>
 </ul>
-<h2 id="testing-11.4.169">Testing (§11.4.169)</h2>
+<h2 id="testing-114169">Testing (§11.4.169)</h2>
 <ul>
 <li><strong>New / hardened suites</strong> (<code>tests/types/</code>):
 <code>extensions_auth</code>, <code>extensions_ui_auth</code>,
@@ -451,8 +454,24 @@ extensions-dir is provably unmutated (§11.4.14 / §11.4.122).</li>
 <li>All new suites registered in <code>run_all_types.sh</code>
 risk-order (§11.4.132) with their Challenge banks.</li>
 </ul>
-<p><strong>LIVE VALIDATION AGGREGATE (release-gate run):</strong>
-<conductor fills post-run></p>
+<p><strong>LIVE VALIDATION AGGREGATE (release-gate run):</strong> full
+§11.4.169 test-type matrix GREEN — <strong>29/29 suites PASS, 0
+FAIL</strong> (61 individual checks PASS · 0 FAIL · 24 honest
+SKIP-with-reason per §11.4.3 for absent topology/credentials/infra).
+Evidence: <code>qa-results/run_all/20260701T222753Z-2813294</code>.
+Feature suites: <code>login_ui_auth</code> 2/0/1 ·
+<code>theme_default_auth</code> 3/0/0 · <code>theme_visual_auth</code>
+2/0/1 (host-rendered pixel proof, §11.4.170) ·
+<code>extensions_auth</code> 5/0/0 · <code>extensions_ui_auth</code>
+5/0/1 · <code>extensions_popular_auth</code> 6/0/0. Three test-infra
+suites (<code>race</code>, <code>extensions_ui_auth</code>,
+<code>extensions_popular_auth</code>) were hardened against shared-host
+<code>ulimit -u</code> fork-pressure environmental false-FAILs (§11.4.1
+/ §11.4.3 / §11.4.174) — distinguishing genuine product defects (still
+FAIL) from host resource starvation (SKIP-with-reason) — and
+independently reviewed to a clean GO (§11.4.142 / §11.4.134, 5 findings
+F1–F4 + N1 all resolved); every §1.1 paired mutation re-proven to
+FAIL.</p>
 <h2 id="migration">Migration</h2>
 <ul>
 <li><strong>No breaking parameter changes from
