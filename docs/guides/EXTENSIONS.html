@@ -1,0 +1,647 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>HelixCode extensions (plugins) — the honest guide</title>
+  <style>
+
+html {
+color: #1a1a1a;
+background-color: #fdfdfd;
+}
+body {
+margin: 0 auto;
+max-width: 36em;
+padding-left: 50px;
+padding-right: 50px;
+padding-top: 50px;
+padding-bottom: 50px;
+hyphens: auto;
+overflow-wrap: break-word;
+text-rendering: optimizeLegibility;
+font-kerning: normal;
+}
+@media (max-width: 600px) {
+body {
+font-size: 0.9em;
+padding: 12px;
+}
+h1 {
+font-size: 1.8em;
+}
+}
+@media print {
+html {
+background-color: white;
+}
+body {
+background-color: transparent;
+color: black;
+font-size: 12pt;
+}
+p, h2, h3 {
+orphans: 3;
+widows: 3;
+}
+h2, h3, h4 {
+page-break-after: avoid;
+}
+}
+p {
+margin: 1em 0;
+}
+a {
+color: #1a1a1a;
+}
+a:visited {
+color: #1a1a1a;
+}
+img {
+max-width: 100%;
+}
+svg {
+height: auto;
+max-width: 100%;
+}
+h1, h2, h3, h4, h5, h6 {
+margin-top: 1.4em;
+}
+h5, h6 {
+font-size: 1em;
+font-style: italic;
+}
+h6 {
+font-weight: normal;
+}
+ol, ul {
+padding-left: 1.7em;
+margin-top: 1em;
+}
+li > ol, li > ul {
+margin-top: 0;
+}
+blockquote {
+margin: 1em 0 1em 1.7em;
+padding-left: 1em;
+border-left: 2px solid #e6e6e6;
+color: #606060;
+}
+code {
+font-family: Menlo, Monaco, Consolas, 'Lucida Console', monospace;
+font-size: 85%;
+margin: 0;
+hyphens: manual;
+}
+pre {
+margin: 1em 0;
+overflow: auto;
+}
+pre code {
+padding: 0;
+overflow: visible;
+overflow-wrap: normal;
+}
+.sourceCode {
+background-color: transparent;
+overflow: visible;
+}
+hr {
+border: none;
+border-top: 1px solid #1a1a1a;
+height: 1px;
+margin: 1em 0;
+}
+table {
+margin: 1em 0;
+border-collapse: collapse;
+width: 100%;
+overflow-x: auto;
+display: block;
+font-variant-numeric: lining-nums tabular-nums;
+}
+table caption {
+margin-bottom: 0.75em;
+}
+tbody {
+margin-top: 0.5em;
+border-top: 1px solid #1a1a1a;
+border-bottom: 1px solid #1a1a1a;
+}
+th {
+border-top: 1px solid #1a1a1a;
+padding: 0.25em 0.5em 0.25em 0.5em;
+}
+td {
+padding: 0.125em 0.5em 0.25em 0.5em;
+}
+header {
+margin-bottom: 4em;
+text-align: center;
+}
+#TOC li {
+list-style: none;
+}
+#TOC ul {
+padding-left: 1.3em;
+}
+#TOC > ul {
+padding-left: 0;
+}
+#TOC a:not(:hover) {
+text-decoration: none;
+}
+code{white-space: pre-wrap;}
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: min(4vw, 1.5em);}
+div.column{flex: auto; overflow-x: auto;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+
+ul.task-list[class]{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+font-size: inherit;
+width: 0.8em;
+margin: 0 0.8em 0.2em -1.6em;
+vertical-align: middle;
+}
+.display.math{display: block; text-align: center; margin: 0.5rem auto;}
+
+html { -webkit-text-size-adjust: 100%; }
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+{ counter-reset: source-line 0; }
+pre.numberSource code > span
+{ position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+{ content: counter(source-line);
+position: relative; left: -1em; text-align: right; vertical-align: baseline;
+border: none; display: inline-block;
+-webkit-touch-callout: none; -webkit-user-select: none;
+-khtml-user-select: none; -moz-user-select: none;
+-ms-user-select: none; user-select: none;
+padding: 0 4px; width: 4em;
+color: #aaaaaa;
+}
+pre.numberSource { margin-left: 3em; border-left: 1px solid #aaaaaa; padding-left: 4px; }
+div.sourceCode
+{ }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+code span.al { color: #ff0000; font-weight: bold; } 
+code span.an { color: #60a0b0; font-weight: bold; font-style: italic; } 
+code span.at { color: #7d9029; } 
+code span.bn { color: #40a070; } 
+code span.bu { color: #008000; } 
+code span.cf { color: #007020; font-weight: bold; } 
+code span.ch { color: #4070a0; } 
+code span.cn { color: #880000; } 
+code span.co { color: #60a0b0; font-style: italic; } 
+code span.cv { color: #60a0b0; font-weight: bold; font-style: italic; } 
+code span.do { color: #ba2121; font-style: italic; } 
+code span.dt { color: #902000; } 
+code span.dv { color: #40a070; } 
+code span.er { color: #ff0000; font-weight: bold; } 
+code span.ex { } 
+code span.fl { color: #40a070; } 
+code span.fu { color: #06287e; } 
+code span.im { color: #008000; font-weight: bold; } 
+code span.in { color: #60a0b0; font-weight: bold; font-style: italic; } 
+code span.kw { color: #007020; font-weight: bold; } 
+code span.op { color: #666666; } 
+code span.ot { color: #007020; } 
+code span.pp { color: #bc7a00; } 
+code span.sc { color: #4070a0; } 
+code span.ss { color: #bb6688; } 
+code span.st { color: #4070a0; } 
+code span.va { color: #19177c; } 
+code span.vs { color: #4070a0; } 
+code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } 
+</style>
+</head>
+<body>
+<header id="title-block-header">
+<h1 class="title">HelixCode extensions (plugins) — the honest guide</h1>
+</header>
+<h1 id="helixcode-extensions-plugins-the-honest-guide">HelixCode
+extensions (plugins) — the honest guide</h1>
+<p><strong>Revision:</strong> 1 <strong>Last modified:</strong>
+2026-07-01T00:00:00Z <strong>Scope:</strong> How code-server’s extension
+(plugin) system works in HelixCode — which marketplace it really uses,
+how to install/list/remove extensions (UI + CLI + local
+<code>.vsix</code>), how the gallery is configured, and how to
+troubleshoot. <strong>Authority:</strong> constitution §11.4.6
+(no-guessing — every fact below is verified against the running binary
+and the latest official docs; see <em>Sources verified</em>), §11.4.10
+(no secrets), §11.4.65
+(<code>.md</code>+<code>.html</code>+<code>.pdf</code> in sync).</p>
+<blockquote>
+<p><strong>Verified against this install:</strong>
+<code>code-server 4.117.0</code> (with Code <code>1.117.0</code>), the
+exact binary HelixCode runs. Command/flag names below are copied from
+<code>code-server --help</code> on this host, not from memory.</p>
+</blockquote>
+<hr />
+<h2 id="tldr-the-marketplace-reality">TL;DR — the marketplace
+reality</h2>
+<ul>
+<li>HelixCode is <strong>code-server</strong>, a third-party
+(non-Microsoft) build of VS Code.</li>
+<li>Its <strong>default extension marketplace is <a href="https://open-vsx.org">Open VSX</a></strong> — an
+<strong>open-source, vendor-neutral</strong> registry operated by the
+<strong>Eclipse Foundation</strong> (EPL-2.0). It is
+<strong>NOT</strong> the Microsoft “VS Code Marketplace”.</li>
+<li>code-server <strong>cannot</strong> use Microsoft’s Marketplace:
+Microsoft’s Marketplace <strong>Terms of Use restrict it to Microsoft’s
+own Visual Studio products</strong> — using it from a third-party editor
+would violate those terms. This guide does <strong>not</strong> provide
+a way around that restriction; it documents the supported Open VSX
+path.</li>
+<li>Practical effect: <strong>most</strong> popular extensions are on
+Open VSX. A few Microsoft <strong>closed-source</strong> extensions are
+<strong>not</strong> (notably <strong>Live Share</strong> and the
+<strong>Remote</strong> family — Remote-SSH / Dev Containers / WSL).
+Third-party alternatives usually exist on Open VSX.</li>
+</ul>
+<hr />
+<h2 id="why-open-vsx-and-not-the-microsoft-marketplace">1. Why Open VSX
+(and not the Microsoft Marketplace)</h2>
+<p><strong>What Open VSX is.</strong> Per the Eclipse project, Open VSX
+is a <em>“vendor-neutral open-source alternative to the Visual Studio
+Marketplace”</em> — a server + web app + publishing CLI, licensed
+<strong>EPL-2.0</strong>, operated by the <strong>Eclipse
+Foundation</strong>, with the public instance at
+<code>https://open-vsx.org</code>. It serves the same <em>kind</em> of
+VS Code extensions, through an independent, non-proprietary channel.</p>
+<p><strong>Why code-server defaults to it.</strong> The Microsoft VS
+Code Marketplace’s Terms of Use state (quoted in the code-server FAQ)
+that Marketplace Offerings are <em>“intended for use only with Visual
+Studio Products and Services”</em>. code-server is not a Microsoft
+product, so it <strong>legally cannot</strong> point at Microsoft’s
+Marketplace, and instead ships <strong>Open VSX</strong> as the default
+gallery. This is a licensing boundary, stated here as fact —
+<strong>HelixCode does not bypass it.</strong></p>
+<p><strong>What you may miss.</strong> Two Microsoft
+<strong>closed-source</strong> extension sets are not on Open VSX and
+are unavailable in code-server:</p>
+<table>
+<colgroup>
+<col style="width: 50%" />
+<col style="width: 50%" />
+</colgroup>
+<thead>
+<tr>
+<th>Not available</th>
+<th>Practical note</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Live Share</strong></td>
+<td>Microsoft closed-source; no Open VSX equivalent from MS.</td>
+</tr>
+<tr>
+<td><strong>Remote</strong> — Remote-SSH, Dev Containers, WSL</td>
+<td>Microsoft closed-source. code-server already runs <em>on</em> the
+host as your real account (see <a href="AUTH.md"><code>AUTH.md</code></a>), so remote-into-host is largely
+moot; the integrated terminal + Open Folder already have full host
+access.</td>
+</tr>
+</tbody>
+</table>
+<p>Everything else — language servers, linters, themes, formatters,
+YAML/JSON tools, etc. — is generally on Open VSX and installs
+normally.</p>
+<hr />
+<h2 id="installing-listing-and-removing-extensions">2. Installing,
+listing, and removing extensions</h2>
+<h3 id="from-the-editor-ui-easiest">2.1 From the editor UI
+(easiest)</h3>
+<ol type="1">
+<li>Open the <strong>Extensions</strong> view — the squares icon in the
+Activity Bar, or <code>Ctrl+Shift+X</code>.</li>
+<li><strong>Search</strong> by name/id and click
+<strong>Install</strong>. Results come from <strong>Open
+VSX</strong>.</li>
+<li>To remove: find the installed extension → gear icon →
+<strong>Uninstall</strong>.</li>
+</ol>
+<p>The UI writes into HelixCode’s <strong>private</strong> extensions
+directory (below), so it never disturbs any other VS Code / code-server
+you run on the host.</p>
+<h3 id="helixcodes-extensions-directory-important">2.2 HelixCode’s
+extensions directory (important)</h3>
+<p>The HelixCode systemd unit
+(<code>deploy/systemd/helix-code-server.service</code>) runs code-server
+with <strong>private</strong> state paths so this instance never shares
+the operator’s global <code>~/.vscode</code> /
+<code>~/.local/share/code-server</code>:</p>
+<pre><code>--user-data-dir   ~/.local/share/helixcode/code-server
+--extensions-dir  ~/.local/share/helixcode/code-server/extensions</code></pre>
+<p>That directory is the <strong>source of truth</strong> for what the
+running editor loads. On this host it currently holds, for example:</p>
+<pre><code>~/.local/share/helixcode/code-server/extensions/
+  adamraichu.pdf-viewer-1.1.2-universal/     # an installed extension
+  extensions.json                            # code-server&#39;s install registry</code></pre>
+<h3 id="from-the-command-line">2.3 From the command line</h3>
+<p>code-server exposes the standard VS Code extension CLI (verified on
+this host — <code>code-server --help</code>):</p>
+<table>
+<colgroup>
+<col style="width: 50%" />
+<col style="width: 50%" />
+</colgroup>
+<thead>
+<tr>
+<th>Flag</th>
+<th>Meaning</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>--install-extension &lt;publisher.name&gt;[@version]</code></td>
+<td>Install/update from the gallery (Open VSX).
+e.g. <code>redhat.vscode-yaml</code>, or pin
+<code>ms-vscode.foo@1.2.3</code>.</td>
+</tr>
+<tr>
+<td><code>--install-extension &lt;path-to.vsix&gt;</code></td>
+<td>Install a local <code>.vsix</code> (see §4).</td>
+</tr>
+<tr>
+<td><code>--uninstall-extension &lt;publisher.name&gt;</code></td>
+<td>Remove an installed extension.</td>
+</tr>
+<tr>
+<td><code>--list-extensions</code></td>
+<td>List installed extension ids.</td>
+</tr>
+<tr>
+<td><code>--show-versions</code></td>
+<td>(with <code>--list-extensions</code>) also print
+<code>@version</code>.</td>
+</tr>
+<tr>
+<td><code>--force</code></td>
+<td>Skip prompts when installing/updating.</td>
+</tr>
+<tr>
+<td><code>--enable-proposed-api [&lt;id&gt; …]</code></td>
+<td>Opt an extension into proposed APIs.</td>
+</tr>
+</tbody>
+</table>
+<blockquote>
+<p><strong>There is NO <code>--extensions-gallery</code> CLI
+flag</strong> in code-server 4.117.0 (confirmed by
+<code>code-server --help</code>). The gallery is configured by the
+<code>EXTENSIONS_GALLERY</code> <strong>environment variable</strong> or
+<code>product.json</code> — see §3. Do not expect a
+<code>--extensions-gallery</code> switch; it does not exist in this
+version.</p>
+</blockquote>
+<p><strong>CRITICAL for HelixCode — target the same dirs.</strong> A
+<em>bare</em> <code>code-server --install-extension foo</code> uses
+code-server’s <strong>default</strong> paths
+(<code>~/.local/share/code-server/extensions</code>), which the
+HelixCode <strong>service does not load</strong>. To install into the
+directory the running HelixCode editor actually uses, pass the
+<strong>same</strong> <code>--extensions-dir</code> (and
+<code>--user-data-dir</code>) the service uses:</p>
+<div class="sourceCode" id="cb3"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="va">CS</span><span class="op">=</span>~/.local/bin/code-server            <span class="co"># the code-server binary on this host</span></span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a><span class="st">&quot;</span><span class="va">$CS</span><span class="st">&quot;</span> <span class="dt">\</span></span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a>  <span class="at">--extensions-dir</span>  ~/.local/share/helixcode/code-server/extensions <span class="dt">\</span></span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a>  <span class="at">--user-data-dir</span>   ~/.local/share/helixcode/code-server <span class="dt">\</span></span>
+<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a>  <span class="at">--install-extension</span> redhat.vscode-yaml</span>
+<span id="cb3-7"><a href="#cb3-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-8"><a href="#cb3-8" aria-hidden="true" tabindex="-1"></a><span class="co"># verify it landed:</span></span>
+<span id="cb3-9"><a href="#cb3-9" aria-hidden="true" tabindex="-1"></a><span class="st">&quot;</span><span class="va">$CS</span><span class="st">&quot;</span> <span class="dt">\</span></span>
+<span id="cb3-10"><a href="#cb3-10" aria-hidden="true" tabindex="-1"></a>  <span class="at">--extensions-dir</span>  ~/.local/share/helixcode/code-server/extensions <span class="dt">\</span></span>
+<span id="cb3-11"><a href="#cb3-11" aria-hidden="true" tabindex="-1"></a>  <span class="at">--user-data-dir</span>   ~/.local/share/helixcode/code-server <span class="dt">\</span></span>
+<span id="cb3-12"><a href="#cb3-12" aria-hidden="true" tabindex="-1"></a>  <span class="at">--list-extensions</span> <span class="at">--show-versions</span></span></code></pre></div>
+<p>Then <strong>reload the editor</strong> (browser: <em>Developer:
+Reload Window</em>, or restart the service so the extension host
+re-scans):</p>
+<div class="sourceCode" id="cb4"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="ex">systemctl</span> <span class="at">--user</span> restart helix-code-server</span></code></pre></div>
+<blockquote>
+<p>Installing from the <strong>UI</strong> (§2.1) already writes to the
+correct HelixCode dir and hot-loads without a restart — the
+<code>--extensions-dir</code> caveat only applies to
+<strong>CLI</strong> installs run in a separate process.</p>
+</blockquote>
+<hr />
+<h2 id="how-the-gallery-is-configured-and-how-to-point-at-another-one">3.
+How the gallery is configured (and how to point at another one)</h2>
+<h3 id="where-the-default-comes-from">3.1 Where the default comes
+from</h3>
+<p>code-server ships <strong>Open VSX</strong> as the built-in gallery.
+Verified on this install:</p>
+<ul>
+<li><p>The bundled VS Code <code>product.json</code>
+(<code>~/.local/lib/code-server-4.117.0-linux-amd64/lib/vscode/product.json</code>)
+has <strong><code>&quot;extensionsGallery&quot;: null</code></strong> — it does
+<strong>not</strong> hard-code a gallery.</p></li>
+<li><p>code-server injects the <strong>Open VSX</strong> endpoints as
+its default (these strings are compiled into the code-server
+distribution and match the Eclipse “Using Open VSX in VS Code” doc):</p>
+<div class="sourceCode" id="cb5"><pre class="sourceCode json"><code class="sourceCode json"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="fu">{</span></span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&quot;serviceUrl&quot;</span><span class="fu">:</span> <span class="st">&quot;https://open-vsx.org/vscode/gallery&quot;</span><span class="fu">,</span></span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&quot;itemUrl&quot;</span><span class="fu">:</span>    <span class="st">&quot;https://open-vsx.org/vscode/item&quot;</span></span>
+<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a><span class="fu">}</span></span></code></pre></div></li>
+<li><p>The HelixCode systemd unit does <strong>not</strong> set
+<code>EXTENSIONS_GALLERY</code>, so the running editor uses this Open
+VSX default.</p></li>
+</ul>
+<p>You can print the currently-configured gallery at any time with the
+read-only helper shipped in this repo:</p>
+<div class="sourceCode" id="cb6"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="ex">scripts/show-extension-gallery.sh</span></span></code></pre></div>
+<h3 id="precedence-what-wins">3.2 Precedence (what wins)</h3>
+<p>code-server resolves the gallery in this order:</p>
+<ol type="1">
+<li><strong><code>EXTENSIONS_GALLERY</code></strong> environment
+variable (if set) — highest priority; a JSON blob matching VS Code’s
+<code>extensionsGallery</code> shape.</li>
+<li><strong><code>product.json</code>
+<code>extensionsGallery</code></strong> (if non-<code>null</code>).</li>
+<li>Otherwise code-server’s <strong>built-in Open VSX default</strong>
+(§3.1).</li>
+</ol>
+<h3 id="pointing-at-an-alternate-or-self-hosted-open-vsx-compatible-gallery">3.3
+Pointing at an ALTERNATE or SELF-HOSTED Open-VSX-compatible gallery</h3>
+<p>If you run (or trust) another registry that implements the <strong>VS
+Code Extension Gallery API</strong> — for example a <strong>self-hosted
+Open VSX</strong> instance, or an internal mirror — you can point
+code-server at it with <code>EXTENSIONS_GALLERY</code>. This is an
+<strong>operator decision</strong>, so it is not wired by default.</p>
+<div class="sourceCode" id="cb7"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="bu">export</span> <span class="va">EXTENSIONS_GALLERY</span><span class="op">=</span><span class="st">&#39;{</span></span>
+<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a><span class="st">  &quot;serviceUrl&quot;: &quot;https://my-openvsx.example.com/vscode/gallery&quot;,</span></span>
+<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a><span class="st">  &quot;itemUrl&quot;:    &quot;https://my-openvsx.example.com/vscode/item&quot;</span></span>
+<span id="cb7-4"><a href="#cb7-4" aria-hidden="true" tabindex="-1"></a><span class="st">}&#39;</span></span>
+<span id="cb7-5"><a href="#cb7-5" aria-hidden="true" tabindex="-1"></a><span class="co"># then start / restart code-server in an environment that has this exported.</span></span></code></pre></div>
+<p>To make it persistent for the HelixCode service, add it to the
+service environment (operator-applied), e.g. a
+<code>systemd --user</code> drop-in:</p>
+<div class="sourceCode" id="cb8"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="fu">mkdir</span> <span class="at">-p</span> ~/.config/systemd/user/helix-code-server.service.d</span>
+<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a><span class="fu">cat</span> <span class="op">&gt;</span> ~/.config/systemd/user/helix-code-server.service.d/20-gallery.conf <span class="op">&lt;&lt;&#39;EOF&#39;</span></span>
+<span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a><span class="st">[Service]</span></span>
+<span id="cb8-4"><a href="#cb8-4" aria-hidden="true" tabindex="-1"></a><span class="st">Environment=EXTENSIONS_GALLERY={&quot;serviceUrl&quot;:&quot;https://my-openvsx.example.com/vscode/gallery&quot;,&quot;itemUrl&quot;:&quot;https://my-openvsx.example.com/vscode/item&quot;}</span></span>
+<span id="cb8-5"><a href="#cb8-5" aria-hidden="true" tabindex="-1"></a><span class="op">EOF</span></span>
+<span id="cb8-6"><a href="#cb8-6" aria-hidden="true" tabindex="-1"></a><span class="ex">systemctl</span> <span class="at">--user</span> daemon-reload</span>
+<span id="cb8-7"><a href="#cb8-7" aria-hidden="true" tabindex="-1"></a><span class="ex">systemctl</span> <span class="at">--user</span> restart helix-code-server</span></code></pre></div>
+<blockquote>
+<p><strong>Licensing caveat (read this).</strong> The
+<code>EXTENSIONS_GALLERY</code> mechanism is a generic pointer. Do
+<strong>NOT</strong> set it to Microsoft’s VS Code Marketplace
+endpoints: Microsoft’s Marketplace Terms of Use restrict that
+Marketplace to Microsoft’s own products, and pointing a third-party
+editor at it violates those terms. Use it only for <strong>Open
+VSX</strong> (the public instance) or an
+<strong>Open-VSX-compatible</strong> registry you are entitled to use.
+HelixCode ships no tooling to switch to the Microsoft Marketplace, by
+design.</p>
+</blockquote>
+<hr />
+<h2 id="installing-a-local-.vsix">4. Installing a local
+<code>.vsix</code></h2>
+<p>You can side-load an extension packaged as a <code>.vsix</code> file
+(e.g. one you built, or downloaded from a source you trust). Point
+<code>--install-extension</code> at the file path instead of an id —
+again with HelixCode’s dirs:</p>
+<div class="sourceCode" id="cb9"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="va">CS</span><span class="op">=</span>~/.local/bin/code-server</span>
+<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a><span class="st">&quot;</span><span class="va">$CS</span><span class="st">&quot;</span> <span class="dt">\</span></span>
+<span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">--extensions-dir</span>  ~/.local/share/helixcode/code-server/extensions <span class="dt">\</span></span>
+<span id="cb9-4"><a href="#cb9-4" aria-hidden="true" tabindex="-1"></a>  <span class="at">--user-data-dir</span>   ~/.local/share/helixcode/code-server <span class="dt">\</span></span>
+<span id="cb9-5"><a href="#cb9-5" aria-hidden="true" tabindex="-1"></a>  <span class="at">--install-extension</span> ./some-extension-1.0.0.vsix</span>
+<span id="cb9-6"><a href="#cb9-6" aria-hidden="true" tabindex="-1"></a><span class="ex">systemctl</span> <span class="at">--user</span> restart helix-code-server</span></code></pre></div>
+<p>Equivalent in the <strong>UI</strong>: Extensions view → the
+<code>…</code> menu → <strong>Install from VSIX…</strong> → pick the
+file. (The UI path writes to the correct dir automatically.)</p>
+<hr />
+<h2 id="troubleshooting">5. Troubleshooting</h2>
+<p><strong>Evidence base.</strong> The end-to-end install + loadability
+behavior described here is exercised by the anti-bluff suite
+<code>tests/types/extensions_auth.sh</code> (§11.4.169
+e2e/full-automation layer). It installs a real extension from
+<strong>Open VSX</strong> into a throwaway
+<code>--extensions-dir</code>, asserts the CLI reports it
+(<code>--list-extensions --show-versions</code>), checks the on-disk
+<code>package.json</code> + entry file, boots a throwaway code-server
+and proves the <strong>extension host</strong> starts and watches the
+registry, and never touches your live extensions dir. Its captured
+evidence lands under
+<code>qa-results/tests/extensions_auth/&lt;run-id&gt;/</code> — the
+concrete proof for the claims below.</p>
+<table>
+<colgroup>
+<col style="width: 33%" />
+<col style="width: 33%" />
+<col style="width: 33%" />
+</colgroup>
+<thead>
+<tr>
+<th>Symptom</th>
+<th>Likely cause</th>
+<th>Fix</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>CLI-installed extension <strong>not visible</strong> in the running
+editor</td>
+<td>Installed into code-server’s <strong>default</strong> dir, not
+HelixCode’s private dir.</td>
+<td>Re-run the install with
+<code>--extensions-dir ~/.local/share/helixcode/code-server/extensions --user-data-dir ~/.local/share/helixcode/code-server</code>
+(§2.3), then reload/restart.</td>
+</tr>
+<tr>
+<td>Extension <strong>installs but doesn’t load</strong></td>
+<td>Editor didn’t re-scan; or the extension needs a proposed API / newer
+Code version.</td>
+<td><em>Developer: Reload Window</em> in the browser, or
+<code>systemctl --user restart helix-code-server</code>. Check the
+extension’s required VS Code version against <code>1.117.0</code>.</td>
+</tr>
+<tr>
+<td><strong>“Extension not found”</strong> / not in search</td>
+<td>It’s a Microsoft <strong>closed-source</strong> extension (Live
+Share / Remote), or simply not published to Open VSX.</td>
+<td>Look for an Open VSX alternative; MS closed-source extensions are
+unavailable (§1).</td>
+</tr>
+<tr>
+<td>Search returns nothing / installs time out</td>
+<td><strong>Gallery unreachable</strong> — <code>open-vsx.org</code> (or
+your custom gallery) not reachable from the host.</td>
+<td>Check egress:
+<code>curl -sS -o /dev/null -w &#39;%{http_code}\n&#39; https://open-vsx.org/api/redhat/vscode-yaml</code>
+should print <code>200</code>. If it’s <code>000</code>, the host can’t
+reach the gallery (proxy/firewall/DNS). The suite reports this as an
+honest <code>SKIP</code> (<code>network_unreachable_external</code>),
+never a false pass.</td>
+</tr>
+<tr>
+<td>Want to confirm <strong>which gallery</strong> is active</td>
+<td>—</td>
+<td>Run <code>scripts/show-extension-gallery.sh</code> (read-only).</td>
+</tr>
+<tr>
+<td>Custom <code>EXTENSIONS_GALLERY</code> ignored</td>
+<td>Not exported into the <strong>service</strong> environment.</td>
+<td>Add it via a <code>systemd --user</code> drop-in (§3.3),
+<code>daemon-reload</code>, restart.</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="sources-verified">Sources verified</h2>
+<p>Verified <strong>2026-07-01</strong> against the latest official
+sources (§11.4.99) and the running binary on this host (§11.4.6 /
+§11.4.123):</p>
+<ul>
+<li>code-server FAQ — marketplace, MS Marketplace Terms of Use
+restriction, <code>--install-extension</code>, <code>.vsix</code>,
+<code>EXTENSIONS_GALLERY</code>, Live Share / Remote unavailability: <a href="https://coder.com/docs/code-server/FAQ" class="uri">https://coder.com/docs/code-server/FAQ</a></li>
+<li>Open VSX / Eclipse project README — “vendor-neutral open-source
+alternative to the Visual Studio Marketplace”, EPL-2.0, operated by the
+Eclipse Foundation: <a href="https://github.com/eclipse/openvsx" class="uri">https://github.com/eclipse/openvsx</a> · <a href="https://raw.githubusercontent.com/eclipse/openvsx/master/README.md" class="uri">https://raw.githubusercontent.com/eclipse/openvsx/master/README.md</a></li>
+<li>Eclipse “Using Open VSX in VS Code” — <code>serviceUrl</code>
+<code>https://open-vsx.org/vscode/gallery</code>, <code>itemUrl</code>
+<code>https://open-vsx.org/vscode/item</code>: <a href="https://github.com/eclipse/openvsx/wiki/Using-Open-VSX-in-VS-Code" class="uri">https://github.com/eclipse/openvsx/wiki/Using-Open-VSX-in-VS-Code</a></li>
+<li>coder/code-server discussion — changing the default marketplace via
+<code>EXTENSIONS_GALLERY</code>: <a href="https://github.com/coder/code-server/discussions/5017" class="uri">https://github.com/coder/code-server/discussions/5017</a></li>
+<li>Open VSX Registry (public instance): <a href="https://open-vsx.org" class="uri">https://open-vsx.org</a></li>
+<li>Local rock-solid evidence (this host):
+<code>code-server --version</code> → <code>4.117.0</code> with Code
+<code>1.117.0</code>; <code>code-server --help</code> (extension flags;
+<strong>no</strong> <code>--extensions-gallery</code> flag);
+<code>deploy/systemd/helix-code-server.service</code>
+(<code>--extensions-dir</code>/<code>--user-data-dir</code> paths, no
+<code>EXTENSIONS_GALLERY</code>);
+<code>.../lib/vscode/product.json</code>
+(<code>extensionsGallery: null</code>); live extensions dir holding
+<code>adamraichu.pdf-viewer-1.1.2-universal</code>; suite
+<code>tests/types/extensions_auth.sh</code>.</li>
+</ul>
+<p>Negative finding (§11.4.99(B)): code-server 4.117.0 exposes
+<strong>no</strong> <code>--extensions-gallery</code> CLI flag; the only
+supported gallery-override mechanisms are the
+<code>EXTENSIONS_GALLERY</code> environment variable and
+<code>product.json</code>.</p>
+</body>
+</html>
