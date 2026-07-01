@@ -1,22 +1,28 @@
 # CONTINUATION — HelixCode web-IDE platform
 
-**Revision:** 5 · **Updated:** 2026-07-01 · **Status:** `codeserver-1.0.0-dev-0.0.3` RELEASED (real-account SSH-key auth; §11.4.169 matrix 23/23 PASS, 4 mirrors, GH+GL releases). **7 post-release commits** landed on all 4 mirrors toward **`codeserver-1.0.0-dev-0.0.4`** (login-redirect fix + durability/host-safety hardening + Open VSX marketplace coverage + VS Code Dark default + deep research). Full §11.4.169 matrix release-gate RUNNING NOW → then tag dev-0.0.4. Stack LIVE at https://192.168.0.213:52443 (all `systemd --user`).
+**Revision:** 6 · **Updated:** 2026-07-02 · **Status:** `codeserver-1.0.0-dev-0.0.4` **RELEASED** (`0e2f854`, tag on all 4 mirrors, GitHub+GitLab prereleases). Release gate: full §11.4.169 matrix **29/29 suites PASS, 0 FAIL** (61 checks PASS, 24 honest SKIP; evidence `qa-results/run_all/20260701T222753Z-2813294`). Ships: login-redirect fix + login-form copy/paste clipboard buttons + Open VSX marketplace install/use/persist/config + popular extensions + VS Code Dark default theme (host-rendered pixel proof) + durable `systemd --user` edge. Three test-infra suites hardened against shared-host `ulimit -u` fork-pressure false-FAILs (§11.4.1/§11.4.3/§11.4.174) + independently reviewed to a clean GO (§11.4.142/§11.4.134). Stack LIVE at https://192.168.0.213:52443 (all `systemd --user`).
 
 Read FIRST on any fresh session: this file, then `git fetch --all`, then the
 auth-pivot spec + AUTH guide + feature ledger below. This is the §12.10 /
 §11.4.131 standing resumption anchor.
 
-## Current phase — post-`dev-0.0.3` hardening → `codeserver-1.0.0-dev-0.0.4` release-gate RUNNING
+## Current phase — `codeserver-1.0.0-dev-0.0.4` **RELEASED** (idle unless new operator request)
 
-`codeserver-1.0.0-dev-0.0.3` is **RELEASED**: the real-account SSH-key
-challenge-response auth model (each session tied to the real host user
-`milosvasic`, host-native), live-validated end-to-end (§11.4.169 matrix
-**23/23 PASS, 0 FAIL** + Go gate **70 tests `-race`**), committed (`2746e0e`),
-tagged, pushed to all 4 mirrors (no force, §11.4.113), released on GitHub + GitLab.
+`codeserver-1.0.0-dev-0.0.4` is **RELEASED** (`0e2f854`): full §11.4.169
+release-gate matrix **29/29 suites PASS, 0 FAIL** on the reviewed+hardened tree
+(evidence `qa-results/run_all/20260701T222753Z-2813294`), tag pushed to all 4
+mirrors (no force, §11.4.113), GitHub + GitLab prereleases created. The batch's
+three hardened test-infra suites (`race`, `extensions_ui_auth`,
+`extensions_popular_auth`) were fixed for shared-host `ulimit -u` fork-pressure
+**environmental** false-FAILs (§11.4.1/§11.4.3/§11.4.174 — genuine defects still
+FAIL, host starvation → SKIP-with-reason) and independently reviewed to a clean
+GO (§11.4.142/§11.4.134; F1–F4 + N1 all resolved; every §1.1 mutation re-proven).
 
-Since the release, **7 post-release commits** landed on **all 4 mirrors** toward
-`codeserver-1.0.0-dev-0.0.4` (login reachability + durability/host-safety
-hardening + Open VSX marketplace coverage + default theme + deep research):
+Prior: `codeserver-1.0.0-dev-0.0.3` **RELEASED** (`2746e0e`) — the real-account
+SSH-key challenge-response auth model, §11.4.169 matrix 23/23 + Go gate 70 tests
+`-race`. The dev-0.0.4 batch (login-redirect fix + copy/paste buttons + Open VSX
+marketplace coverage + VS Code Dark default + durable edge + deep research)
+landed across these commits toward the release:
 
 - `75e2d9b` — login-redirect fix (an unauthenticated browser now lands on the
   login form instead of a bodyless "This page isn't working").

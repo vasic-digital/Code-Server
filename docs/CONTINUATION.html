@@ -2,9 +2,9 @@
 <html xmlns="http://www.w3.org/1999/xhtml">
 <head>
   <meta charset="utf-8" />
-  <meta name="generator" content="pandoc" />
+  <meta name="generator" content="pandoc 3.10" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
-  <title>CONTINUATION</title>
+  <title>HelixCode — CONTINUATION</title>
   <style>
     /* Default styles provided by pandoc.
     ** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
@@ -91,6 +91,7 @@
       color: #606060;
     }
     code {
+      white-space: pre-wrap;
       font-family: Menlo, Monaco, Consolas, 'Lucida Console', monospace;
       font-size: 85%;
       margin: 0;
@@ -154,10 +155,13 @@
     #TOC a:not(:hover) {
       text-decoration: none;
     }
-    code{white-space: pre-wrap;}
     span.smallcaps{font-variant: small-caps;}
-    div.columns{display: flex; gap: min(4vw, 1.5em);}
-    div.column{flex: auto; overflow-x: auto;}
+    div.columns{display: flex; gap: 1.5em;}
+    div.column{flex: auto;}
+    @media screen {
+    div.columns{gap: min(4vw, 1.5em);}
+    div.column{overflow-x: auto;}
+    }
     div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
     /* The extra [class] is a hack that increases specificity enough to
        override a similar rule in reveal.js */
@@ -172,42 +176,59 @@
   </style>
 </head>
 <body>
-<h1 id="continuation-helixcode-web-ide-platform">CONTINUATION —
+<header id="title-block-header">
+<h1 class="title">HelixCode — CONTINUATION</h1>
+</header>
+<h1 id="continuation--helixcode-web-ide-platform">CONTINUATION —
 HelixCode web-IDE platform</h1>
-<p><strong>Revision:</strong> 5 · <strong>Updated:</strong> 2026-07-01 ·
-<strong>Status:</strong> <code>codeserver-1.0.0-dev-0.0.3</code>
-RELEASED (real-account SSH-key auth; §11.4.169 matrix 23/23 PASS, 4
-mirrors, GH+GL releases). <strong>7 post-release commits</strong> landed
-on all 4 mirrors toward
-<strong><code>codeserver-1.0.0-dev-0.0.4</code></strong> (login-redirect
-fix + durability/host-safety hardening + Open VSX marketplace coverage +
-VS Code Dark default + deep research). Full §11.4.169 matrix
-release-gate RUNNING NOW → then tag dev-0.0.4. Stack LIVE at
-https://192.168.0.213:52443 (all <code>systemd --user</code>).</p>
+<p><strong>Revision:</strong> 6 · <strong>Updated:</strong> 2026-07-02 ·
+<strong>Status:</strong> <code>codeserver-1.0.0-dev-0.0.4</code>
+<strong>RELEASED</strong> (<code>0e2f854</code>, tag on all 4 mirrors,
+GitHub+GitLab prereleases). Release gate: full §11.4.169 matrix
+<strong>29/29 suites PASS, 0 FAIL</strong> (61 checks PASS, 24 honest
+SKIP; evidence
+<code>qa-results/run_all/20260701T222753Z-2813294</code>). Ships:
+login-redirect fix + login-form copy/paste clipboard buttons + Open VSX
+marketplace install/use/persist/config + popular extensions + VS Code
+Dark default theme (host-rendered pixel proof) + durable
+<code>systemd --user</code> edge. Three test-infra suites hardened
+against shared-host <code>ulimit -u</code> fork-pressure false-FAILs
+(§11.4.1/§11.4.3/§11.4.174) + independently reviewed to a clean GO
+(§11.4.142/§11.4.134). Stack LIVE at <a
+href="https://192.168.0.213:52443">https://192.168.0.213:52443</a> (all
+<code>systemd --user</code>).</p>
 <p>Read FIRST on any fresh session: this file, then
 <code>git fetch --all</code>, then the auth-pivot spec + AUTH guide +
 feature ledger below. This is the §12.10 / §11.4.131 standing resumption
 anchor.</p>
 <h2
-id="current-phase-post-dev-0.0.3-hardening-codeserver-1.0.0-dev-0.0.4-release-gate-running">Current
-phase — post-<code>dev-0.0.3</code> hardening →
-<code>codeserver-1.0.0-dev-0.0.4</code> release-gate RUNNING</h2>
-<p><code>codeserver-1.0.0-dev-0.0.3</code> is <strong>RELEASED</strong>:
-the real-account SSH-key challenge-response auth model (each session
-tied to the real host user <code>milosvasic</code>, host-native),
-live-validated end-to-end (§11.4.169 matrix <strong>23/23 PASS, 0
-FAIL</strong> + Go gate <strong>70 tests <code>-race</code></strong>),
-committed (<code>2746e0e</code>), tagged, pushed to all 4 mirrors (no
-force, §11.4.113), released on GitHub + GitLab.</p>
-<p>Since the release, <strong>7 post-release commits</strong> landed on
-<strong>all 4 mirrors</strong> toward
-<code>codeserver-1.0.0-dev-0.0.4</code> (login reachability +
-durability/host-safety hardening + Open VSX marketplace coverage +
-default theme + deep research):</p>
+id="current-phase--codeserver-100-dev-004-released-idle-unless-new-operator-request">Current
+phase — <code>codeserver-1.0.0-dev-0.0.4</code>
+<strong>RELEASED</strong> (idle unless new operator request)</h2>
+<p><code>codeserver-1.0.0-dev-0.0.4</code> is <strong>RELEASED</strong>
+(<code>0e2f854</code>): full §11.4.169 release-gate matrix <strong>29/29
+suites PASS, 0 FAIL</strong> on the reviewed+hardened tree (evidence
+<code>qa-results/run_all/20260701T222753Z-2813294</code>), tag pushed to
+all 4 mirrors (no force, §11.4.113), GitHub + GitLab prereleases
+created. The batch's three hardened test-infra suites
+(<code>race</code>, <code>extensions_ui_auth</code>,
+<code>extensions_popular_auth</code>) were fixed for shared-host
+<code>ulimit -u</code> fork-pressure <strong>environmental</strong>
+false-FAILs (§11.4.1/§11.4.3/§11.4.174 — genuine defects still FAIL,
+host starvation → SKIP-with-reason) and independently reviewed to a
+clean GO (§11.4.142/§11.4.134; F1–F4 + N1 all resolved; every §1.1
+mutation re-proven).</p>
+<p>Prior: <code>codeserver-1.0.0-dev-0.0.3</code>
+<strong>RELEASED</strong> (<code>2746e0e</code>) — the real-account
+SSH-key challenge-response auth model, §11.4.169 matrix 23/23 + Go gate
+70 tests <code>-race</code>. The dev-0.0.4 batch (login-redirect fix +
+copy/paste buttons + Open VSX marketplace coverage + VS Code Dark
+default + durable edge + deep research) landed across these commits
+toward the release:</p>
 <ul>
 <li><code>75e2d9b</code> — login-redirect fix (an unauthenticated
-browser now lands on the login form instead of a bodyless “This page
-isn’t working”).</li>
+browser now lands on the login form instead of a bodyless "This page
+isn't working").</li>
 <li><code>e0519bf</code> — hardening: <strong>DURABLE</strong>
 <code>systemd</code> Quadlet edge that survives session crashes +
 full-host reboot, tarball code-server install (drops the fragile npm
@@ -227,13 +248,13 @@ gallery probe.</li>
 (+ pixel proof) + popular-extensions install/use/persist +
 auth-modernization deep-research report.</li>
 </ul>
-<p>The stack is LIVE + reachable at
-<strong>https://192.168.0.213:52443</strong> — every component is
-<code>systemd --user</code>-managed (Caddy edge Quadlet,
-<code>helix-auth</code>, <code>helix-code-server</code>). All standing
-operator requests have landed: extension install/use tests, login-form
-copy/paste buttons, popular-extensions install/use/persist, VS Code Dark
-default, and the first deep-research report.</p>
+<p>The stack is LIVE + reachable at <strong><a
+href="https://192.168.0.213:52443">https://192.168.0.213:52443</a></strong>
+— every component is <code>systemd --user</code>-managed (Caddy edge
+Quadlet, <code>helix-auth</code>, <code>helix-code-server</code>). All
+standing operator requests have landed: extension install/use tests,
+login-form copy/paste buttons, popular-extensions install/use/persist,
+VS Code Dark default, and the first deep-research report.</p>
 <ul>
 <li>Changelog (in progress):
 <code>docs/changelogs/codeserver-1.0.0-dev-0.0.4.md</code></li>
@@ -249,7 +270,7 @@ boot: <code>docs/guides/EDGE_BOOT.md</code></li>
 <code>docs/research/auth_modernization_20260701/FINDINGS.md</code>
 (first report → <strong>WebAuthn/passkeys recommended</strong>)</li>
 </ul>
-<h3 id="why-the-pivot-captured-facts-11.4.6">Why the pivot (captured
+<h3 id="why-the-pivot-captured-facts-1146">Why the pivot (captured
 facts, §11.4.6)</h3>
 <p>This host is ALT Linux with the <strong>tcb</strong> shadow scheme,
 so a <strong>non-root</strong> service cannot verify passwords via PAM
@@ -285,28 +306,31 @@ forward_auth; <strong>fails closed</strong>.</li>
 <li><strong>Stack directive adopted:</strong> Go + Gin + HTTP/3 (QUIC) +
 Brotli.</li>
 </ul>
-<h2 id="feature-status-11.4.6-honest">Feature status (§11.4.6 —
+<h2 id="feature-status-1146--honest">Feature status (§11.4.6 —
 honest)</h2>
 <p>The real-account + SSH-key rows in
 <code>docs/features/Status.md</code> are <strong>PASS with cited
 captured evidence</strong> (§11.4.169 matrix 23/23 PASS; Status.md
 Revision 2). Testing: Go unit/integration/race (<strong>70 tests,
 <code>-race</code>, 81.8% cover</strong>) + shell suites
-<code>tests/types/{e2e,security,stress_chaos,concurrency,load,memory,benchmark,challenges,helixqa}_auth.sh</code>
-+ banks
+<code>tests/types/{e2e,security,stress_chaos,concurrency,load,memory,benchmark,challenges,helixqa}_auth.sh</code></p>
+<ul>
+<li>banks
 <code>tests/banks/helixcode-auth-{challenges,helixqa}.yaml</code>. The
-live aggregate is the conductor-filled placeholder in the changelog.</p>
+live aggregate is the conductor-filled placeholder in the
+changelog.</li>
+</ul>
 <h3 id="honest-boundaries-carried-into-the-release">Honest boundaries
 carried into the release</h3>
 <ul>
-<li>Editor “jail” is <strong>cosmetic</strong> (Explorer default only;
+<li>Editor "jail" is <strong>cosmetic</strong> (Explorer default only;
 terminal/Open-Folder/ extensions keep full host access by design).</li>
 <li><code>--auth none</code> on loopback:8080 is a
 <strong>residual</strong> — host firewall rule for loopback:8080
 recommended (all real auth is at the gate/edge).</li>
 <li>code-server pinned <strong>4.117.0</strong> (newest on npm at
 release time).</li>
-<li>Real public Let’s Encrypt remains <strong>operator-gated</strong>
+<li>Real public Let's Encrypt remains <strong>operator-gated</strong>
 (see <code>docs/guides/TLS.md</code>).</li>
 </ul>
 <h2 id="migration">Migration</h2>
@@ -318,8 +342,8 @@ helix-auth units; <code>deploy/up.sh</code> brings up the Caddy edge.
 <code>HELIX_AUTH_AUTHORIZED_KEYS</code>,
 <code>HELIX_AUTH_PRINCIPAL</code>, <code>PROJECTS_ROOT</code> (no
 password parameter).</p>
-<h2 id="immediate-next-to-close-codeserver-1.0.0-dev-0.0.4">Immediate
-NEXT (to close <code>codeserver-1.0.0-dev-0.0.4</code>)</h2>
+<h2 id="immediate-next-to-close-codeserver-100-dev-004">Immediate NEXT
+(to close <code>codeserver-1.0.0-dev-0.0.4</code>)</h2>
 <ol type="1">
 <li>Full §11.4.169 test-type matrix release-gate — <strong>RUNNING
 NOW</strong> against the live host stack; capture evidence under
@@ -327,7 +351,7 @@ NOW</strong> against the live host stack; capture evidence under
 PASS/FAIL/SKIP, never invented).</li>
 <li>Fill the live-validation aggregate in
 <code>docs/changelogs/codeserver-1.0.0-dev-0.0.4.md</code> from the
-gate’s real counts.</li>
+gate's real counts.</li>
 <li>Tag <code>codeserver-1.0.0-dev-0.0.4</code> (§11.4.151 prefix) →
 push to all 4 mirrors via merge-onto-latest-main (no force-push,
 §11.4.113) → publish GitHub + GitLab releases.</li>
@@ -355,7 +379,7 @@ retained)</h2>
 code-server stack on Podman; TLS1.3 edge on 52443, →301 on 52080;
 <code>$PROJECTS</code> bind-mounted). Owned submodules (8) at root carry
 the Constitution inheritance pointer; constitution pinned (see history).
-Prior release <code>codeserver-1.0.0-dev-0.0.2</code> shipped Let’s
+Prior release <code>codeserver-1.0.0-dev-0.0.2</code> shipped Let's
 Encrypt HTTPS (auto-renew + rotation) + the 14-suite §11.4.169
 matrix.</p>
 </body>
