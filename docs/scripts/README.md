@@ -1,6 +1,6 @@
 # HelixCode operator scripts
 
-**Revision:** 3 · **Last modified:** 2026-07-01 · **Last verified:** 2026-07-01
+**Revision:** 4 · **Last modified:** 2026-07-01 · **Last verified:** 2026-07-01
 
 Companion documentation (constitution §11.4.18) for every script under
 `scripts/`. Each script also carries an in-source documentation block. Run any
@@ -152,3 +152,59 @@ Regression guard: `tests/test_inotify_watchers.sh`.
 - **Overview:** Stops, disables, and removes the systemd unit.
 - **Usage:** `scripts/uninstall-service.sh` · `scripts/uninstall-service.sh --system`
 - **Related:** `install-service.sh`.
+
+## `install-auth.sh`
+- **Overview:** Wires up the host-native real-account editor with SSH-key
+  challenge-response login. Installs **code-server** from the pinned
+  `CODE_SERVER_VERSION`'s **standalone GitHub-release tarball** (PRIMARY):
+  downloads `code-server-<ver>-linux-amd64.tar.gz`, extracts it to the
+  user-writable prefix `~/.local/lib/code-server-<ver>-linux-amd64`, and symlinks
+  its `bin/code-server` into `~/.local/bin/code-server` (on PATH). The tarball is
+  the robust path on this host — it avoids the npm registry version lag
+  (4.118–4.126 are GitHub-only, so `npm i -g` E404s) and the
+  corrupted-tarball/ENOENT npm failures. **npm global** (`npm i -g
+  code-server@<ver>`) remains the documented fallback if the tarball fetch fails.
+  Then builds the `helix-auth` gate (when `services/auth_gate/` is present) and
+  installs/enables the `helix-code-server` + `helix-auth` systemd `--user` units.
+  Everything runs NON-root (no sudo, no `/etc/pam.d`).
+- **Prerequisites:** bash; `curl` or `wget` + `tar` (tarball install); `~/.local/bin`
+  on PATH; systemd `--user`; `go` (only if building the gate); `npm` (only for the
+  fallback).
+- **Usage:** `scripts/install-auth.sh` · `scripts/install-auth.sh -h` ·
+  `CODE_SERVER_VERSION=4.117.0 scripts/install-auth.sh`
+- **Internal behaviour:** idempotent — the early `command -v code-server` check
+  skips the install when code-server is already present, and the tarball step
+  re-uses an already-extracted pinned version; success is proven by running the
+  extracted `code-server --version` and asserting it equals the pin (§11.4.6). The
+  release publishes no per-version checksum, so checksum verification is
+  best-effort (verified when a checksum file is present). `HC_INSTALL_AUTH_SELFTEST=<dir>`
+  exercises ONLY the tarball fetch+extract+verify into a sandbox dir and exits —
+  a non-destructive proof seam that never touches `~/.local`, systemd, or the live
+  install.
+- **Edge cases:** if `~/.local/bin` is not on PATH the script warns after a
+  successful install; if both the tarball and npm paths fail it exits non-zero with
+  guidance. Never touches any process/unit not named `helix-code-server` /
+  `helix-auth` (§11.4.174).
+- **Related:** `deploy/systemd/*.service`, `deploy/up.sh`, `deploy/.env.example`,
+  `docs/superpowers/specs/2026-07-01-auth-pivot-ssh-key.md`.
+
+## `harden-loopback.sh`
+- **Overview:** Closes the `--auth none` residual risk of the host-native editor:
+  code-server listens on `127.0.0.1:8080` with no per-UID access control, so any
+  local UID can reach it and get a shell as the account, bypassing the Caddy gate.
+  Installs a UID-scoped loopback OUTPUT firewall rule (nftables preferred, iptables
+  fallback) that DROPs connections to `127.0.0.1:<port>` from any UID other than the
+  account (rootless Caddy connects AS the account, so it stays allowed).
+  Defence-in-depth, NOT a replacement for the fail-closed Caddy gate. Reads the
+  account + port from `deploy/.env` — nothing hard-coded (§11.4.6/§11.4.28).
+- **Prerequisites:** `--check` needs no root (read-only). `--apply`/`--remove` need
+  **root** + `nft` or `iptables`; the script never escalates — it refuses politely
+  with the exact root re-run command.
+- **Usage:** `scripts/harden-loopback.sh --check` ·
+  `su - -c '… scripts/harden-loopback.sh --apply'` ·
+  `scripts/harden-loopback.sh --remove` · `scripts/harden-loopback.sh --help`
+- **Edge cases:** idempotent; `--check` exits `0` only when the rule is confirmed
+  present, `1` when absent or unverifiable (fail-closed reporting). nft/iptables
+  rules are runtime state — persist them after `--apply` to survive reboot.
+- **Related:** `deploy/systemd/helix-code-server.service` (RESIDUAL RISK block),
+  `docs/scripts/harden-loopback.md`, `docs/guides/AUTH.md` §5.1, `install-auth.sh`.

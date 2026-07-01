@@ -1,0 +1,101 @@
+# deploy/quadlet/helixcode-caddy.container — rootless podman Quadlet unit.
+#
+# Purpose      : Make the HelixCode Caddy EDGE survive a full host reboot.
+#                Today the edge runs as `deploy_caddy_1`, started by
+#                podman-compose via deploy/up.sh with restart=unless-stopped.
+#                A podman restart policy is NOT a boot mechanism: after a full
+#                host reboot nothing re-creates that container, so the edge does
+#                NOT come back (only the two `systemd --user` services do,
+#                because they are `enable`d + linger=yes). This Quadlet closes
+#                that gap: systemd's podman generator turns this file into a
+#                `helixcode-caddy.service` --user unit that starts on
+#                login/boot (linger=yes for milosvasic is already set).
+#
+# Source of    : This file is the tracked SOURCE OF TRUTH. Install it to
+# truth          ~/.config/containers/systemd/helixcode-caddy.container via
+#                scripts/install-edge-boot.sh (or a documented cp). See
+#                docs/guides/EDGE_BOOT.md for the exact enable command.
+#
+# Fidelity     : Every value below MIRRORS the live `deploy_caddy_1` container
+# (§11.4.6)      read from `podman inspect deploy_caddy_1` (image, network,
+#                ports tcp+udp, bind mounts with :Z, the two named volumes, and
+#                the ACME_DNS_API_TOKEN env passthrough). NOTHING is invented.
+#                The container NAME differs on purpose (`helixcode-caddy` vs
+#                `deploy_caddy_1`) so this unit never collides with the
+#                compose-created container that already exists in storage; the
+#                two share the SAME named volumes (deploy_caddy-data /
+#                deploy_caddy-config) so ACME/cert state carries over. Only one
+#                can bind 52443/52080 at a time — this unit is the boot owner.
+#
+# Placeholders : %h — systemd specifier -> invoking user's home (/home/milosvasic).
+
+[Unit]
+Description=HelixCode Caddy edge (rootless podman, boot-persistent)
+Documentation=file://%h/.config/containers/systemd/helixcode-caddy.container
+Wants=network-online.target
+After=network-online.target
+
+[Container]
+# --- identity ---------------------------------------------------------------
+# Distinct from the compose container `deploy_caddy_1` to avoid a name clash in
+# podman storage; shares the same volumes below so nothing is lost.
+ContainerName=helixcode-caddy
+# Locally-built brotli image (podman inspect .ImageName). Never pull at boot:
+# it is a localhost/ image with no registry — fail clearly if absent, never hang.
+Image=localhost/helixcode-caddy-brotli:2
+Pull=never
+
+# --- network (podman inspect .HostConfig.NetworkMode + CreateCommand) --------
+# pasta with --map-host-loopback maps host.containers.internal (169.254.1.2)
+# through to the host's 127.0.0.1 so Caddy reaches the loopback-bound
+# helix-auth + code-server services.
+Network=pasta:--map-host-loopback,169.254.1.2
+
+# --- published ports (podman inspect .NetworkSettings.Ports) ----------------
+# 443 tcp AND udp (HTTP/3) -> host 52443 ; 80 tcp -> host 52080 ; on 0.0.0.0.
+PublishPort=0.0.0.0:52443:443/tcp
+PublishPort=0.0.0.0:52443:443/udp
+PublishPort=0.0.0.0:52080:80/tcp
+
+# --- volumes (podman inspect .Mounts / .Config.CreateCommand) ---------------
+# Two bind mounts (tracked repo files) with :Z SELinux relabel, exactly as the
+# compose CreateCommand. Absolute host paths — a --user Quadlet has no compose
+# working-dir context, so ./Caddyfile / ./tls are pinned to their real paths.
+Volume=/run/media/milosvasic/DATA4TB/Projects/code_server/deploy/Caddyfile:/etc/caddy/Caddyfile:Z
+Volume=/run/media/milosvasic/DATA4TB/Projects/code_server/deploy/tls:/etc/caddy/tls:Z
+# The two persistent named volumes the live container uses (compose-prefixed).
+# Reusing the SAME names preserves Caddy's /data (ACME account + certs) + /config.
+Volume=deploy_caddy-data:/data
+Volume=deploy_caddy-config:/config
+
+# --- environment (podman inspect .Config.Env / CreateCommand -e) ------------
+# ACME_DNS_API_TOKEN passthrough — a SECRET (§11.4.10), NEVER a real value here
+# nor in the tracked Caddyfile. The live container has it DEFINED-BUT-EMPTY
+# (`podman inspect .Config.Env` -> `ACME_DNS_API_TOKEN=`); the compose passes
+# `ACME_DNS_API_TOKEN=${ACME_DNS_API_TOKEN:-}` from deploy/.env, empty today.
+# This inline empty value reproduces the live state EXACTLY and ALWAYS parses.
+# NOTE (§11.4.6, proven by `podman-system-generator -dryrun`): Quadlet's
+# `EnvironmentFile=` does NOT honor systemd's `-` optional prefix nor `%h`, and
+# resolves a relative path against the quadlet dir — so an env-file seam would
+# bake a bogus `--env-file` path and FAIL the container at boot. To supply a
+# REAL token, scripts/install-edge-boot.sh writes an OUT-OF-REPO Quadlet drop-in
+# `helixcode-caddy.container.d/10-token.conf` (0600) whose `[Container]
+# Environment=ACME_DNS_API_TOKEN=<value>` MERGES OVER this empty default — never
+# versioned. See docs/guides/EDGE_BOOT.md.
+Environment=ACME_DNS_API_TOKEN=
+
+[Service]
+# unless-stopped semantics for a boot service: self-heal on crash, stay down
+# only when the operator explicitly `systemctl --user stop`s it.
+Restart=always
+RestartSec=2
+# Match the live container's 10s stop timeout (org.systemd.property.TimeoutStopUSec).
+TimeoutStopSec=10
+# Give the first-boot start room (image already local, so this is generous).
+TimeoutStartSec=90
+
+[Install]
+# Quadlet processes this [Install] so the generated helixcode-caddy.service is
+# wanted by default.target => it STARTS on every login/boot (with linger=yes,
+# that means at host boot). This is how a generated unit is "enabled".
+WantedBy=default.target

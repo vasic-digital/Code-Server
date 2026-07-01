@@ -1,0 +1,954 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>FINDINGS</title>
+  <style>
+    /* Default styles provided by pandoc.
+    ** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
+    */
+    html {
+      color: #1a1a1a;
+      background-color: #fdfdfd;
+    }
+    body {
+      margin: 0 auto;
+      max-width: 36em;
+      padding-left: 50px;
+      padding-right: 50px;
+      padding-top: 50px;
+      padding-bottom: 50px;
+      hyphens: auto;
+      overflow-wrap: break-word;
+      text-rendering: optimizeLegibility;
+      font-kerning: normal;
+    }
+    @media (max-width: 600px) {
+      body {
+        font-size: 0.9em;
+        padding: 12px;
+      }
+      h1 {
+        font-size: 1.8em;
+      }
+    }
+    @media print {
+      html {
+        background-color: white;
+      }
+      body {
+        background-color: transparent;
+        color: black;
+        font-size: 12pt;
+      }
+      p, h2, h3 {
+        orphans: 3;
+        widows: 3;
+      }
+      h2, h3, h4 {
+        page-break-after: avoid;
+      }
+    }
+    p {
+      margin: 1em 0;
+    }
+    a {
+      color: #1a1a1a;
+    }
+    a:visited {
+      color: #1a1a1a;
+    }
+    img {
+      max-width: 100%;
+    }
+    svg {
+      height: auto;
+      max-width: 100%;
+    }
+    h1, h2, h3, h4, h5, h6 {
+      margin-top: 1.4em;
+    }
+    h5, h6 {
+      font-size: 1em;
+      font-style: italic;
+    }
+    h6 {
+      font-weight: normal;
+    }
+    ol, ul {
+      padding-left: 1.7em;
+      margin-top: 1em;
+    }
+    li > ol, li > ul {
+      margin-top: 0;
+    }
+    blockquote {
+      margin: 1em 0 1em 1.7em;
+      padding-left: 1em;
+      border-left: 2px solid #e6e6e6;
+      color: #606060;
+    }
+    code {
+      font-family: Menlo, Monaco, Consolas, 'Lucida Console', monospace;
+      font-size: 85%;
+      margin: 0;
+      hyphens: manual;
+    }
+    pre {
+      margin: 1em 0;
+      overflow: auto;
+    }
+    pre code {
+      padding: 0;
+      overflow: visible;
+      overflow-wrap: normal;
+    }
+    .sourceCode {
+     background-color: transparent;
+     overflow: visible;
+    }
+    hr {
+      border: none;
+      border-top: 1px solid #1a1a1a;
+      height: 1px;
+      margin: 1em 0;
+    }
+    table {
+      margin: 1em 0;
+      border-collapse: collapse;
+      width: 100%;
+      overflow-x: auto;
+      display: block;
+      font-variant-numeric: lining-nums tabular-nums;
+    }
+    table caption {
+      margin-bottom: 0.75em;
+    }
+    tbody {
+      margin-top: 0.5em;
+      border-top: 1px solid #1a1a1a;
+      border-bottom: 1px solid #1a1a1a;
+    }
+    th {
+      border-top: 1px solid #1a1a1a;
+      padding: 0.25em 0.5em 0.25em 0.5em;
+    }
+    td {
+      padding: 0.125em 0.5em 0.25em 0.5em;
+    }
+    header {
+      margin-bottom: 4em;
+      text-align: center;
+    }
+    #TOC li {
+      list-style: none;
+    }
+    #TOC ul {
+      padding-left: 1.3em;
+    }
+    #TOC > ul {
+      padding-left: 0;
+    }
+    #TOC a:not(:hover) {
+      text-decoration: none;
+    }
+    code{white-space: pre-wrap;}
+    span.smallcaps{font-variant: small-caps;}
+    div.columns{display: flex; gap: min(4vw, 1.5em);}
+    div.column{flex: auto; overflow-x: auto;}
+    div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+    /* The extra [class] is a hack that increases specificity enough to
+       override a similar rule in reveal.js */
+    ul.task-list[class]{list-style: none;}
+    ul.task-list li input[type="checkbox"] {
+      font-size: inherit;
+      width: 0.8em;
+      margin: 0 0.8em 0.2em -1.6em;
+      vertical-align: middle;
+    }
+    .display.math{display: block; text-align: center; margin: 0.5rem auto;}
+    /* CSS for syntax highlighting */
+    html { -webkit-text-size-adjust: 100%; }
+    pre > code.sourceCode { white-space: pre; position: relative; }
+    pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+    pre > code.sourceCode > span:empty { height: 1.2em; }
+    .sourceCode { overflow: visible; }
+    code.sourceCode > span { color: inherit; text-decoration: inherit; }
+    div.sourceCode { margin: 1em 0; }
+    pre.sourceCode { margin: 0; }
+    @media screen {
+    div.sourceCode { overflow: auto; }
+    }
+    @media print {
+    pre > code.sourceCode { white-space: pre-wrap; }
+    pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+    }
+    pre.numberSource code
+      { counter-reset: source-line 0; }
+    pre.numberSource code > span
+      { position: relative; left: -4em; counter-increment: source-line; }
+    pre.numberSource code > span > a:first-child::before
+      { content: counter(source-line);
+        position: relative; left: -1em; text-align: right; vertical-align: baseline;
+        border: none; display: inline-block;
+        -webkit-touch-callout: none; -webkit-user-select: none;
+        -khtml-user-select: none; -moz-user-select: none;
+        -ms-user-select: none; user-select: none;
+        padding: 0 4px; width: 4em;
+        color: #aaaaaa;
+      }
+    pre.numberSource { margin-left: 3em; border-left: 1px solid #aaaaaa;  padding-left: 4px; }
+    div.sourceCode
+      {   }
+    @media screen {
+    pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+    }
+    code span.al { color: #ff0000; font-weight: bold; } /* Alert */
+    code span.an { color: #60a0b0; font-weight: bold; font-style: italic; } /* Annotation */
+    code span.at { color: #7d9029; } /* Attribute */
+    code span.bn { color: #40a070; } /* BaseN */
+    code span.bu { color: #008000; } /* BuiltIn */
+    code span.cf { color: #007020; font-weight: bold; } /* ControlFlow */
+    code span.ch { color: #4070a0; } /* Char */
+    code span.cn { color: #880000; } /* Constant */
+    code span.co { color: #60a0b0; font-style: italic; } /* Comment */
+    code span.cv { color: #60a0b0; font-weight: bold; font-style: italic; } /* CommentVar */
+    code span.do { color: #ba2121; font-style: italic; } /* Documentation */
+    code span.dt { color: #902000; } /* DataType */
+    code span.dv { color: #40a070; } /* DecVal */
+    code span.er { color: #ff0000; font-weight: bold; } /* Error */
+    code span.ex { } /* Extension */
+    code span.fl { color: #40a070; } /* Float */
+    code span.fu { color: #06287e; } /* Function */
+    code span.im { color: #008000; font-weight: bold; } /* Import */
+    code span.in { color: #60a0b0; font-weight: bold; font-style: italic; } /* Information */
+    code span.kw { color: #007020; font-weight: bold; } /* Keyword */
+    code span.op { color: #666666; } /* Operator */
+    code span.ot { color: #007020; } /* Other */
+    code span.pp { color: #bc7a00; } /* Preprocessor */
+    code span.sc { color: #4070a0; } /* SpecialChar */
+    code span.ss { color: #bb6688; } /* SpecialString */
+    code span.st { color: #4070a0; } /* String */
+    code span.va { color: #19177c; } /* Variable */
+    code span.vs { color: #4070a0; } /* VerbatimString */
+    code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warning */
+  </style>
+</head>
+<body>
+<header id="title-block-header">
+<h1 class="title">FINDINGS</h1>
+</header>
+<h1
+id="host-native-code-server-projects-jail-hardening-research-findings">Host-native
+code-server projects-jail + hardening — research findings</h1>
+<p><strong>Revision:</strong> 1 <strong>Last modified:</strong>
+2026-07-01T00:00:00Z <strong>Authority:</strong> operator research
+mandate 2026-07-01 (§11.4.150 deep multi-angle research; §11.4.99
+latest-source cross-reference) <strong>Scope:</strong> RUNTIME side of
+the HelixCode real-account code-server design
+(<code>docs/superpowers/specs/2026-07-01-real-account-code-server-design.md</code>
++ <code>docs/superpowers/specs/2026-07-01-auth-pivot-ssh-key.md</code>).
+READ + WRITE-A-DOC only. No code, no deploy, no git changes.
+<strong>Runtime facts of this host (captured, §11.4.6):</strong> ALT
+Linux, tcb shadow scheme, <code>systemd --user</code> with linger
+enabled for <code>milosvasic</code>, rootless Podman Caddy edge,
+code-server pinned 4.117.0, auth pivoted PAM → ssh-key
+challenge-response.</p>
+<blockquote>
+<p><strong>Honesty banner (§11.4.6).</strong> The operator has already
+accepted the core trade-off: <strong>editor file-tree scoped; shell
+full.</strong> This document proves <em>why</em> the file-tree scope is
+<strong>cosmetic, not enforced</strong>, exactly what IS and ISN’T
+enforceable, and — the load-bearing finding — that <strong>aggressively
+sandboxing the code-server systemd unit is self-defeating, because the
+sandbox is inherited by the integrated terminal and would break the
+“full real-user capability” requirement.</strong> Hardening therefore
+concentrates on the <em>auth-gate</em> unit and on <em>reachability
+control</em>, not on filesystem-jailing the editor.</p>
+</blockquote>
+<hr />
+<h2 id="actionable-hardening-checklist">Actionable hardening
+checklist</h2>
+<p>Ordered by security value. Each item is expanded + cited in the
+per-angle sections.</p>
+<h3 id="a.-code-server-launch-flags-recommended">A. code-server launch
+flags (recommended)</h3>
+<pre><code>code-server \
+  --auth none \
+  --bind-addr 127.0.0.1:8080 \          # OR --socket (see item C — stronger)
+  --user-data-dir  %h/.local/share/helix-code-server \
+  --extensions-dir %h/.local/share/helix-code-server/extensions \
+  --disable-telemetry \
+  --disable-update-check \              # we pin the version; no phone-home
+  --disable-workspace-trust \           # single trusted workspace; avoids trust nag
+  --disable-file-downloads \            # optional data-egress reduction (see Angle 1)
+  --disable-file-uploads \              # optional
+  --ignore-last-opened \                # always reopen $PROJECTS_ROOT, not last dir
+  &quot;$PROJECTS_ROOT&quot;</code></pre>
+<ul>
+<li>DO isolate <code>--user-data-dir</code> +
+<code>--extensions-dir</code> to a HelixCode-private path so this
+instance does not read/write the operator’s real <code>~/.vscode</code>
+/ <code>~/.local/share/code-server</code>.</li>
+<li>DON’T rely on <code>--disable-file-downloads/uploads</code> or the
+scoped workspace as a security boundary — they are UX/egress-reduction
+only (Angle 1). <code>--disable-workspace-trust</code> “only affects the
+current session” per the CLI help.</li>
+<li>DON’T pass <code>--skip-auth-preflight</code> (loosens proxy auth)
+unless a concrete CORS need proves it.</li>
+<li>Caddy edge SHOULD block the code-server built-in port-proxy paths
+(<code>/proxy/</code>, <code>/absproxy/</code>) with a 404 if the
+port-forwarding feature is not used — it is the CVE-2025-47269
+attack-surface class and HelixCode does not need it (Angle 2 + Angle
+4).</li>
+</ul>
+<h3
+id="b.-helix-code-server.service-systemd---user-must-stay-permissive">B.
+<code>helix-code-server.service</code> (<code>systemd --user</code>) —
+MUST STAY PERMISSIVE</h3>
+<div class="sourceCode" id="cb2"><pre
+class="sourceCode ini"><code class="sourceCode ini"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="kw">[Service]</span></span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a><span class="co"># Resource ceilings only — cgroup-v2 + user delegation (Angle 3). §12.6-style.</span></span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a><span class="dt">MemoryHigh</span><span class="ot">=</span><span class="st">3G</span></span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a><span class="dt">MemoryMax</span><span class="ot">=</span><span class="st">4G</span></span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a><span class="dt">TasksMax</span><span class="ot">=</span><span class="dv">4096</span></span>
+<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a><span class="co"># Restart backoff</span></span>
+<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a><span class="dt">Restart</span><span class="ot">=</span><span class="st">on-failure</span></span>
+<span id="cb2-8"><a href="#cb2-8" aria-hidden="true" tabindex="-1"></a><span class="dt">RestartSec</span><span class="ot">=</span><span class="st">5s</span></span>
+<span id="cb2-9"><a href="#cb2-9" aria-hidden="true" tabindex="-1"></a><span class="dt">StartLimitIntervalSec</span><span class="ot">=</span><span class="st">60s</span></span>
+<span id="cb2-10"><a href="#cb2-10" aria-hidden="true" tabindex="-1"></a><span class="dt">StartLimitBurst</span><span class="ot">=</span><span class="dv">5</span></span>
+<span id="cb2-11"><a href="#cb2-11" aria-hidden="true" tabindex="-1"></a><span class="co"># Low-risk protections that do NOT sandbox the terminal&#39;s *capabilities*:</span></span>
+<span id="cb2-12"><a href="#cb2-12" aria-hidden="true" tabindex="-1"></a><span class="dt">ProtectClock</span><span class="ot">=</span><span class="kw">true</span></span>
+<span id="cb2-13"><a href="#cb2-13" aria-hidden="true" tabindex="-1"></a><span class="dt">ProtectKernelTunables</span><span class="ot">=</span><span class="kw">true</span></span>
+<span id="cb2-14"><a href="#cb2-14" aria-hidden="true" tabindex="-1"></a><span class="co"># Everything the integrated terminal needs stays PERMISSIVE by omission:</span></span>
+<span id="cb2-15"><a href="#cb2-15" aria-hidden="true" tabindex="-1"></a><span class="co">#   NO NoNewPrivileges   (would kill setuid: sudo/su/mount/newgrp/passwd in the terminal)</span></span>
+<span id="cb2-16"><a href="#cb2-16" aria-hidden="true" tabindex="-1"></a><span class="co">#   NO ProtectSystem=strict / PrivateUsers=true (would read-only /usr + nest a userns →</span></span>
+<span id="cb2-17"><a href="#cb2-17" aria-hidden="true" tabindex="-1"></a><span class="co">#       breaks installs, rootless podman, unshare, and real-uid tools in the terminal)</span></span>
+<span id="cb2-18"><a href="#cb2-18" aria-hidden="true" tabindex="-1"></a><span class="co">#   NO ProtectHome        (we REQUIRE $HOME: ~/.ssh, ~/.bashrc, $PROJECTS_ROOT)</span></span>
+<span id="cb2-19"><a href="#cb2-19" aria-hidden="true" tabindex="-1"></a><span class="co">#   NO RestrictNamespaces (terminal tools legitimately create namespaces)</span></span></code></pre></div>
+<ul>
+<li><strong>Load-bearing rationale:</strong> the code-server process is
+the <em>parent</em> of every integrated-terminal shell. systemd
+sandboxing (namespaces + <code>NoNewPrivileges</code>) is
+<strong>inherited by child processes</strong> and cannot be relaxed by
+them. Any filesystem/privilege sandbox on THIS unit is therefore imposed
+on the user’s terminal too — directly contradicting “terminal keeps full
+real-user capability (ssh, all host binaries).”</li>
+</ul>
+<h3
+id="c.-helix-auth.service-auth_gate-systemd---user-harden-aggressively">C.
+<code>helix-auth.service</code> (auth_gate, <code>systemd --user</code>)
+— HARDEN AGGRESSIVELY</h3>
+<p>The auth gate is a self-contained Go binary that only reads
+<code>~/.ssh/authorized_keys</code> + shells out to
+<code>ssh-keygen -Y verify</code>. It never spawns a user login shell,
+so a tight sandbox costs nothing.</p>
+<div class="sourceCode" id="cb3"><pre
+class="sourceCode ini"><code class="sourceCode ini"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="kw">[Service]</span></span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a><span class="dt">NoNewPrivileges</span><span class="ot">=</span><span class="kw">true</span></span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a><span class="dt">RestrictSUIDSGID</span><span class="ot">=</span><span class="kw">true</span></span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a><span class="co"># Filesystem namespacing in a --user unit REQUIRES PrivateUsers=true (Angle 3):</span></span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a><span class="dt">PrivateUsers</span><span class="ot">=</span><span class="kw">true</span></span>
+<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a><span class="dt">ProtectSystem</span><span class="ot">=</span><span class="st">strict</span></span>
+<span id="cb3-7"><a href="#cb3-7" aria-hidden="true" tabindex="-1"></a><span class="dt">ProtectHome</span><span class="ot">=</span><span class="st">read-only            # it only READS ~/.ssh/authorized_keys + allowed_signers</span></span>
+<span id="cb3-8"><a href="#cb3-8" aria-hidden="true" tabindex="-1"></a><span class="dt">ReadWritePaths</span><span class="ot">=</span><span class="st">%t/helix-auth      # runtime dir for the 0600 HMAC secret + sockets, if any</span></span>
+<span id="cb3-9"><a href="#cb3-9" aria-hidden="true" tabindex="-1"></a><span class="dt">ReadOnlyPaths</span><span class="ot">=</span><span class="st">%h/.ssh</span></span>
+<span id="cb3-10"><a href="#cb3-10" aria-hidden="true" tabindex="-1"></a><span class="dt">PrivateTmp</span><span class="ot">=</span><span class="kw">true</span></span>
+<span id="cb3-11"><a href="#cb3-11" aria-hidden="true" tabindex="-1"></a><span class="dt">ProtectClock</span><span class="ot">=</span><span class="kw">true</span></span>
+<span id="cb3-12"><a href="#cb3-12" aria-hidden="true" tabindex="-1"></a><span class="dt">ProtectKernelTunables</span><span class="ot">=</span><span class="kw">true</span></span>
+<span id="cb3-13"><a href="#cb3-13" aria-hidden="true" tabindex="-1"></a><span class="dt">ProtectKernelModules</span><span class="ot">=</span><span class="kw">true</span></span>
+<span id="cb3-14"><a href="#cb3-14" aria-hidden="true" tabindex="-1"></a><span class="dt">ProtectControlGroups</span><span class="ot">=</span><span class="kw">true</span></span>
+<span id="cb3-15"><a href="#cb3-15" aria-hidden="true" tabindex="-1"></a><span class="dt">RestrictNamespaces</span><span class="ot">=</span><span class="kw">true</span></span>
+<span id="cb3-16"><a href="#cb3-16" aria-hidden="true" tabindex="-1"></a><span class="dt">RestrictAddressFamilies</span><span class="ot">=</span><span class="st">AF_INET AF_INET6 AF_UNIX</span></span>
+<span id="cb3-17"><a href="#cb3-17" aria-hidden="true" tabindex="-1"></a><span class="dt">LockPersonality</span><span class="ot">=</span><span class="kw">true</span></span>
+<span id="cb3-18"><a href="#cb3-18" aria-hidden="true" tabindex="-1"></a><span class="dt">MemoryDenyWriteExecute</span><span class="ot">=</span><span class="st">true      # verify ssh-keygen subprocess tolerates it; drop if it breaks</span></span>
+<span id="cb3-19"><a href="#cb3-19" aria-hidden="true" tabindex="-1"></a><span class="dt">SystemCallArchitectures</span><span class="ot">=</span><span class="st">native</span></span>
+<span id="cb3-20"><a href="#cb3-20" aria-hidden="true" tabindex="-1"></a><span class="co"># Resource + restart</span></span>
+<span id="cb3-21"><a href="#cb3-21" aria-hidden="true" tabindex="-1"></a><span class="dt">MemoryMax</span><span class="ot">=</span><span class="st">256M</span></span>
+<span id="cb3-22"><a href="#cb3-22" aria-hidden="true" tabindex="-1"></a><span class="dt">TasksMax</span><span class="ot">=</span><span class="dv">256</span></span>
+<span id="cb3-23"><a href="#cb3-23" aria-hidden="true" tabindex="-1"></a><span class="dt">Restart</span><span class="ot">=</span><span class="st">on-failure</span></span>
+<span id="cb3-24"><a href="#cb3-24" aria-hidden="true" tabindex="-1"></a><span class="dt">RestartSec</span><span class="ot">=</span><span class="st">2s</span></span>
+<span id="cb3-25"><a href="#cb3-25" aria-hidden="true" tabindex="-1"></a><span class="dt">StartLimitIntervalSec</span><span class="ot">=</span><span class="st">60s</span></span>
+<span id="cb3-26"><a href="#cb3-26" aria-hidden="true" tabindex="-1"></a><span class="dt">StartLimitBurst</span><span class="ot">=</span><span class="st">10               # generous restart so the gate FAILS CLOSED, not dead</span></span></code></pre></div>
+<ul>
+<li>DO verify each namespacing line actually takes effect:
+<code>systemctl --user show helix-auth -p NoNewPrivileges -p ProtectSystem</code>
+and <code>systemd-analyze --user security helix-auth</code>.</li>
+<li>DON’T set <code>ProtectHome=true/tmpfs</code> (it hides
+<code>~/.ssh</code> → gate can’t read
+<code>authorized_keys</code>).</li>
+<li>If <code>MemoryDenyWriteExecute=true</code> breaks the
+<code>ssh-keygen</code> subprocess on this host, drop it
+(evidence-first).</li>
+</ul>
+<h3 id="d.-reachability-control-close-the-multi-user-loopback-hole">D.
+Reachability control (close the multi-user loopback hole)</h3>
+<p>Pick ONE (in decreasing strength):</p>
+<ol type="1">
+<li><strong>Unix socket, owner-only (STRONGEST):</strong>
+<code>code-server --socket %t/helix-code-server.sock --socket-mode 0600</code>
++ bind-mount that socket into the rootless Caddy container as the
+reverse-proxy upstream. Only <code>milosvasic</code> (+ root) can
+connect. Eliminates the loopback-TCP exposure entirely.</li>
+<li><strong>Loopback TCP + firewall by UID:</strong> keep
+<code>127.0.0.1:8080</code> but add an nftables/iptables OUTPUT
+<code>owner</code> rule so only <code>milosvasic</code>’s (and the Caddy
+container’s) UID may connect to <code>127.0.0.1:8080</code>; drop all
+other local UIDs.</li>
+<li><strong>Loopback TCP, unrestricted (WEAKEST, current
+design):</strong> accept that ANY local user/process on the host can
+reach <code>127.0.0.1:8080</code> and get a shell <strong>as
+milosvasic</strong> — documented residual risk.</li>
+</ol>
+<ul>
+<li>DO keep the gate <strong>fail-closed</strong> (already the #1 spec
+invariant): auth-service outage ⇒ Caddy denies, never proxies.</li>
+<li>DON’T bind code-server to anything but loopback/unix socket. Never
+<code>0.0.0.0</code>.</li>
+</ul>
+<h3 id="e.-version-update-posture-angle-4">E. Version / update posture
+(Angle 4)</h3>
+<ul>
+<li>4.117.0 (2026-04-23) is patched against the only
+code-server-specific advisory (CVE-2025-47269, fixed 4.99.4) but is
+<strong>9 releases behind</strong> the current 4.126.0 (2026-06-24) and
+thus misses upstream VS Code security patches shipped 4.118→4.126. DO
+adopt a documented update cadence and re-pin, or consciously accept the
+gap per §11.4.112 with a review date.</li>
+<li>DO pin by exact version + verify the download checksum (§11.4.77
+regen mechanism).</li>
+<li><code>--disable-update-check</code> stops the 6-hourly GitHub
+phone-home + weekly nag.</li>
+</ul>
+<hr />
+<h2
+id="angle-1-editor-projects-jail-reality-what-actually-restricts-navigation">Angle
+1 — Editor projects-jail reality (what actually restricts
+navigation)</h2>
+<h3
+id="finding-the-file-tree-scope-is-cosmetic.-it-is-not-a-filesystem-boundary.">Finding:
+the file-tree scope is COSMETIC. It is not a filesystem boundary.</h3>
+<p>Launching <code>code-server "$PROJECTS_ROOT"</code> opens
+<code>$PROJECTS_ROOT</code> as the single-folder workspace, so the
+<strong>Explorer default view</strong> is rooted there. That is the
+whole of what “scoping” buys you — a default view, not a jail.</p>
+<p>The code-server maintainer (<code>code-asher</code>, member) states
+it plainly on the exact feature request (“restrict users to only access
+files within the workspace directory”):</p>
+<blockquote>
+<p>“We could restrict the file picker to the workspace root(s), and do
+the same with the ‘open file’ picker, but <strong>this would not really
+close any security holes as the user will still have access to the files
+through the command line, extensions, and the debugger.</strong> I think
+<strong>the only way to reliably achieve this is to use a chroot or run
+code-server in a VM/container.</strong>” — coder/code-server#6658
+(duplicate of #600), accessed 2026-07-01.</p>
+</blockquote>
+<p>The request to hard-limit filesystem access to a folder (#1251, #600,
+#6658) remains an <strong>open, unimplemented feature request</strong>.
+There is no CLI flag and no setting that confines the process to
+<code>$PROJECTS_ROOT</code>.</p>
+<h3
+id="escape-vectors-that-remain-fully-open-as-the-real-user-milosvasic">Escape
+vectors that remain fully open (as the real user
+<code>milosvasic</code>)</h3>
+<ul>
+<li><strong>Integrated terminal</strong> — <code>cd /</code>,
+<code>cat /etc/…</code>, edit anything the user can (by design
+here).</li>
+<li><strong>File → Open Folder / Open File / Open Recent</strong> — the
+picker starts anywhere the process can <code>stat</code>; the user can
+type/navigate a parent path and open it as a new workspace.</li>
+<li><strong>Command Palette</strong> actions, <strong>debugger</strong>
+<code>cwd</code>, <strong>tasks</strong>, and
+<strong>extensions</strong> — all run with the process’s full FS
+access.</li>
+<li><strong>Quick Open / Go to File</strong> honors the workspace, but
+<code>files.exclude</code> (below) is <em>display</em> filtering, not
+access control.</li>
+</ul>
+<h3 id="do-tighten-the-default-without-breaking-the-full-terminal">DO
+(tighten the default without breaking the full terminal)</h3>
+<ul>
+<li>DO pass <code>"$PROJECTS_ROOT"</code> as the single workspace folder
++ <code>--ignore-last-opened</code> so a fresh window always reopens the
+projects root rather than the last-opened arbitrary path.</li>
+<li>DO set, in the HelixCode-private <code>--user-data-dir</code>
+machine/user settings:
+<ul>
+<li><code>"files.exclude"</code> /
+<code>"explorer.excludeGitIgnore"</code> to hide noise (cosmetic).</li>
+<li><code>"security.workspace.trust.enabled": false</code> (or
+<code>--disable-workspace-trust</code>) so the trust modal doesn’t block
+automation — noting it is NOT a boundary.</li>
+<li><code>"window.openFoldersInNewWindow"</code> /
+disable-getting-started etc. for a clean default.</li>
+</ul></li>
+<li>DO reduce data-egress with <code>--disable-file-downloads</code>
+(<code>CS_DISABLE_FILE_DOWNLOADS=1</code>) and
+<code>--disable-file-uploads</code> if download/upload via the editor is
+unwanted — but treat these as egress-reduction, not a jail (the terminal
+can still <code>scp</code>/<code>curl</code>).</li>
+<li>DO, if a REAL filesystem boundary is ever required, use the
+maintainer’s answer: chroot / container / VM / bind-mount namespace —
+i.e. re-scope the whole runtime, not a setting.</li>
+</ul>
+<h3 id="dont">DON’T</h3>
+<ul>
+<li>DON’T represent the scoped workspace, <code>files.exclude</code>, or
+disabling <code>openFolder</code> as security. There is no supported way
+to remove the <code>File &gt; Open Folder</code> command such that the
+terminal + extensions + debugger paths are also closed — the maintainer
+explicitly says a UI restriction “would not really close any security
+holes.”</li>
+<li>DON’T claim the editor is “jailed to projects.” The accurate claim
+is: <strong>“Explorer defaults to <code>$PROJECTS_ROOT</code>; the
+real-user shell + editor internals retain full host FS access, by
+operator design.”</strong></li>
+</ul>
+<p>Sources: coder/code-server#6658, #1251, #600 (feature requests,
+unimplemented); code-asher maintainer comment; VS Code
+settings/workspaces/workspace-trust docs; code-server CLI help.</p>
+<hr />
+<h2 id="angle-2---auth-none-safety-behind-the-caddy-gate">Angle 2 —
+<code>--auth none</code> safety behind the Caddy gate</h2>
+<h3 id="is---auth-none-acceptable-here-yes-conditionally.">Is
+<code>--auth none</code> acceptable here? — Yes, CONDITIONALLY.</h3>
+<p>code-server’s own guidance:</p>
+<blockquote>
+<p>“Never expose code-server directly to the internet without some form
+of authentication and encryption, otherwise <strong>someone can take
+over your machine via the terminal.</strong>” — coder guide, accessed
+2026-07-01.</p>
+</blockquote>
+<p>The guide explicitly endorses <code>auth: none</code> <strong>only
+when a security layer sits in front</strong> (their canonical example is
+SSH port-forwarding; a reverse proxy with its own auth is the same
+pattern): “no authentication does not pass security requirements” on its
+own. HelixCode’s fail-closed ssh-key gate + TLS edge is a legitimate
+front. So <code>--auth none</code> is acceptable <strong>iff</strong>
+all three hold: (i) code-server is unreachable except through Caddy;
+(ii) the gate fails closed; (iii) TLS terminates at the edge.</p>
+<h3 id="the-real-residual-risk-loopback-is-not-per-user-isolated">The
+real residual risk: loopback is NOT per-user isolated</h3>
+<p><code>127.0.0.1:8080</code> on a normal host is reachable by
+<strong>every local process/user in the host network namespace</strong>
+— loopback has no per-UID access control. With <code>--auth none</code>,
+ANY local user who can reach that port gets an unauthenticated
+code-server → a terminal <strong>as milosvasic</strong> → full takeover
+of the milosvasic account, bypassing Caddy entirely. This is the one
+hole <code>--auth none</code> opens that the gate does NOT cover.</p>
+<ul>
+<li>Other <strong>rootless containers</strong> on the host are lower
+risk: rootless Podman puts each pod in its own network namespace
+(slirp4netns/pasta), so they cannot reach the host’s
+<code>127.0.0.1</code> unless run with host networking or an explicit
+<code>host.containers.internal</code> route. So “other containers” ≠
+automatic reach; “other host users/processes” IS automatic reach.</li>
+<li><strong>SSRF from the gate:</strong> Caddy
+<code>reverse_proxy</code>/<code>forward_auth</code> to <em>fixed</em>
+upstreams is not SSRF. The SSRF-shaped surface is code-server’s
+<strong>built-in port proxy</strong> (<code>/proxy/&lt;port&gt;</code>,
+<code>/absproxy/</code>) — the exact class of CVE-2025-47269
+(session-cookie exfil via a crafted <code>/proxy/host@evil/…</code>
+URL). It is patched in 4.117.0, but the feature is unused by HelixCode
+and should be shut off at the edge.</li>
+</ul>
+<h3 id="do-defense-in-depth">DO (defense-in-depth)</h3>
+<ul>
+<li>DO close the loopback hole with the strongest reachable option
+(checklist D): <strong>unix socket
+<code>--socket … --socket-mode 0600</code></strong> bind-mounted into
+Caddy is best (owner-only connect); otherwise <strong>firewall
+<code>127.0.0.1:8080</code> by UID</strong> with an nftables/iptables
+OUTPUT <code>owner --uid-owner</code> rule so only milosvasic + the
+Caddy container UID may connect.</li>
+<li>DO keep the gate <strong>fail-closed</strong> and TLS-terminated at
+Caddy (already spec’d).</li>
+<li>DO block <code>/proxy/</code> and <code>/absproxy/</code> (and
+<code>/vscode-remote-resource</code> if unused) at Caddy with a 404 —
+removes the CVE-2025-47269 attack-surface class even though 4.117.0 is
+patched.</li>
+<li>DO have Caddy strip inbound <code>X-Forwarded-*</code> from the
+client and set them itself, so a client cannot spoof proxy headers;
+forward only the minimal set code-server needs
+(<code>X-Forwarded-Host/Proto</code>).</li>
+</ul>
+<h3 id="on-a-shared-secret-header-between-caddy-and-code-server">On a
+“shared-secret header between Caddy and code-server”</h3>
+<ul>
+<li><strong>Honest limitation:</strong> with <code>--auth none</code>,
+code-server accepts <em>everything</em> and has <strong>no hook to
+require a shared header</strong> — so a Caddy-injected secret header is
+not validated by code-server and does NOT add a boundary on its own. A
+shared-secret only helps if a component that <em>checks</em> it sits in
+front of code-server. Two workable variants:
+<ol type="1">
+<li>Keep code-server on <strong><code>--auth password</code></strong>
+with a long random password known ONLY to Caddy, and have Caddy inject
+the auth cookie/credential — but this re-introduces code-server’s own
+auth (whose cookie/proxy handling produced CVE-2025-47269), so it is
+weaker than the external gate.</li>
+<li>Prefer the <strong>unix-socket / UID-firewall</strong> boundary (a
+filesystem/kernel boundary), which is a real access control, over a
+header the backend won’t enforce.</li>
+</ol></li>
+<li>DON’T rely on a shared header alone with
+<code>--auth none</code>.</li>
+</ul>
+<p>Sources: coder/code-server guide (terminal takeover warning;
+auth-none-behind-proxy); GHSA-p483-wpfp-42cj / CVE-2025-47269;
+code-server CLI (<code>--socket</code>, <code>--socket-mode</code>,
+<code>--skip-auth-preflight</code>, <code>--proxy-domain</code>);
+iptables owner-match man page + examples; unix(7) socket permission
+semantics.</p>
+<hr />
+<h2 id="angle-3-systemd---user-hardening-for-both-units">Angle 3 —
+<code>systemd --user</code> hardening for both units</h2>
+<h3
+id="the-decisive-fact-filesystem-namespacing-is-unavailable-to---user-units-unless-privateuserstrue">The
+decisive fact: filesystem namespacing is unavailable to
+<code>--user</code> units unless <code>PrivateUsers=true</code></h3>
+<p><code>systemd.exec(5)</code> (Debian unstable manpage, accessed
+2026-07-01) states verbatim:</p>
+<blockquote>
+<p>“Also note that some sandboxing functionality is <strong>generally
+not available in user services</strong> (i.e. services run by the
+per-user service manager). Specifically, the various settings requiring
+<strong>file system namespacing support (such as ProtectSystem=) are not
+available</strong>, as the underlying kernel functionality is only
+accessible to privileged processes. <strong>However, most namespacing
+settings, that will not work on their own in user services, will work
+when used in conjunction with PrivateUsers=true.</strong>”</p>
+</blockquote>
+<p>So in a <code>--user</code> unit: <code>ProtectSystem</code>,
+<code>ProtectHome</code>, <code>PrivateTmp</code>,
+<code>ReadWritePaths</code>, <code>ReadOnlyPaths</code>,
+<code>ProtectControlGroups</code>, <code>RestrictNamespaces</code>, etc.
+are <strong>no-ops unless you also set
+<code>PrivateUsers=true</code></strong>. <code>NoNewPrivileges</code>
+and <code>RestrictSUIDSGID</code> (prctl/seccomp-based, not namespacing)
+DO work directly. Resource controls (<code>MemoryMax</code>,
+<code>TasksMax</code>) work on cgroup-v2 <strong>when the controller is
+delegated to the user manager</strong> (modern systemd delegates
+<code>memory</code> + <code>pids</code> to <code>user@.service</code> by
+default; legacy cgroup-v1 disables user resource control — verify with
+<code>systemctl --user show &lt;u&gt; -p MemoryMax</code>).</p>
+<h3
+id="the-load-bearing-consequence-dont-sandbox-the-code-server-unit">The
+load-bearing consequence: DON’T sandbox the code-server unit</h3>
+<p><code>NoNewPrivileges</code>, user namespaces
+(<code>PrivateUsers</code>), and mount-namespace protections are
+<strong>inherited by child processes and cannot be loosened by
+them</strong>. The code-server process spawns every integrated-terminal
+shell, so any such sandbox on <code>helix-code-server.service</code> is
+imposed on the operator’s terminal too:</p>
+<ul>
+<li><code>NoNewPrivileges=true</code> ⇒ setuid binaries silently fail in
+the terminal — <code>sudo</code>, <code>su</code>, <code>newgrp</code>,
+<code>mount</code>, <code>passwd</code>, some <code>ping</code>.
+Contradicts “all host binaries.”</li>
+<li><code>PrivateUsers=true</code> ⇒ nested user namespace; real root
+maps to <code>nobody</code>; <strong>rootless podman /
+<code>unshare</code> / <code>buildah</code> inside the terminal
+break</strong> (nested userns + uid-map conflicts). Contradicts “full
+capability.”</li>
+<li><code>ProtectSystem=strict</code> ⇒ <code>/usr</code>,
+<code>/etc</code>, <code>/boot</code> read-only for the terminal ⇒
+installs/writes fail.</li>
+<li><code>ProtectHome</code> ⇒ hides <code>~/.ssh</code>,
+<code>~/.bashrc</code>, <code>$PROJECTS_ROOT</code> ⇒ breaks the entire
+requirement.</li>
+</ul>
+<p>⇒ For <code>helix-code-server.service</code>, use <strong>resource +
+restart controls only</strong>, plus at most a couple of
+capability-neutral protections (<code>ProtectClock</code>,
+<code>ProtectKernelTunables</code>). See checklist B.</p>
+<h3
+id="for-helix-auth.service-harden-aggressively-it-spawns-no-user-shell">For
+<code>helix-auth.service</code> — harden aggressively (it spawns no user
+shell)</h3>
+<p>The auth gate reads <code>~/.ssh/authorized_keys</code> + runs
+<code>ssh-keygen -Y verify</code>. A tight sandbox is free here. Use
+checklist C: <code>NoNewPrivileges</code>,
+<code>PrivateUsers=true</code> (to unlock the namespacing set),
+<code>ProtectSystem=strict</code>, <code>ProtectHome=read-only</code>
+(must still READ <code>~/.ssh</code> — do NOT use
+<code>true</code>/<code>tmpfs</code>),
+<code>ReadOnlyPaths=%h/.ssh</code>,
+<code>ReadWritePaths=%t/helix-auth</code> (0600 HMAC secret),
+<code>PrivateTmp</code>, <code>RestrictSUIDSGID</code>,
+<code>RestrictNamespaces=true</code>,
+<code>RestrictAddressFamilies=AF_INET AF_INET6 AF_UNIX</code>,
+<code>LockPersonality</code>,
+<code>ProtectKernelModules/Tunables/ControlGroups</code>, tight
+<code>MemoryMax</code>/<code>TasksMax</code>, generous
+<code>Restart</code> backoff (fail-closed must self-heal, not stay
+dead).</p>
+<h3 id="do-dont">DO / DON’T</h3>
+<ul>
+<li>DO verify each directive took effect
+(<code>systemctl --user show</code>,
+<code>systemd-analyze --user security &lt;unit&gt;</code>); a
+silently-ignored namespacing line in a user unit is a §11.4 bluff.</li>
+<li>DO confirm <code>MemoryMax</code>/<code>TasksMax</code> are honored
+(cgroup-v2 + delegation) before relying on them for §12.6.</li>
+<li>DON’T put <code>NoNewPrivileges</code>, <code>PrivateUsers</code>,
+<code>ProtectSystem</code>, <code>ProtectHome</code>, or
+<code>RestrictNamespaces</code> on the <strong>code-server</strong> unit
+— each breaks a stated terminal requirement.</li>
+<li>DON’T use <code>ProtectHome=true</code>/<code>tmpfs</code> on the
+<strong>auth</strong> unit (it needs to read <code>~/.ssh</code>).</li>
+</ul>
+<p>Sources: systemd.exec(5) Debian manpage (user-service namespacing +
+PrivateUsers=true); systemd.resource-control(5) (cgroup-v2 delegation,
+MemoryMax/TasksMax); ArchWiki systemd/Sandboxing; ageis
+systemd-hardening gist; NoNewPrivileges/RestrictSUIDSGID semantics.</p>
+<hr />
+<h2 id="angle-4-code-server-install-version-security-notes">Angle 4 —
+code-server install / version security notes</h2>
+<h3 id="version-posture">Version posture</h3>
+<ul>
+<li><strong>4.117.0</strong> released 2026-04-23; <strong>latest is
+4.126.0</strong> (2026-06-24) — 4.117.0 is <strong>9 releases
+behind</strong>.</li>
+<li>The single code-server-specific advisory,
+<strong>GHSA-p483-wpfp-42cj / CVE-2025-47269</strong> (High, CVSS 8.3 —
+“session cookie can be extracted by having a user visit a specially
+crafted <code>/proxy/</code> URL”), is <strong>patched from v4.99.4
+onward</strong>, so 4.117.0 is <strong>not vulnerable</strong> to it. No
+other published code-server advisory affects 4.117.0 as of
+2026-07-01.</li>
+<li>Residual gap: pinning 4.117.0 forgoes upstream VS Code security
+fixes bundled in 4.118→4.126. Each code-server release wraps a specific
+<code>Code</code> version; falling behind inherits any Code-side CVE
+fixed later.</li>
+</ul>
+<h3 id="do">DO</h3>
+<ul>
+<li>DO adopt a documented update cadence (re-pin toward the latest
+stable, re-run the full suite) or record a §11.4.112 conscious-hold with
+a review date — don’t let the pin silently rot.</li>
+<li>DO install by <strong>exact version + verified checksum</strong> of
+the standalone tarball
+(<code>code-server-4.117.0-linux-amd64.tar.gz</code>) as the §11.4.77
+regen mechanism; a user-scope <code>npm i -g</code> pin is acceptable
+but pin the exact version and verify the resolved binary
+(<code>code-server --version</code>) — install exit 0 ≠ correct version
+(§11.4.80 lesson).</li>
+<li>DO isolate state with <code>--user-data-dir</code> +
+<code>--extensions-dir</code> under a HelixCode-private path so this
+instance does not share/settle into the operator’s real
+<code>~/.local/share/code-server</code> or <code>~/.vscode</code>
+(extension &amp; settings blast-radius isolation). Only trusted
+extensions in that dir.</li>
+<li>DO <code>--disable-telemetry</code> and
+<code>--disable-update-check</code> (kills the 6-hourly GitHub check +
+weekly nag; we pin).</li>
+<li>DO block the built-in proxy paths at Caddy (Angle 2) — closes the
+CVE-2025-47269 <em>class</em> even though patched.</li>
+</ul>
+<h3 id="dont-1">DON’T</h3>
+<ul>
+<li>DON’T assume “patched advisory ⇒ nothing to do” — the proxy feature
+remains an attack-surface class; and being 9 releases behind is its own
+risk.</li>
+<li>DON’T enable <code>--proxy-domain</code>/port-proxy unless a feature
+needs it.</li>
+</ul>
+<p>Sources: <code>gh release list/view coder/code-server</code> (4.117.0
+date; 4.126.0 latest); GitHub Security Advisories API
+(GHSA-p483-wpfp-42cj / CVE-2025-47269, patched &gt;=4.99.4); code-server
+CHANGELOG; code-server CLI help.</p>
+<hr />
+<h2
+id="angle-5-environment-.bashrc-sourcing-ssh-key-git-from-the-terminal">Angle
+5 — Environment / <code>.bashrc</code> sourcing + ssh-key git from the
+terminal</h2>
+<h3
+id="correcting-the-spec-wording-bash--l-.bashrc-its-imprecise">Correcting
+the spec wording (<code>bash -l</code> ⇒ <code>.bashrc</code>) — it’s
+imprecise</h3>
+<p>Bash file-sourcing rules (bash manual, VS Code terminal docs,
+accessed 2026-07-01):</p>
+<ul>
+<li>An <strong>interactive login shell</strong> reads
+<code>~/.bash_profile</code> → <code>~/.bash_login</code> →
+<code>~/.profile</code> (first found). It does <strong>NOT</strong> read
+<code>~/.bashrc</code> directly — only if
+<code>.bash_profile</code>/<code>.profile</code> explicitly
+<code>source ~/.bashrc</code>.</li>
+<li>An <strong>interactive non-login shell</strong> reads
+<code>~/.bashrc</code> directly.</li>
+<li>VS Code / code-server’s integrated terminal, <strong>by default on
+Linux, launches <code>$SHELL</code> as a non-login interactive
+shell</strong> — so <code>~/.bashrc</code> is <strong>already sourced by
+default</strong> without any <code>-l</code>.</li>
+</ul>
+<p>⇒ If the operator’s goal is “everything from <code>.bashrc</code>
+works,” the <strong>default terminal already achieves it</strong>.
+Forcing <code>bash -l</code> (as the spec proposes) can actually
+<strong>skip <code>~/.bashrc</code></strong> on a host where
+<code>~/.bash_profile</code> does not source it — the opposite of the
+intent. The correct posture depends on where the exports live:</p>
+<ul>
+<li>Exports in <code>~/.bashrc</code> → the <strong>default (non-login)
+terminal already works</strong>; do nothing, or explicitly set a
+non-login bash profile.</li>
+<li>Exports/init in <code>~/.profile</code>/<code>~/.bash_profile</code>
+(login-only) → configure a <strong>login-shell profile</strong>
+(<code>terminal.integrated.profiles.linux</code> →
+<code>{ "path": "bash", "args": ["-l"] }</code> +
+<code>terminal.integrated.defaultProfile.linux: "bash"</code>) AND
+ensure <code>~/.bash_profile</code> sources <code>~/.bashrc</code> (the
+standard convention) so BOTH are loaded.</li>
+</ul>
+<h3
+id="systemd---user-environment-vs-the-interactive-shell-a-real-pitfall">systemd
+<code>--user</code> environment vs the interactive shell — a real
+pitfall</h3>
+<ul>
+<li>The <code>systemd --user</code> manager has its <strong>own
+environment</strong> (from <code>~/.config/environment.d/*</code>, PAM,
+and <code>systemctl --user import-environment</code>), which is
+generally <strong>NOT</strong> the interactive login shell’s
+environment. A service started at boot via <strong>linger</strong> may
+lack variables the operator sets in the graphical/login session.</li>
+<li>This does <strong>not</strong> break the integrated terminal’s env,
+because the terminal spawns a fresh shell that sources the rc/profile
+files itself — so <code>PATH</code>, exports, etc. are rebuilt
+per-terminal regardless of the service env. DO verify the code-server
+service’s own <code>PATH</code> is sane if code-server itself (not the
+terminal) needs a tool.</li>
+</ul>
+<h3 id="ssh-key-git-from-the-terminal-ssh_auth_sock-is-the-trap">ssh-key
+git from the terminal — <code>SSH_AUTH_SOCK</code> is the trap</h3>
+<ul>
+<li>The pivot’s login gate reads only
+<code>~/.ssh/authorized_keys</code> (public material).
+<strong>git-over-SSH from the terminal is separate</strong> and uses the
+operator’s private keys in <code>~/.ssh</code>.</li>
+<li>If the keys are <strong>passphrase-less</strong>,
+<code>ssh</code>/<code>git</code> read <code>~/.ssh/id_*</code> directly
+— <strong>no agent needed</strong>, works in any terminal. This is the
+simplest, most reliable path and matches the spec’s e2e check
+(<code>git ls-remote git@github.com:vasic-digital/Code-Server.git</code>).</li>
+<li>If keys are <strong>passphrase-protected</strong> and rely on an
+<code>ssh-agent</code>, the agent’s socket is exposed via
+<code>SSH_AUTH_SOCK</code>. A <code>systemd --user</code> code-server
+started at boot/linger will typically <strong>NOT</strong> inherit a
+desktop-session agent’s <code>SSH_AUTH_SOCK</code>, so the terminal
+won’t find the agent and git may prompt/fail.
+<ul>
+<li>DO, in that case, run a <strong>per-user <code>ssh-agent</code> as
+its own <code>systemd --user</code> service</strong> and publish
+<code>SSH_AUTH_SOCK</code> via
+<code>~/.config/environment.d/ssh_auth_sock.conf</code> (or a fixed
+<code>%t/ssh-agent.socket</code> path), so both the manager and the
+terminals see a stable agent socket. GPG-agent’s SSH support
+(<code>gpg-agent --enable-ssh-support</code>,
+<code>SSH_AUTH_SOCK=$(gpgconf --list-dirs agent-ssh-socket)</code>) is
+an equivalent pattern.</li>
+<li>DON’T assume a login-session agent is reachable from a
+linger-started user service.</li>
+</ul></li>
+<li>DO confirm <code>~/.ssh</code> perms are sane (<code>700</code> dir,
+<code>600</code> keys, <code>644</code>/<code>600</code>
+<code>authorized_keys</code>) — the security suite already checks this;
+loose perms make <code>ssh</code> refuse the key AND are a leak risk
+(§11.4.10).</li>
+</ul>
+<h3 id="do-dont-summary">DO / DON’T summary</h3>
+<ul>
+<li>DO keep the terminal as the <strong>default non-login interactive
+shell</strong> if the operator’s exports live in <code>~/.bashrc</code>
+(it already sources it) — or use <code>bash -l</code> +
+<code>.bash_profile</code>→<code>.bashrc</code> sourcing if they live in
+the login profile.</li>
+<li>DO prefer passphrase-less on-disk keys OR a
+<code>systemd --user</code> ssh-agent with a stable
+<code>SSH_AUTH_SOCK</code> for autonomous, non-interactive ssh-key
+git.</li>
+<li>DON’T conflate the login <em>gate</em>
+(<code>authorized_keys</code>) with git-over-SSH <em>auth</em> (private
+keys) — they are independent.</li>
+<li>DON’T rely on <code>bash -l</code> to load <code>~/.bashrc</code>;
+verify which file the exports actually live in first.</li>
+</ul>
+<p>Sources: bash manual (login vs non-login startup files); VS Code
+terminal profiles docs + microsoft/vscode#56061 (integrated terminal
+file-sourcing); systemd
+<code>environment.d</code>/<code>import-environment</code>; gpg-agent /
+ssh-agent <code>SSH_AUTH_SOCK</code> guidance.</p>
+<hr />
+<h2 id="sources-verified-2026-07-01">Sources verified 2026-07-01</h2>
+<p>Code-server / VS Code - code-server CLI options (<code>--auth</code>,
+<code>--bind-addr</code>, <code>--socket</code>,
+<code>--socket-mode</code>, <code>--user-data-dir</code>,
+<code>--extensions-dir</code>, <code>--disable-file-downloads</code>,
+<code>--disable-file-uploads</code>,
+<code>--disable-workspace-trust</code>,
+<code>--disable-telemetry</code>, <code>--disable-update-check</code>,
+<code>--proxy-domain</code>, <code>--abs-proxy-base-path</code>,
+<code>--skip-auth-preflight</code>, <code>--ignore-last-opened</code>) —
+https://github.com/coder/code-server/blob/main/src/node/cli.ts -
+code-server FAQ (config, bind-addr, user-data-dir,
+disable-file-downloads) — https://coder.com/docs/code-server/FAQ -
+code-server “Securely Access &amp; Expose” guide (terminal-takeover
+warning; auth-none-behind-proxy; reverse-proxy header forwarding) —
+https://coder.com/docs/code-server/guide and
+https://github.com/coder/code-server/blob/main/docs/guide.md -
+Folder-restriction feature requests + maintainer answer (cosmetic,
+chroot/VM/container only) —
+https://github.com/coder/code-server/issues/6658 (dup of #600),
+https://github.com/coder/code-server/issues/1251 -
+<code>--socket-mode</code> request/behavior —
+https://github.com/coder/code-server/issues/1466 - Releases (4.117.0
+date; 4.126.0 latest) — https://github.com/coder/code-server/releases ;
+CHANGELOG — https://github.com/coder/code-server/blob/main/CHANGELOG.md
+- Advisory GHSA-p483-wpfp-42cj / CVE-2025-47269 (proxy session-cookie
+exfil, patched &gt;=4.99.4) —
+https://github.com/coder/code-server/security/advisories/GHSA-p483-wpfp-42cj
+, https://nvd.nist.gov/vuln/detail/cve-2025-47269 - VS Code settings /
+workspaces / workspace-trust —
+https://code.visualstudio.com/docs/configure/settings ,
+https://code.visualstudio.com/docs/editor/workspaces ,
+https://code.visualstudio.com/docs/editor/workspace-trust - VS Code
+terminal profiles + integrated-terminal shell sourcing —
+https://code.visualstudio.com/docs/terminal/profiles ,
+https://github.com/microsoft/vscode/issues/56061</p>
+<p>systemd - systemd.exec(5) — user-service namespacing limitation +
+“will work … with PrivateUsers=true”; NoNewPrivileges, ProtectSystem,
+ProtectHome, ReadWritePaths, PrivateTmp, RestrictSUIDSGID —
+https://manpages.debian.org/unstable/systemd/systemd.exec.5.en.html
+(freedesktop mirror 403 at fetch time) - systemd.resource-control(5) —
+MemoryMax/TasksMax + cgroup-v2 delegation for user services —
+https://www.freedesktop.org/software/systemd/man/latest/systemd.resource-control.html
+,
+https://manpages.debian.org/testing/systemd/systemd.resource-control.5.en.html
+- ArchWiki systemd/Sandboxing —
+https://wiki.archlinux.org/title/Systemd/Sandboxing (Anubis-gated at
+fetch; corroborated via search excerpt: “some sandboxing functionality
+is generally not available in user services”) - ageis systemd hardening
+options gist —
+https://gist.github.com/ageis/f5595e59b1cddb1513d1b425a323db04</p>
+<p>Networking / OS - iptables owner match (<code>--uid-owner</code>,
+OUTPUT-only) to restrict loopback port by UID —
+https://linux.die.net/man/8/iptables ,
+https://www.cyberciti.biz/tips/block-outgoing-network-access-for-a-single-user-from-my-server-using-iptables.html
+- unix(7) socket permission semantics —
+https://man7.org/linux/man-pages/man7/unix.7.html - ssh-agent /
+SSH_AUTH_SOCK guidance —
+https://docs.vscentrum.be/accounts/ssh_agent.html</p>
+<p>Negative findings (documented per §11.4.99(B)): - No published
+code-server advisory other than CVE-2025-47269 affects 4.117.0
+(single-item advisories list, 2026-07-01). - code-server has NO
+flag/setting that confines the process to <code>$PROJECTS_ROOT</code>;
+the folder-restriction request is unimplemented and maintainer-declared
+out-of-scope for a UI fix. - A Caddy→code-server “shared-secret header”
+does NOT create a boundary under <code>--auth none</code>, because
+code-server has no mechanism to require/validate such a header.</p>
+</body>
+</html>

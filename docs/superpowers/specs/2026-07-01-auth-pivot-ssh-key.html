@@ -1,0 +1,273 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>2026-07-01-auth-pivot-ssh-key</title>
+  <style>
+    /* Default styles provided by pandoc.
+    ** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
+    */
+    html {
+      color: #1a1a1a;
+      background-color: #fdfdfd;
+    }
+    body {
+      margin: 0 auto;
+      max-width: 36em;
+      padding-left: 50px;
+      padding-right: 50px;
+      padding-top: 50px;
+      padding-bottom: 50px;
+      hyphens: auto;
+      overflow-wrap: break-word;
+      text-rendering: optimizeLegibility;
+      font-kerning: normal;
+    }
+    @media (max-width: 600px) {
+      body {
+        font-size: 0.9em;
+        padding: 12px;
+      }
+      h1 {
+        font-size: 1.8em;
+      }
+    }
+    @media print {
+      html {
+        background-color: white;
+      }
+      body {
+        background-color: transparent;
+        color: black;
+        font-size: 12pt;
+      }
+      p, h2, h3 {
+        orphans: 3;
+        widows: 3;
+      }
+      h2, h3, h4 {
+        page-break-after: avoid;
+      }
+    }
+    p {
+      margin: 1em 0;
+    }
+    a {
+      color: #1a1a1a;
+    }
+    a:visited {
+      color: #1a1a1a;
+    }
+    img {
+      max-width: 100%;
+    }
+    svg {
+      height: auto;
+      max-width: 100%;
+    }
+    h1, h2, h3, h4, h5, h6 {
+      margin-top: 1.4em;
+    }
+    h5, h6 {
+      font-size: 1em;
+      font-style: italic;
+    }
+    h6 {
+      font-weight: normal;
+    }
+    ol, ul {
+      padding-left: 1.7em;
+      margin-top: 1em;
+    }
+    li > ol, li > ul {
+      margin-top: 0;
+    }
+    blockquote {
+      margin: 1em 0 1em 1.7em;
+      padding-left: 1em;
+      border-left: 2px solid #e6e6e6;
+      color: #606060;
+    }
+    code {
+      font-family: Menlo, Monaco, Consolas, 'Lucida Console', monospace;
+      font-size: 85%;
+      margin: 0;
+      hyphens: manual;
+    }
+    pre {
+      margin: 1em 0;
+      overflow: auto;
+    }
+    pre code {
+      padding: 0;
+      overflow: visible;
+      overflow-wrap: normal;
+    }
+    .sourceCode {
+     background-color: transparent;
+     overflow: visible;
+    }
+    hr {
+      border: none;
+      border-top: 1px solid #1a1a1a;
+      height: 1px;
+      margin: 1em 0;
+    }
+    table {
+      margin: 1em 0;
+      border-collapse: collapse;
+      width: 100%;
+      overflow-x: auto;
+      display: block;
+      font-variant-numeric: lining-nums tabular-nums;
+    }
+    table caption {
+      margin-bottom: 0.75em;
+    }
+    tbody {
+      margin-top: 0.5em;
+      border-top: 1px solid #1a1a1a;
+      border-bottom: 1px solid #1a1a1a;
+    }
+    th {
+      border-top: 1px solid #1a1a1a;
+      padding: 0.25em 0.5em 0.25em 0.5em;
+    }
+    td {
+      padding: 0.125em 0.5em 0.25em 0.5em;
+    }
+    header {
+      margin-bottom: 4em;
+      text-align: center;
+    }
+    #TOC li {
+      list-style: none;
+    }
+    #TOC ul {
+      padding-left: 1.3em;
+    }
+    #TOC > ul {
+      padding-left: 0;
+    }
+    #TOC a:not(:hover) {
+      text-decoration: none;
+    }
+    code{white-space: pre-wrap;}
+    span.smallcaps{font-variant: small-caps;}
+    div.columns{display: flex; gap: min(4vw, 1.5em);}
+    div.column{flex: auto; overflow-x: auto;}
+    div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+    /* The extra [class] is a hack that increases specificity enough to
+       override a similar rule in reveal.js */
+    ul.task-list[class]{list-style: none;}
+    ul.task-list li input[type="checkbox"] {
+      font-size: inherit;
+      width: 0.8em;
+      margin: 0 0.8em 0.2em -1.6em;
+      vertical-align: middle;
+    }
+    .display.math{display: block; text-align: center; margin: 0.5rem auto;}
+  </style>
+</head>
+<body>
+<header id="title-block-header">
+<h1 class="title">2026-07-01-auth-pivot-ssh-key</h1>
+</header>
+<h1
+id="auth-pivot-ssh-key-challenge-response-login-supersedes-pam-login">Auth
+pivot — SSH-key challenge-response login (supersedes PAM login)</h1>
+<p><strong>Revision:</strong> 1 <strong>Last modified:</strong>
+2026-07-01T00:00:00Z <strong>Supersedes:</strong> the “live PAM login”
+part of <code>2026-07-01-real-account-code-server-design.md</code>
+§3.1/§4. Everything else in that spec (host-native code-server AS
+milosvasic, editor projects-jail, Caddy forward-auth gate, fail-closed,
+SSH keys/.bashrc/binaries native, TLS modes) STANDS UNCHANGED.</p>
+<h2 id="why-the-pivot-captured-facts-11.4.6-not-guessing">Why the pivot
+(captured facts, §11.4.6 — not guessing)</h2>
+<p>This host is ALT Linux with the <strong>tcb</strong> shadow scheme: -
+<code>/etc/tcb</code> = <code>drwx--x--- root shadow</code>; per-user
+<code>/etc/tcb/&lt;user&gt;/shadow</code> is NOT readable by the user. -
+The <code>tcb_chkpwd</code> setuid helper lives in
+<code>/usr/lib/chkpwd/</code> which is <strong>Permission-denied to
+non-root</strong>. - ⇒ <code>pam_tcb</code> running as a
+<strong>non-root</strong> process (our <code>systemd --user</code>
+service) CANNOT read the hash nor invoke the helper, so
+<code>pam_authenticate</code> returns <code>PAM_AUTH_ERR</code> for
+EVERY password (verified: wrong AND correct both → rc=7). Non-root PAM
+verify is impossible here. - Password login would therefore need a
+<strong>root/system</strong> auth service. Operator directive: “sudo
+can’t be used” + emphatic “<strong>All access MUST BE configured to use
+ssh key(s)!!!</strong>”.</p>
+<p>Positive facts enabling the pivot: -
+<code>~/.ssh/authorized_keys</code> readable (6 keys);
+<code>ssh-keygen -Y sign/verify</code> supported ⇒ ssh-key
+challenge-response works fully <strong>as non-root milosvasic</strong>,
+no password, nothing stored.</p>
+<h2 id="new-login-mechanism-ssh-key-challenge-response">New login
+mechanism: SSH-key challenge-response</h2>
+<p>Service (rename <code>services/pam_auth/</code> →
+<code>services/auth_gate/</code>, module
+<code>digital.vasic.helixcode/auth_gate</code>; keep ALL the
+cookie/session/rate-limit/HTTP machinery — only the Verifier + the two
+login endpoints change):</p>
+<ul>
+<li><strong><code>GET /login</code></strong> → issue a fresh
+<strong>challenge</strong>: a random 32-byte nonce, HMAC-signed by the
+server (bind to a short TTL + client) so it can’t be forged/replayed;
+render a login page showing the challenge + the EXACT command the user
+runs locally:
+<code>printf %s '&lt;challenge&gt;' | ssh-keygen -Y sign -n helixcode-login -f ~/.ssh/id_ed25519</code>
+→ paste the signature.</li>
+<li><strong><code>POST /login</code></strong> → form
+<code>{ principal, signature }</code>. Verify:
+<ol type="1">
+<li>the challenge HMAC is valid + unexpired (server-issued, not
+replayed);</li>
+<li><code>ssh-keygen -Y verify -n helixcode-login -f &lt;allowed_signers&gt; -I &lt;principal&gt; -s &lt;sigfile&gt;</code>
+succeeds over the challenge bytes, where
+<code>&lt;allowed_signers&gt;</code> is derived from milosvasic’s
+<code>~/.ssh/authorized_keys</code> (each key → an allowed-signers line
+for the configured principal). On success → issue the existing signed
+session cookie; on failure → 401, generic error, rate-limited.</li>
+</ol></li>
+<li><strong><code>Verifier</code> interface stays</strong>; concrete
+becomes <code>sshSigVerifier</code> (uses
+<code>ssh-keygen -Y verify</code> against the allowed-signers file). The
+<code>pamVerifier</code> stub is removed.</li>
+<li><strong><code>GET /auth</code>, <code>POST /logout</code>, cookie,
+rate-limit, fail-closed</strong> — UNCHANGED from the built
+service.</li>
+</ul>
+<p>Params: <code>HELIX_AUTH_MODE=sshkey</code>,
+<code>HELIX_AUTH_ACCOUNT=milosvasic</code>,
+<code>HELIX_AUTH_AUTHORIZED_KEYS</code> (default
+<code>~/.ssh/authorized_keys</code>), <code>HELIX_AUTH_PRINCIPAL</code>
+(default the account name). No password param anywhere.</p>
+<h2
+id="autonomous-test-path-real-evidence-11.4.98-no-operator-no-password">Autonomous
+test path (real evidence, §11.4.98 — no operator, no password)</h2>
+<p>Tests generate a challenge, sign it with milosvasic’s real key via
+<code>ssh-keygen -Y sign</code>, POST the signature → expect 302 +
+cookie; tamper the signature / use a non-authorized key / replay an old
+challenge → expect 401. All with captured evidence. This is MORE
+testable than PAM (no secret needed).</p>
+<h2 id="reuse-churn">Reuse / churn</h2>
+<ul>
+<li>Reused as-is: cookie HMAC + secret, session TTL, rate-limiter,
+<code>/auth</code>, <code>/logout</code>, fail-closed, Caddy
+<code>forward_auth</code> render, systemd <code>--user</code> units,
+install flow, TLS machinery.</li>
+<li>Changed: Verifier (PAM→ssh-key), <code>/login</code> GET+POST,
+service name (<code>pam_auth</code>→<code>auth_gate</code>), env params,
+docs wording (PAM→ssh-key), <code>.env.example</code>.</li>
+</ul>
+<h2 id="credentials-11.4.10">Credentials (§11.4.10)</h2>
+<p>The login stores NO password. The operator-provided milosvasic/su
+passwords are NOT used and NOT stored — the test secret is scrubbed to
+the account name only. <code>~/.ssh</code> private keys are never read
+by the service (only <code>authorized_keys</code>/public material for
+verification).</p>
+</body>
+</html>

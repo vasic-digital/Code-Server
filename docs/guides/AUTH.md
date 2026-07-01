@@ -1,6 +1,6 @@
 # HelixCode — Authentication / Login Guide (real-account, SSH-key)
 
-**Revision:** 3
+**Revision:** 4
 **Last modified:** 2026-07-01T00:00:00Z
 
 > **Status: IN PROGRESS — being built.** This guide describes the *intended*
@@ -209,6 +209,55 @@ real-account SSH-key model uses:
 > limiting are **designed and being built**, and their tests/evidence are being
 > produced by other work streams — treat the security claims above as
 > *intended*, not yet proven, until the feature ledger records a PASS.
+
+### 5.1. Residual risk — loopback reachability, and how to close it
+
+**The risk (honest, §11.4.6).** The host-native code-server runs with
+`--auth none` and binds `127.0.0.1:8080`. Authentication is enforced **upstream**
+by the Caddy `forward_auth` gate, **not** on the loopback socket. So the loopback
+socket has **no per-UID access control**: any local process or other user in the
+host network namespace can connect to `127.0.0.1:8080` directly and get an
+interactive shell **as the account** — bypassing the Caddy gate entirely. (The
+strongest fix — a unix socket bind-mounted into the rootless Caddy container — was
+assessed and **deferred** as fragile on this two-lifecycle topology; see the note
+in `deploy/compose.codeserver.yml`. This is the same residual risk documented in
+the `RESIDUAL RISK` block of `deploy/systemd/helix-code-server.service`.)
+
+**The mitigation.** A **UID-scoped loopback OUTPUT firewall rule** that DROPs
+connections to `127.0.0.1:8080` from any UID **other than the account**. Only the
+account reaches code-server; rootless Caddy connects **as the account** (via
+`host.containers.internal` → host loopback), so the gate path stays allowed.
+Rootless-Podman pods sit in their own network namespace and never reach host
+loopback unless host-networked.
+
+**How to run it.** `scripts/harden-loopback.sh` installs the rule (nftables
+preferred, iptables fallback). Because modifying the firewall needs root and this
+project **never uses sudo/root itself**, the operator applies it via their own root
+path. It reads the account + port from `deploy/.env` — nothing is hard-coded.
+
+```bash
+# 1. Inspect the current state (read-only, NO root) — prints the exact rule it
+#    would add:
+scripts/harden-loopback.sh --check
+
+# 2. Apply it as root, via your own root path (su / sudo / doas / root login):
+su - -c 'HELIX_AUTH_ACCOUNT=milosvasic /abs/path/to/scripts/harden-loopback.sh --apply'
+
+# 3. Remove it later (also root):
+su - -c 'HELIX_AUTH_ACCOUNT=milosvasic /abs/path/to/scripts/harden-loopback.sh --remove'
+```
+
+The rule installed (iptables form, exactly as documented in the systemd unit):
+
+```
+iptables -A OUTPUT -o lo -p tcp --dport 8080 -m owner ! --uid-owner <account-uid> -j DROP
+```
+
+nft/iptables rules are **runtime state** and do not survive a reboot on their own —
+persist them via your distro's ruleset-save mechanism or a boot unit after
+applying. This is **defence-in-depth** on top of the fail-closed Caddy gate, not a
+replacement for it. Full details:
+[`docs/scripts/harden-loopback.md`](../scripts/harden-loopback.md).
 
 ---
 

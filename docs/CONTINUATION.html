@@ -1,0 +1,328 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>CONTINUATION</title>
+  <style>
+    /* Default styles provided by pandoc.
+    ** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
+    */
+    html {
+      color: #1a1a1a;
+      background-color: #fdfdfd;
+    }
+    body {
+      margin: 0 auto;
+      max-width: 36em;
+      padding-left: 50px;
+      padding-right: 50px;
+      padding-top: 50px;
+      padding-bottom: 50px;
+      hyphens: auto;
+      overflow-wrap: break-word;
+      text-rendering: optimizeLegibility;
+      font-kerning: normal;
+    }
+    @media (max-width: 600px) {
+      body {
+        font-size: 0.9em;
+        padding: 12px;
+      }
+      h1 {
+        font-size: 1.8em;
+      }
+    }
+    @media print {
+      html {
+        background-color: white;
+      }
+      body {
+        background-color: transparent;
+        color: black;
+        font-size: 12pt;
+      }
+      p, h2, h3 {
+        orphans: 3;
+        widows: 3;
+      }
+      h2, h3, h4 {
+        page-break-after: avoid;
+      }
+    }
+    p {
+      margin: 1em 0;
+    }
+    a {
+      color: #1a1a1a;
+    }
+    a:visited {
+      color: #1a1a1a;
+    }
+    img {
+      max-width: 100%;
+    }
+    svg {
+      height: auto;
+      max-width: 100%;
+    }
+    h1, h2, h3, h4, h5, h6 {
+      margin-top: 1.4em;
+    }
+    h5, h6 {
+      font-size: 1em;
+      font-style: italic;
+    }
+    h6 {
+      font-weight: normal;
+    }
+    ol, ul {
+      padding-left: 1.7em;
+      margin-top: 1em;
+    }
+    li > ol, li > ul {
+      margin-top: 0;
+    }
+    blockquote {
+      margin: 1em 0 1em 1.7em;
+      padding-left: 1em;
+      border-left: 2px solid #e6e6e6;
+      color: #606060;
+    }
+    code {
+      font-family: Menlo, Monaco, Consolas, 'Lucida Console', monospace;
+      font-size: 85%;
+      margin: 0;
+      hyphens: manual;
+    }
+    pre {
+      margin: 1em 0;
+      overflow: auto;
+    }
+    pre code {
+      padding: 0;
+      overflow: visible;
+      overflow-wrap: normal;
+    }
+    .sourceCode {
+     background-color: transparent;
+     overflow: visible;
+    }
+    hr {
+      border: none;
+      border-top: 1px solid #1a1a1a;
+      height: 1px;
+      margin: 1em 0;
+    }
+    table {
+      margin: 1em 0;
+      border-collapse: collapse;
+      width: 100%;
+      overflow-x: auto;
+      display: block;
+      font-variant-numeric: lining-nums tabular-nums;
+    }
+    table caption {
+      margin-bottom: 0.75em;
+    }
+    tbody {
+      margin-top: 0.5em;
+      border-top: 1px solid #1a1a1a;
+      border-bottom: 1px solid #1a1a1a;
+    }
+    th {
+      border-top: 1px solid #1a1a1a;
+      padding: 0.25em 0.5em 0.25em 0.5em;
+    }
+    td {
+      padding: 0.125em 0.5em 0.25em 0.5em;
+    }
+    header {
+      margin-bottom: 4em;
+      text-align: center;
+    }
+    #TOC li {
+      list-style: none;
+    }
+    #TOC ul {
+      padding-left: 1.3em;
+    }
+    #TOC > ul {
+      padding-left: 0;
+    }
+    #TOC a:not(:hover) {
+      text-decoration: none;
+    }
+    code{white-space: pre-wrap;}
+    span.smallcaps{font-variant: small-caps;}
+    div.columns{display: flex; gap: min(4vw, 1.5em);}
+    div.column{flex: auto; overflow-x: auto;}
+    div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+    /* The extra [class] is a hack that increases specificity enough to
+       override a similar rule in reveal.js */
+    ul.task-list[class]{list-style: none;}
+    ul.task-list li input[type="checkbox"] {
+      font-size: inherit;
+      width: 0.8em;
+      margin: 0 0.8em 0.2em -1.6em;
+      vertical-align: middle;
+    }
+    .display.math{display: block; text-align: center; margin: 0.5rem auto;}
+  </style>
+</head>
+<body>
+<header id="title-block-header">
+<h1 class="title">CONTINUATION</h1>
+</header>
+<h1 id="continuation-helixcode-web-ide-platform">CONTINUATION —
+HelixCode web-IDE platform</h1>
+<p><strong>Revision:</strong> 4 · <strong>Updated:</strong> 2026-07-01 ·
+<strong>Status:</strong> RELEASED
+<strong><code>codeserver-1.0.0-dev-0.0.3</code></strong> (real-account
+SSH-key auth) — live-validated (§11.4.169 matrix 23/23 PASS, 0 FAIL),
+tagged + pushed to all 4 mirrors, GitHub + GitLab releases published;
+stack LIVE at https://192.168.0.213:52443</p>
+<p>Read FIRST on any fresh session: this file, then
+<code>git fetch --all</code>, then the auth-pivot spec + AUTH guide +
+feature ledger below. This is the §12.10 / §11.4.131 standing resumption
+anchor.</p>
+<h2
+id="current-phase-codeserver-1.0.0-dev-0.0.3-released-real-account-ssh-key-auth">Current
+phase — <code>codeserver-1.0.0-dev-0.0.3</code> RELEASED (real-account
+SSH-key auth)</h2>
+<p>This round pivoted authentication to a <strong>real-account, SSH-key
+challenge-response</strong> model tying each HelixCode session to the
+real host user (<code>milosvasic</code>), host-native. Live-validated
+end-to-end on this host (full edge journey + §11.4.169 matrix
+<strong>23/23 PASS, 0 FAIL</strong> + Go gate <strong>70 tests
+<code>-race</code></strong>), committed (<code>2746e0e</code>), tagged,
+pushed to all 4 mirrors (no force, §11.4.113), and released on GitHub +
+GitLab. The stack is LIVE + reachable for operator testing at
+<strong>https://192.168.0.213:52443</strong> — sign the
+<code>/login</code> challenge with an
+<code>~/.ssh/authorized_keys</code> key (no password). Non-blocking
+follow-ups: edge-container reboot-persistence; publicly-trusted Let’s
+Encrypt (operator-gated); the loopback:8080 host-firewall
+recommendation.</p>
+<ul>
+<li>Changelog (this release):
+<code>docs/changelogs/codeserver-1.0.0-dev-0.0.3.md</code></li>
+<li>Auth pivot spec (authoritative):
+<code>docs/superpowers/specs/2026-07-01-auth-pivot-ssh-key.md</code>
+(supersedes the live-PAM-login part of
+<code>docs/superpowers/specs/2026-07-01-real-account-code-server-design.md</code>)</li>
+<li>User guide: <code>docs/guides/AUTH.md</code></li>
+<li>Feature ledger + validation verdicts:
+<code>docs/features/Status.md</code></li>
+<li>Prior release:
+<code>docs/changelogs/codeserver-1.0.0-dev-0.0.2.md</code> (TLS / Let’s
+Encrypt + §11.4.169 matrix)</li>
+</ul>
+<h3 id="why-the-pivot-captured-facts-11.4.6">Why the pivot (captured
+facts, §11.4.6)</h3>
+<p>This host is ALT Linux with the <strong>tcb</strong> shadow scheme,
+so a <strong>non-root</strong> service cannot verify passwords via PAM
+(<code>/etc/tcb/&lt;user&gt;/shadow</code> unreadable by the user;
+<code>tcb_chkpwd</code> setuid helper permission-denied to non-root ⇒
+<code>pam_authenticate</code> returns <code>PAM_AUTH_ERR</code> for
+every password). A password gate would need root; the operator directive
+is <strong>no sudo/root</strong> and <strong>all access via SSH
+keys</strong>. <code>~/.ssh/authorized_keys</code> is readable and
+<code>ssh-keygen -Y sign</code>/<code>-Y verify</code> are supported, so
+SSH-key challenge-response runs fully <strong>as non-root
+milosvasic</strong>, with <strong>no password and nothing
+stored</strong>.</p>
+<h2 id="architecture-this-release">Architecture (this release)</h2>
+<pre><code>Browser ──HTTPS──▶ Caddy (TLS edge, CONTAINERIZED rootless Podman; HTTP/3 + brotli via custom xcaddy)
+                    ├─ forward_auth ─▶ helix-auth (host-native Gin, systemd --user, loopback:8081, NON-root)
+                    └─ reverse_proxy ─▶ code-server (host-native AS milosvasic, systemd --user,
+                                          --auth none, loopback:8080; inherits ~/.ssh, ~/.bashrc, host binaries)</code></pre>
+<ul>
+<li><strong>code-server</strong> — host-native
+<code>systemd --user</code>, <code>--auth none</code>,
+loopback:8080.</li>
+<li><strong>helix-auth</strong> — host-native <strong>Gin</strong> gate,
+<code>systemd --user</code>, loopback:8081, non-root: SSH-key challenge
+(<code>GET /login</code>) → verify pasted signature vs
+<code>authorized_keys</code> (<code>ssh-keygen -Y verify</code>) →
+<code>__Host-</code> session cookie; <code>GET /auth</code> for
+forward_auth; <strong>fails closed</strong>.</li>
+<li><strong>Caddy</strong> — sole containerized component: TLS edge,
+<code>forward_auth</code> (fail-closed), HTTP/3,
+<code>encode zstd br gzip</code>, <code>/proxy</code> 403,
+<code>X-Helix-User</code> strip.</li>
+<li><strong>Stack directive adopted:</strong> Go + Gin + HTTP/3 (QUIC) +
+Brotli.</li>
+</ul>
+<h2 id="feature-status-11.4.6-honest">Feature status (§11.4.6 —
+honest)</h2>
+<p>The real-account + SSH-key rows in
+<code>docs/features/Status.md</code> are <strong>In progress / PENDING
+validation</strong> — no PASS is claimed until captured evidence lands.
+Testing: Go unit/integration/race (<strong>70 tests, <code>-race</code>,
+81.8% cover</strong>) + shell suites
+<code>tests/types/{e2e,security,stress_chaos,concurrency,load,memory,benchmark,challenges,helixqa}_auth.sh</code>
++ banks
+<code>tests/banks/helixcode-auth-{challenges,helixqa}.yaml</code>. The
+live aggregate is the conductor-filled placeholder in the changelog.</p>
+<h3 id="honest-boundaries-carried-into-the-release">Honest boundaries
+carried into the release</h3>
+<ul>
+<li>Editor “jail” is <strong>cosmetic</strong> (Explorer default only;
+terminal/Open-Folder/ extensions keep full host access by design).</li>
+<li><code>--auth none</code> on loopback:8080 is a
+<strong>residual</strong> — host firewall rule for loopback:8080
+recommended (all real auth is at the gate/edge).</li>
+<li>code-server pinned <strong>4.117.0</strong> (newest on npm at
+release time).</li>
+<li>Real public Let’s Encrypt remains <strong>operator-gated</strong>
+(see <code>docs/guides/TLS.md</code>).</li>
+</ul>
+<h2 id="migration">Migration</h2>
+<p><code>scripts/install-auth.sh</code> (host-native, <strong>no
+sudo</strong>) provisions the <code>systemd --user</code> code-server +
+helix-auth units; <code>deploy/up.sh</code> brings up the Caddy edge.
+<strong><code>CODE_SERVER_PASSWORD</code> is retired</strong> →
+<code>HELIX_AUTH_MODE=sshkey</code>, <code>HELIX_AUTH_ACCOUNT</code>,
+<code>HELIX_AUTH_AUTHORIZED_KEYS</code>,
+<code>HELIX_AUTH_PRINCIPAL</code>, <code>PROJECTS_ROOT</code> (no
+password parameter).</p>
+<h2 id="immediate-next-to-close-the-release">Immediate NEXT (to close
+the release)</h2>
+<ol type="1">
+<li>Run the live §11.4.169 auth matrix against the freshly-installed
+host stack; capture evidence under
+<code>docs/qa/codeserver-1.0.0-dev-0.0.3/</code>.</li>
+<li>Fill <code>LIVE VALIDATION AGGREGATE</code> in
+<code>docs/changelogs/codeserver-1.0.0-dev-0.0.3.md</code> with the real
+PASS/FAIL/SKIP counts (§11.4.6 — never invented).</li>
+<li>Flip the <code>docs/features/Status.md</code> real-account rows to
+their verdicts once evidence lands.</li>
+<li>Full-suite retest (§11.4.40) → tag
+<code>codeserver-1.0.0-dev-0.0.3</code> → publish to all upstreams via
+merge-onto-latest-main (no force-push, §11.4.113).</li>
+</ol>
+<h2 id="binding-constraints-every-phase">Binding constraints (every
+phase)</h2>
+<p>Port band <strong>52000–52999</strong>; publish only edge ports on
+<code>0.0.0.0</code>; <strong>no secrets</strong> (only git-ignored
+<code>.env</code>); <strong>every gate paired with a §1.1
+mutation</strong>; <strong>no
+<code>--force</code>/<code>--no-verify</code>/bypass</strong>;
+hardlinked <code>.git</code> backup before destructive ops;
+<strong>anti-bluff</strong> (PASS needs captured runtime evidence, no
+invented numbers); stop + root-cause + full retest on any defect;
+release prefix <code>codeserver</code>; submodule commits propagate
+first; docs kept in sync.</p>
+<h2 id="prior-state-phases-12-retained">Prior state (Phases 1–2,
+retained)</h2>
+<p>Phase 1 COMPLETE; Phase 2 core working+verified (Caddy edge +
+code-server stack on Podman; TLS1.3 edge on 52443, →301 on 52080;
+<code>$PROJECTS</code> bind-mounted). Owned submodules (8) at root carry
+the Constitution inheritance pointer; constitution pinned (see history).
+Prior release <code>codeserver-1.0.0-dev-0.0.2</code> shipped Let’s
+Encrypt HTTPS (auto-renew + rotation) + the 14-suite §11.4.169
+matrix.</p>
+</body>
+</html>

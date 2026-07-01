@@ -1,0 +1,390 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>HelixCode Caddy edge — boot persistence</title>
+  <style>
+    /* Default styles provided by pandoc.
+    ** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
+    */
+    html {
+      color: #1a1a1a;
+      background-color: #fdfdfd;
+    }
+    body {
+      margin: 0 auto;
+      max-width: 36em;
+      padding-left: 50px;
+      padding-right: 50px;
+      padding-top: 50px;
+      padding-bottom: 50px;
+      hyphens: auto;
+      overflow-wrap: break-word;
+      text-rendering: optimizeLegibility;
+      font-kerning: normal;
+    }
+    @media (max-width: 600px) {
+      body {
+        font-size: 0.9em;
+        padding: 12px;
+      }
+      h1 {
+        font-size: 1.8em;
+      }
+    }
+    @media print {
+      html {
+        background-color: white;
+      }
+      body {
+        background-color: transparent;
+        color: black;
+        font-size: 12pt;
+      }
+      p, h2, h3 {
+        orphans: 3;
+        widows: 3;
+      }
+      h2, h3, h4 {
+        page-break-after: avoid;
+      }
+    }
+    p {
+      margin: 1em 0;
+    }
+    a {
+      color: #1a1a1a;
+    }
+    a:visited {
+      color: #1a1a1a;
+    }
+    img {
+      max-width: 100%;
+    }
+    svg {
+      height: auto;
+      max-width: 100%;
+    }
+    h1, h2, h3, h4, h5, h6 {
+      margin-top: 1.4em;
+    }
+    h5, h6 {
+      font-size: 1em;
+      font-style: italic;
+    }
+    h6 {
+      font-weight: normal;
+    }
+    ol, ul {
+      padding-left: 1.7em;
+      margin-top: 1em;
+    }
+    li > ol, li > ul {
+      margin-top: 0;
+    }
+    blockquote {
+      margin: 1em 0 1em 1.7em;
+      padding-left: 1em;
+      border-left: 2px solid #e6e6e6;
+      color: #606060;
+    }
+    code {
+      font-family: Menlo, Monaco, Consolas, 'Lucida Console', monospace;
+      font-size: 85%;
+      margin: 0;
+      hyphens: manual;
+    }
+    pre {
+      margin: 1em 0;
+      overflow: auto;
+    }
+    pre code {
+      padding: 0;
+      overflow: visible;
+      overflow-wrap: normal;
+    }
+    .sourceCode {
+     background-color: transparent;
+     overflow: visible;
+    }
+    hr {
+      border: none;
+      border-top: 1px solid #1a1a1a;
+      height: 1px;
+      margin: 1em 0;
+    }
+    table {
+      margin: 1em 0;
+      border-collapse: collapse;
+      width: 100%;
+      overflow-x: auto;
+      display: block;
+      font-variant-numeric: lining-nums tabular-nums;
+    }
+    table caption {
+      margin-bottom: 0.75em;
+    }
+    tbody {
+      margin-top: 0.5em;
+      border-top: 1px solid #1a1a1a;
+      border-bottom: 1px solid #1a1a1a;
+    }
+    th {
+      border-top: 1px solid #1a1a1a;
+      padding: 0.25em 0.5em 0.25em 0.5em;
+    }
+    td {
+      padding: 0.125em 0.5em 0.25em 0.5em;
+    }
+    header {
+      margin-bottom: 4em;
+      text-align: center;
+    }
+    #TOC li {
+      list-style: none;
+    }
+    #TOC ul {
+      padding-left: 1.3em;
+    }
+    #TOC > ul {
+      padding-left: 0;
+    }
+    #TOC a:not(:hover) {
+      text-decoration: none;
+    }
+    code{white-space: pre-wrap;}
+    span.smallcaps{font-variant: small-caps;}
+    div.columns{display: flex; gap: min(4vw, 1.5em);}
+    div.column{flex: auto; overflow-x: auto;}
+    div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+    /* The extra [class] is a hack that increases specificity enough to
+       override a similar rule in reveal.js */
+    ul.task-list[class]{list-style: none;}
+    ul.task-list li input[type="checkbox"] {
+      font-size: inherit;
+      width: 0.8em;
+      margin: 0 0.8em 0.2em -1.6em;
+      vertical-align: middle;
+    }
+    .display.math{display: block; text-align: center; margin: 0.5rem auto;}
+    /* CSS for syntax highlighting */
+    html { -webkit-text-size-adjust: 100%; }
+    pre > code.sourceCode { white-space: pre; position: relative; }
+    pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+    pre > code.sourceCode > span:empty { height: 1.2em; }
+    .sourceCode { overflow: visible; }
+    code.sourceCode > span { color: inherit; text-decoration: inherit; }
+    div.sourceCode { margin: 1em 0; }
+    pre.sourceCode { margin: 0; }
+    @media screen {
+    div.sourceCode { overflow: auto; }
+    }
+    @media print {
+    pre > code.sourceCode { white-space: pre-wrap; }
+    pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+    }
+    pre.numberSource code
+      { counter-reset: source-line 0; }
+    pre.numberSource code > span
+      { position: relative; left: -4em; counter-increment: source-line; }
+    pre.numberSource code > span > a:first-child::before
+      { content: counter(source-line);
+        position: relative; left: -1em; text-align: right; vertical-align: baseline;
+        border: none; display: inline-block;
+        -webkit-touch-callout: none; -webkit-user-select: none;
+        -khtml-user-select: none; -moz-user-select: none;
+        -ms-user-select: none; user-select: none;
+        padding: 0 4px; width: 4em;
+        color: #aaaaaa;
+      }
+    pre.numberSource { margin-left: 3em; border-left: 1px solid #aaaaaa;  padding-left: 4px; }
+    div.sourceCode
+      {   }
+    @media screen {
+    pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+    }
+    code span.al { color: #ff0000; font-weight: bold; } /* Alert */
+    code span.an { color: #60a0b0; font-weight: bold; font-style: italic; } /* Annotation */
+    code span.at { color: #7d9029; } /* Attribute */
+    code span.bn { color: #40a070; } /* BaseN */
+    code span.bu { color: #008000; } /* BuiltIn */
+    code span.cf { color: #007020; font-weight: bold; } /* ControlFlow */
+    code span.ch { color: #4070a0; } /* Char */
+    code span.cn { color: #880000; } /* Constant */
+    code span.co { color: #60a0b0; font-style: italic; } /* Comment */
+    code span.cv { color: #60a0b0; font-weight: bold; font-style: italic; } /* CommentVar */
+    code span.do { color: #ba2121; font-style: italic; } /* Documentation */
+    code span.dt { color: #902000; } /* DataType */
+    code span.dv { color: #40a070; } /* DecVal */
+    code span.er { color: #ff0000; font-weight: bold; } /* Error */
+    code span.ex { } /* Extension */
+    code span.fl { color: #40a070; } /* Float */
+    code span.fu { color: #06287e; } /* Function */
+    code span.im { color: #008000; font-weight: bold; } /* Import */
+    code span.in { color: #60a0b0; font-weight: bold; font-style: italic; } /* Information */
+    code span.kw { color: #007020; font-weight: bold; } /* Keyword */
+    code span.op { color: #666666; } /* Operator */
+    code span.ot { color: #007020; } /* Other */
+    code span.pp { color: #bc7a00; } /* Preprocessor */
+    code span.sc { color: #4070a0; } /* SpecialChar */
+    code span.ss { color: #bb6688; } /* SpecialString */
+    code span.st { color: #4070a0; } /* String */
+    code span.va { color: #19177c; } /* Variable */
+    code span.vs { color: #4070a0; } /* VerbatimString */
+    code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warning */
+  </style>
+</head>
+<body>
+<header id="title-block-header">
+<h1 class="title">HelixCode Caddy edge — boot persistence</h1>
+</header>
+<h1 id="helixcode-caddy-edge-boot-persistence">HelixCode Caddy edge —
+boot persistence</h1>
+<p><strong>Revision:</strong> 1 <strong>Last modified:</strong>
+2026-07-01T19:10:00Z <strong>Scope:</strong> rootless-podman boot
+mechanism for the Caddy edge container. <strong>Authority:</strong>
+constitution §11.4.6 (no-guessing — values mirrored from the live
+container), §11.4.10 (secret handling), §11.4.174 (never touch other
+projects’ containers).</p>
+<h2 id="problem">Problem</h2>
+<p>The HelixCode edge (Caddy, rootless podman) runs today as container
+<code>deploy_caddy_1</code>, started by <code>podman-compose</code> via
+<code>deploy/up.sh</code> with <code>restart=unless-stopped</code>. A
+podman restart policy is <strong>not</strong> a boot mechanism: after a
+full host reboot nothing re-creates that container, so the edge does
+<strong>not</strong> come back. Only the two <code>systemd --user</code>
+services (<code>helix-auth</code>, <code>helix-code-server</code>)
+return, because they are <code>enable</code>d and linger is on.</p>
+<p>This guide closes that gap with a <strong>rootless-podman
+Quadlet</strong> that systemd’s podman generator turns into a
+<code>helixcode-caddy.service</code> <code>--user</code> unit which
+auto-starts on every login/boot (linger <code>=yes</code> for
+<code>milosvasic</code> is already set, so that means at host boot).</p>
+<h2 id="what-ships">What ships</h2>
+<table>
+<colgroup>
+<col style="width: 50%" />
+<col style="width: 50%" />
+</colgroup>
+<thead>
+<tr>
+<th>File</th>
+<th>Role</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>deploy/quadlet/helixcode-caddy.container</code></td>
+<td><strong>Source of truth</strong> Quadlet unit (tracked). Every value
+mirrors <code>podman inspect deploy_caddy_1</code>.</td>
+</tr>
+<tr>
+<td><code>scripts/install-edge-boot.sh</code></td>
+<td>Install / arm-boot / start / uninstall helper.</td>
+</tr>
+<tr>
+<td><code>docs/guides/EDGE_BOOT.md</code></td>
+<td>This guide.</td>
+</tr>
+</tbody>
+</table>
+<p>The unit reproduces the live container exactly (verified with
+<code>podman inspect deploy_caddy_1</code>):</p>
+<ul>
+<li><strong>image</strong>
+<code>localhost/helixcode-caddy-brotli:2</code> (<code>Pull=never</code>
+— local image, no registry)</li>
+<li><strong>network</strong>
+<code>pasta:--map-host-loopback,169.254.1.2</code></li>
+<li><strong>ports</strong> <code>0.0.0.0:52443:443/tcp</code>,
+<code>0.0.0.0:52443:443/udp</code>,
+<code>0.0.0.0:52080:80/tcp</code></li>
+<li><strong>volumes</strong>
+<code>./deploy/Caddyfile:/etc/caddy/Caddyfile:Z</code>,
+<code>./deploy/tls:/etc/caddy/tls:Z</code>,
+<code>deploy_caddy-data:/data</code>,
+<code>deploy_caddy-config:/config</code> (the same named volumes the
+live container uses, so ACME/cert state carries over)</li>
+<li><strong>env</strong> <code>ACME_DNS_API_TOKEN=</code> passthrough
+(empty today, matching live)</li>
+</ul>
+<p>The container is named <code>helixcode-caddy</code>
+(<strong>not</strong> <code>deploy_caddy_1</code>) so it never collides
+with the compose-created container that already exists in podman
+storage. Only one process can bind <code>52443</code>/<code>52080</code>
+at a time — the Quadlet unit is the <strong>boot owner</strong>.</p>
+<h2 id="install-enable-the-exact-command">Install / enable (the exact
+command)</h2>
+<div class="sourceCode" id="cb1"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="co"># From the repo root:</span></span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="ex">scripts/install-edge-boot.sh</span></span></code></pre></div>
+<p>That copies the unit to
+<code>~/.config/containers/systemd/helixcode-caddy.container</code> and
+runs <code>systemctl --user daemon-reload</code>. The unit’s
+<code>[Install] WantedBy=default.target</code> means
+<strong>daemon-reload alone arms boot start</strong> — a
+Quadlet-generated unit is <em>not</em> enabled with
+<code>systemctl enable</code>; the <code>[Install]</code> section is how
+it is wired into <code>default.target</code>.</p>
+<p>Equivalent manual form (no script):</p>
+<div class="sourceCode" id="cb2"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="fu">mkdir</span> <span class="at">-p</span> ~/.config/containers/systemd</span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a><span class="fu">cp</span> deploy/quadlet/helixcode-caddy.container ~/.config/containers/systemd/</span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a><span class="ex">systemctl</span> <span class="at">--user</span> daemon-reload</span></code></pre></div>
+<p>By design the install does <strong>not</strong> start the container
+immediately: while the compose <code>deploy_caddy_1</code> is live it
+owns the ports, so a start would clash. On the next reboot the compose
+container does not return and the Quadlet unit claims the ports
+cleanly.</p>
+<h3 id="activating-now-optional">Activating now (optional)</h3>
+<p>To hand over from the running compose edge to the Quadlet unit
+without a reboot, stop the compose container first (frees the ports),
+then start the unit:</p>
+<div class="sourceCode" id="cb3"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="ex">scripts/install-edge-boot.sh</span> <span class="at">--start</span>   <span class="co"># refuses if deploy_caddy_1 is still up</span></span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a><span class="co"># or, manually, after stopping the compose edge:</span></span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a><span class="ex">systemctl</span> <span class="at">--user</span> start helixcode-caddy.service</span></code></pre></div>
+<h2 id="acme-dns-token-11.4.10">ACME DNS token (§11.4.10)</h2>
+<p>The tracked unit ships <code>ACME_DNS_API_TOKEN=</code>
+<strong>empty</strong> — matching the live container and never
+versioning a secret. <code>scripts/install-edge-boot.sh</code> only
+writes a real token if <code>deploy/.env</code> already carries a
+non-empty one, and then only into an <strong>out-of-repo</strong>
+Quadlet drop-in
+<code>~/.config/containers/systemd/helixcode-caddy.container.d/10-token.conf</code>
+(mode <code>0600</code>, never echoed, never committed) that merges over
+the empty default.</p>
+<blockquote>
+<p>Note (§11.4.6): Quadlet’s <code>EnvironmentFile=</code> does
+<strong>not</strong> honor systemd’s <code>-</code> optional prefix or
+<code>%h</code>, so an env-file seam bakes a bogus
+<code>--env-file</code> path and fails the container at boot. The
+inline-empty + drop-in-override design above avoids that (proven with
+<code>podman-system-generator -dryrun</code>).</p>
+</blockquote>
+<h2 id="verify-static-does-not-start-anything">Verify (static, does not
+start anything)</h2>
+<div class="sourceCode" id="cb4"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="va">QUADLET_UNIT_DIRS</span><span class="op">=</span><span class="st">&quot;</span><span class="va">$PWD</span><span class="st">/deploy/quadlet&quot;</span> <span class="dt">\</span></span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a>  <span class="ex">/usr/lib/systemd/system-generators/podman-system-generator</span> <span class="at">--user</span> <span class="at">-dryrun</span></span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a><span class="co"># and, on the generated service:</span></span>
+<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a><span class="va">tmp</span><span class="op">=</span><span class="va">$(</span><span class="fu">mktemp</span> <span class="at">-d</span><span class="va">)</span></span>
+<span id="cb4-6"><a href="#cb4-6" aria-hidden="true" tabindex="-1"></a><span class="va">QUADLET_UNIT_DIRS</span><span class="op">=</span><span class="st">&quot;</span><span class="va">$PWD</span><span class="st">/deploy/quadlet&quot;</span> <span class="dt">\</span></span>
+<span id="cb4-7"><a href="#cb4-7" aria-hidden="true" tabindex="-1"></a>  <span class="ex">/usr/lib/systemd/system-generators/podman-system-generator</span> <span class="at">--user</span> <span class="st">&quot;</span><span class="va">$tmp</span><span class="st">&quot;</span></span>
+<span id="cb4-8"><a href="#cb4-8" aria-hidden="true" tabindex="-1"></a><span class="ex">systemd-analyze</span> <span class="at">--user</span> verify <span class="st">&quot;</span><span class="va">$tmp</span><span class="st">/helixcode-caddy.service&quot;</span>   <span class="co"># exit 0 = clean</span></span></code></pre></div>
+<p>After a real install:
+<code>systemctl --user status helixcode-caddy.service</code> and, on the
+next boot, <code>podman ps</code> should show the
+<code>helixcode-caddy</code> container up.</p>
+<h2 id="uninstall-disarm">Uninstall / disarm</h2>
+<div class="sourceCode" id="cb5"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="ex">scripts/install-edge-boot.sh</span> <span class="at">--uninstall</span></span></code></pre></div>
+<p>Stops the service, removes the unit + token drop-in, reloads. The
+named volumes (<code>deploy_caddy-data</code> /
+<code>deploy_caddy-config</code>) and the compose stack are left
+untouched.</p>
+</body>
+</html>

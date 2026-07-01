@@ -1,0 +1,385 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>2026-07-01-real-account-code-server-design</title>
+  <style>
+    /* Default styles provided by pandoc.
+    ** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
+    */
+    html {
+      color: #1a1a1a;
+      background-color: #fdfdfd;
+    }
+    body {
+      margin: 0 auto;
+      max-width: 36em;
+      padding-left: 50px;
+      padding-right: 50px;
+      padding-top: 50px;
+      padding-bottom: 50px;
+      hyphens: auto;
+      overflow-wrap: break-word;
+      text-rendering: optimizeLegibility;
+      font-kerning: normal;
+    }
+    @media (max-width: 600px) {
+      body {
+        font-size: 0.9em;
+        padding: 12px;
+      }
+      h1 {
+        font-size: 1.8em;
+      }
+    }
+    @media print {
+      html {
+        background-color: white;
+      }
+      body {
+        background-color: transparent;
+        color: black;
+        font-size: 12pt;
+      }
+      p, h2, h3 {
+        orphans: 3;
+        widows: 3;
+      }
+      h2, h3, h4 {
+        page-break-after: avoid;
+      }
+    }
+    p {
+      margin: 1em 0;
+    }
+    a {
+      color: #1a1a1a;
+    }
+    a:visited {
+      color: #1a1a1a;
+    }
+    img {
+      max-width: 100%;
+    }
+    svg {
+      height: auto;
+      max-width: 100%;
+    }
+    h1, h2, h3, h4, h5, h6 {
+      margin-top: 1.4em;
+    }
+    h5, h6 {
+      font-size: 1em;
+      font-style: italic;
+    }
+    h6 {
+      font-weight: normal;
+    }
+    ol, ul {
+      padding-left: 1.7em;
+      margin-top: 1em;
+    }
+    li > ol, li > ul {
+      margin-top: 0;
+    }
+    blockquote {
+      margin: 1em 0 1em 1.7em;
+      padding-left: 1em;
+      border-left: 2px solid #e6e6e6;
+      color: #606060;
+    }
+    code {
+      font-family: Menlo, Monaco, Consolas, 'Lucida Console', monospace;
+      font-size: 85%;
+      margin: 0;
+      hyphens: manual;
+    }
+    pre {
+      margin: 1em 0;
+      overflow: auto;
+    }
+    pre code {
+      padding: 0;
+      overflow: visible;
+      overflow-wrap: normal;
+    }
+    .sourceCode {
+     background-color: transparent;
+     overflow: visible;
+    }
+    hr {
+      border: none;
+      border-top: 1px solid #1a1a1a;
+      height: 1px;
+      margin: 1em 0;
+    }
+    table {
+      margin: 1em 0;
+      border-collapse: collapse;
+      width: 100%;
+      overflow-x: auto;
+      display: block;
+      font-variant-numeric: lining-nums tabular-nums;
+    }
+    table caption {
+      margin-bottom: 0.75em;
+    }
+    tbody {
+      margin-top: 0.5em;
+      border-top: 1px solid #1a1a1a;
+      border-bottom: 1px solid #1a1a1a;
+    }
+    th {
+      border-top: 1px solid #1a1a1a;
+      padding: 0.25em 0.5em 0.25em 0.5em;
+    }
+    td {
+      padding: 0.125em 0.5em 0.25em 0.5em;
+    }
+    header {
+      margin-bottom: 4em;
+      text-align: center;
+    }
+    #TOC li {
+      list-style: none;
+    }
+    #TOC ul {
+      padding-left: 1.3em;
+    }
+    #TOC > ul {
+      padding-left: 0;
+    }
+    #TOC a:not(:hover) {
+      text-decoration: none;
+    }
+    code{white-space: pre-wrap;}
+    span.smallcaps{font-variant: small-caps;}
+    div.columns{display: flex; gap: min(4vw, 1.5em);}
+    div.column{flex: auto; overflow-x: auto;}
+    div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+    /* The extra [class] is a hack that increases specificity enough to
+       override a similar rule in reveal.js */
+    ul.task-list[class]{list-style: none;}
+    ul.task-list li input[type="checkbox"] {
+      font-size: inherit;
+      width: 0.8em;
+      margin: 0 0.8em 0.2em -1.6em;
+      vertical-align: middle;
+    }
+    .display.math{display: block; text-align: center; margin: 0.5rem auto;}
+  </style>
+</head>
+<body>
+<header id="title-block-header">
+<h1 class="title">2026-07-01-real-account-code-server-design</h1>
+</header>
+<h1 id="real-account-tied-code-server-design-spec">Real-account-tied
+code-server — design spec</h1>
+<p><strong>Revision:</strong> 1 <strong>Last modified:</strong>
+2026-07-01T00:00:00Z <strong>Status:</strong> approved (design forks +
+design approved by operator 2026-07-01) <strong>Authority:</strong>
+operator mandate 2026-07-01 (this session) <strong>Scope:</strong>
+HelixCode deploy — auth + runtime model + editor jail</p>
+<h2 id="goal">1. Goal</h2>
+<p>Every code-server session is tied to a <strong>real host user
+account</strong> (default <code>milosvasic</code>) so it has that user’s
+full capability:</p>
+<ul>
+<li><strong>All SSH keys</strong> already registered with our Git
+services (host <code>~/.ssh</code>) work for git over SSH from the
+editor terminal.</li>
+<li><strong>Everything from <code>.bashrc</code></strong> (exported vars
++ init steps) works in a fresh terminal session.</li>
+<li><strong>All system apps / binaries / utils</strong> the user
+normally has are available.</li>
+<li>The <strong>login screen authenticates against the real account
+password via PAM, live</strong> — nothing stored anywhere (no password
+in repo, config, env, logs, or evidence).</li>
+<li>The editor <strong>file navigation is scoped to the projects
+directory</strong> (user can’t browse outside it in the explorer), while
+the <strong>terminal keeps full real-user capability</strong> (SSH, all
+binaries).</li>
+</ul>
+<h2 id="approved-architecture-operator-2026-07-01">2. Approved
+architecture (operator, 2026-07-01)</h2>
+<pre><code>Browser ──HTTPS :52443──▶ Caddy (TLS edge, containerized §11.4.76, unchanged TLS modes)
+                            ├─ forward_auth ─▶ helix-pam-auth  (127.0.0.1:&lt;p&gt;, host-native)
+                            │        POST /login  : PAM-verify entered pw for HELIX_AUTH_ACCOUNT
+                            │        GET  /auth    : forward-auth check (valid cookie→200 else 401)
+                            │        GET  /login   : login page ; POST /logout : clear cookie
+                            │        cookie: signed (HMAC) HttpOnly Secure SameSite=Lax, TTL+sliding
+                            │        NOTHING stored ; password never logged/persisted
+                            └─ reverse_proxy ─▶ code-server (127.0.0.1:8080, --auth none)
+                                     systemd --user service AS milosvasic (linger already enabled)
+                                     inherits ~/.ssh, ~/.bashrc, ALL host binaries natively
+                                     opens $PROJECTS_ROOT as workspace (editor file-tree jail)
+                                     integrated terminal = login shell → full real-user capability</code></pre>
+<p>Runtime model = <strong>host-native as the real user</strong> (chosen
+over containerized keep-id+bind — the only clean way to give “all host
+binaries the user usually has”). Caddy edge stays containerized per
+§11.4.76; only the editor + auth processes are host-native (a legitimate
+non-containerized case — they fundamentally require the host’s real
+identity + toolchain + PAM).</p>
+<h2 id="components">3. Components</h2>
+<h3 id="helix-pam-auth-new-go-static-binary">3.1
+<code>helix-pam-auth</code> (new Go static binary)</h3>
+<ul>
+<li>Path: <code>services/pam_auth/</code> (Go module; decoupled,
+project-agnostic §11.4.28).</li>
+<li>Endpoints: <code>GET /auth</code>, <code>GET /login</code>,
+<code>POST /login</code>, <code>POST /logout</code>,
+<code>GET /healthz</code>.</li>
+<li>PAM: verify <code>HELIX_AUTH_ACCOUNT</code>’s password via
+<code>pam_authenticate</code> (service file
+<code>/etc/pam.d/helix-pam-auth</code> →
+<code>pam_unix</code>/system-auth).</li>
+<li><strong>Privilege (load-bearing, spike first):</strong> runs
+<strong>as <code>milosvasic</code></strong> (systemd –user).
+<code>pam_unix</code> verifies via the setuid-root helper
+<code>unix_chkpwd</code>, which permits a <strong>non-root caller to
+check its OWN user’s password</strong> — so no root daemon is needed.
+<strong>Task P0 proves this on the host</strong> before the full build
+(§11.4.150). Fallback if disproven: a system service running as a
+dedicated user in the <code>shadow</code> group, OR a minimal setuid
+check helper — chosen only on captured evidence, documented per
+§11.4.112 if a hard limit is hit.</li>
+<li>Security: loopback-only bind; login <strong>rate-limited</strong>
+(anti-brute-force, fail-closed); cookie HMAC secret generated to a
+<code>0600</code> file (regenerated if absent); password bytes never
+written to disk/logs (zeroed after use); constant-time compares;
+HttpOnly+Secure+SameSite cookie; session TTL.</li>
+<li><strong>FAIL CLOSED:</strong> any auth-service error/outage ⇒ Caddy
+denies (never proxies to code-server). The #1 security invariant —
+tested by stress/chaos.</li>
+</ul>
+<h3 id="code-server-host-native">3.2 code-server host-native</h3>
+<ul>
+<li><code>systemd --user</code> unit for <code>milosvasic</code>:
+<code>code-server --auth none --bind-addr 127.0.0.1:8080 --user-data-dir &lt;dir&gt; $PROJECTS_ROOT</code>.</li>
+<li>Runs as milosvasic ⇒ <code>~/.ssh</code>, <code>~/.bashrc</code>,
+all host binaries native.</li>
+<li>Opens <code>$PROJECTS_ROOT</code> as the workspace ⇒ explorer scoped
+there (editor jail).</li>
+<li>Terminal spawns a login shell (<code>bash -l</code>) ⇒
+<code>.bashrc</code>/profile sourced, full capability by design.</li>
+<li>Install path resolves the code-server binary (npm global /
+standalone / existing container image extraction) — determined in Task
+P0.</li>
+</ul>
+<h3 id="caddy">3.3 Caddy</h3>
+<ul>
+<li><code>up.sh</code> Caddyfile render gains: <code>forward_auth</code>
+to helix-pam-auth for the app, serve <code>/login</code> + static
+assets, <code>reverse_proxy</code> to host-native code-server
+(host.containers.internal or the host gateway IP from the rootless
+netns).</li>
+<li>TLS modes (self-signed / letsencrypt* / internal-acme) preserved
+from 0.0.0.2.</li>
+</ul>
+<h2 id="parameters-replace-code_server_password">4. Parameters (replace
+<code>CODE_SERVER_PASSWORD</code>)</h2>
+<ul>
+<li><code>HELIX_AUTH_MODE=pam</code> (only mode this release).</li>
+<li><code>HELIX_AUTH_ACCOUNT=milosvasic</code> (the system account
+sessions tie to).</li>
+<li><code>PROJECTS_ROOT</code> / existing <code>PROJECTS</code>
+(workspace + jail root).</li>
+<li><strong>No password parameter.</strong> Entered live at login,
+PAM-verified, stored nowhere.</li>
+<li><code>.env.example</code> updated (placeholders only);
+<code>CODE_SERVER_PASSWORD</code> retired.</li>
+</ul>
+<h2 id="test-time-secret-handling-11.4.10-11.4.10.a-11.4.98">5.
+Test-time secret handling (§11.4.10 / §11.4.10.A / §11.4.98)</h2>
+<p>Production stores nothing. Autonomous integration/e2e (§11.4.98, no
+manual step) needs the real password to prove <em>correct→success</em>:
+- Lives ONLY in git-ignored
+<code>scripts/testing/secrets/host_account.env</code>
+(<code>0600</code>), keys <code>HELIX_TEST_ACCOUNT</code>,
+<code>HELIX_TEST_PASSWORD</code>. - <strong>§11.4.10.A pre-store
+audit:</strong> repo tree + full history scanned for prior leaks of the
+value (counts/paths only, value never echoed) BEFORE storing. -
+<code>.gitignore</code> covers <code>scripts/testing/secrets/</code>
+(verify/add). - Never committed, never logged; evidence records the
+OUTCOME (“correct pw → 200 + cookie”), never the value.</p>
+<h2 id="test-coverage-full-11.4.169-real-evidence-anti-bluff">6. Test
+coverage — full §11.4.169, real evidence (anti-bluff)</h2>
+<ul>
+<li><strong>unit</strong> (mocks allowed here only): cookie HMAC
+sign/verify, TTL+sliding, rate-limit state machine, config parse, PAM
+wrapper seam.</li>
+<li><strong>integration</strong>: real helix-pam-auth + real PAM stack →
+correct pw → 200 + cookie ; wrong pw → 401, no cookie ; code-server
+reachable ONLY via the gate.</li>
+<li><strong>e2e</strong>: login journey via Caddy (unauth→login ;
+correct account pw→editor ; wrong→denied) + terminal-as-milosvasic
+<strong>SSH-key git action succeeds</strong>
+(<code>git ls-remote git@github.com:vasic-digital/Code-Server.git</code>)
++ a <code>.bashrc</code> export present in a fresh terminal + workspace
+scoped to <code>$PROJECTS_ROOT</code>.</li>
+<li><strong>full_automation</strong>: N=3 deterministic, self-driving
+(§11.4.50/§11.4.98).</li>
+<li><strong>security</strong>: no plaintext password anywhere (tree
+scan, value not echoed); cookie HttpOnly+Secure+SameSite ; login
+rate-limited ; TLS enforced ; PAM service least-privilege ; ~/.ssh perms
+sane / not leaked.</li>
+<li><strong>load / DDoS</strong>: login endpoint flood → rate-limit
+holds, no crash.</li>
+<li><strong>stress_chaos</strong>: kill helix-pam-auth → <strong>auth
+FAILS CLOSED</strong> (Caddy denies, never bypasses) ; kill code-server
+→ recovers ; corrupt cookie secret → sessions invalidated, not bypassed
+; fd/oom pressure.</li>
+<li><strong>concurrency / race</strong>: concurrent logins, atomic
+cookie issuance, no session fixation, no deadlock.</li>
+<li><strong>memory / benchmark</strong>: helix-pam-auth RSS bounded ;
+login p50/p95/p99 vs baseline.</li>
+<li><strong>challenges + helixqa</strong>: capability challenges —
+real-account login, SSH-key push, <code>.bashrc</code> var, editor jail
+— PASS only on captured evidence.</li>
+<li>Each fix ships §11.4.115 RED→GREEN polarity + §11.4.135 regression
+guard; each suite has a paired §1.1 mutation.</li>
+</ul>
+<h2 id="docs-extend-all-existing">7. Docs (extend all existing)</h2>
+<p>README (auth/quick-start rewrite), new
+<code>docs/guides/AUTH.md</code> (real-account model, PAM, SSH keys,
+jail, operator prerequisites), <code>docs/guides/TLS.md</code> xref,
+<code>docs/features/Status.md</code> new rows,
+<code>docs/qa/&lt;run-id&gt;/</code> curated evidence, changelog
+<code>docs/changelogs/codeserver-1.0.0-dev-0.0.3.md</code>. HTML/PDF
+export is a known pre-existing project gap (not introduced here).</p>
+<h2 id="migration-rollback">8. Migration / rollback</h2>
+<ul>
+<li>New: <code>services/pam_auth/</code>, systemd units (code-server +
+pam-auth as milosvasic), Caddyfile forward_auth render, install.sh
+wiring, .env.example.</li>
+<li>Retire container <code>code-server</code> service +
+<code>CODE_SERVER_PASSWORD</code>; Caddy + TLS machinery unchanged.
+Reversible (git revert + prior release tag).</li>
+</ul>
+<h2 id="live-validation-release">9. Live validation + release</h2>
+<p>Install on THIS host, bring the stack up, run the full §11.4.169
+matrix live (§11.4.40), capture evidence, independent code review to GO
+(§11.4.142/§11.4.134), then release
+<code>codeserver-1.0.0-dev-0.0.3</code> (VERSION + changelog + tag on
+all 4 mirrors + GitHub/GitLab releases). Built subagent-driven
+(§11.4.70).</p>
+<h2
+id="key-risks-open-technical-items-resolve-early-evidence-first-11.4.6">10.
+Key risks / open technical items (resolve early, evidence-first
+§11.4.6)</h2>
+<ul>
+<li><strong>P0 spike:</strong> PAM-as-milosvasic via
+<code>unix_chkpwd</code> for own-user verify — prove on host before full
+build; pick privilege model on evidence.</li>
+<li>code-server host binary source (npm global vs standalone tarball vs
+extract from image) — resolve in P0.</li>
+<li>rootless-podman Caddy → host-native code-server/pam-auth
+reachability (host gateway IP / <code>host.containers.internal</code> /
+host network) — resolve in P0.</li>
+<li>Non-negotiable security invariant: <strong>auth fails
+CLOSED</strong>.</li>
+</ul>
+</body>
+</html>

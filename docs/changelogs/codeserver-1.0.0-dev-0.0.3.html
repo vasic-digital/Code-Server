@@ -1,0 +1,396 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>codeserver-1.0.0-dev-0.0.3</title>
+  <style>
+    /* Default styles provided by pandoc.
+    ** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
+    */
+    html {
+      color: #1a1a1a;
+      background-color: #fdfdfd;
+    }
+    body {
+      margin: 0 auto;
+      max-width: 36em;
+      padding-left: 50px;
+      padding-right: 50px;
+      padding-top: 50px;
+      padding-bottom: 50px;
+      hyphens: auto;
+      overflow-wrap: break-word;
+      text-rendering: optimizeLegibility;
+      font-kerning: normal;
+    }
+    @media (max-width: 600px) {
+      body {
+        font-size: 0.9em;
+        padding: 12px;
+      }
+      h1 {
+        font-size: 1.8em;
+      }
+    }
+    @media print {
+      html {
+        background-color: white;
+      }
+      body {
+        background-color: transparent;
+        color: black;
+        font-size: 12pt;
+      }
+      p, h2, h3 {
+        orphans: 3;
+        widows: 3;
+      }
+      h2, h3, h4 {
+        page-break-after: avoid;
+      }
+    }
+    p {
+      margin: 1em 0;
+    }
+    a {
+      color: #1a1a1a;
+    }
+    a:visited {
+      color: #1a1a1a;
+    }
+    img {
+      max-width: 100%;
+    }
+    svg {
+      height: auto;
+      max-width: 100%;
+    }
+    h1, h2, h3, h4, h5, h6 {
+      margin-top: 1.4em;
+    }
+    h5, h6 {
+      font-size: 1em;
+      font-style: italic;
+    }
+    h6 {
+      font-weight: normal;
+    }
+    ol, ul {
+      padding-left: 1.7em;
+      margin-top: 1em;
+    }
+    li > ol, li > ul {
+      margin-top: 0;
+    }
+    blockquote {
+      margin: 1em 0 1em 1.7em;
+      padding-left: 1em;
+      border-left: 2px solid #e6e6e6;
+      color: #606060;
+    }
+    code {
+      font-family: Menlo, Monaco, Consolas, 'Lucida Console', monospace;
+      font-size: 85%;
+      margin: 0;
+      hyphens: manual;
+    }
+    pre {
+      margin: 1em 0;
+      overflow: auto;
+    }
+    pre code {
+      padding: 0;
+      overflow: visible;
+      overflow-wrap: normal;
+    }
+    .sourceCode {
+     background-color: transparent;
+     overflow: visible;
+    }
+    hr {
+      border: none;
+      border-top: 1px solid #1a1a1a;
+      height: 1px;
+      margin: 1em 0;
+    }
+    table {
+      margin: 1em 0;
+      border-collapse: collapse;
+      width: 100%;
+      overflow-x: auto;
+      display: block;
+      font-variant-numeric: lining-nums tabular-nums;
+    }
+    table caption {
+      margin-bottom: 0.75em;
+    }
+    tbody {
+      margin-top: 0.5em;
+      border-top: 1px solid #1a1a1a;
+      border-bottom: 1px solid #1a1a1a;
+    }
+    th {
+      border-top: 1px solid #1a1a1a;
+      padding: 0.25em 0.5em 0.25em 0.5em;
+    }
+    td {
+      padding: 0.125em 0.5em 0.25em 0.5em;
+    }
+    header {
+      margin-bottom: 4em;
+      text-align: center;
+    }
+    #TOC li {
+      list-style: none;
+    }
+    #TOC ul {
+      padding-left: 1.3em;
+    }
+    #TOC > ul {
+      padding-left: 0;
+    }
+    #TOC a:not(:hover) {
+      text-decoration: none;
+    }
+    code{white-space: pre-wrap;}
+    span.smallcaps{font-variant: small-caps;}
+    div.columns{display: flex; gap: min(4vw, 1.5em);}
+    div.column{flex: auto; overflow-x: auto;}
+    div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+    /* The extra [class] is a hack that increases specificity enough to
+       override a similar rule in reveal.js */
+    ul.task-list[class]{list-style: none;}
+    ul.task-list li input[type="checkbox"] {
+      font-size: inherit;
+      width: 0.8em;
+      margin: 0 0.8em 0.2em -1.6em;
+      vertical-align: middle;
+    }
+    .display.math{display: block; text-align: center; margin: 0.5rem auto;}
+  </style>
+</head>
+<body>
+<header id="title-block-header">
+<h1 class="title">codeserver-1.0.0-dev-0.0.3</h1>
+</header>
+<h1 id="codeserver-1.0.0-dev-0.0.3">codeserver-1.0.0-dev-0.0.3</h1>
+<p><strong>Revision:</strong> 1 · <strong>Last modified:</strong>
+2026-07-01T00:00:00Z</p>
+<p>Third dev pre-release of <strong>HelixCode</strong>. This round
+pivots authentication to a <strong>real-account, SSH-key
+challenge-response</strong> model: a HelixCode session runs
+<strong>host-native as the real host user</strong> (default
+<code>milosvasic</code>) — natively inheriting that user’s
+<code>~/.ssh</code> keys, full <code>.bashrc</code>, and every host
+binary — and the login screen proves control of one of the account’s SSH
+keys by having the user sign a fresh server-issued challenge. <strong>No
+password exists anywhere; nothing is stored.</strong> The editor
+Explorer defaults to <code>PROJECTS_ROOT</code> as a convenience view
+(honestly <strong>not</strong> a security jail). The design supersedes
+the earlier live-PAM-login draft, which is impossible as a non-root
+service on this ALT/tcb host (captured facts, §11.4.6).</p>
+<p>Authoritative sources: pivot spec <a
+href="../superpowers/specs/2026-07-01-auth-pivot-ssh-key.md"><code>docs/superpowers/specs/2026-07-01-auth-pivot-ssh-key.md</code></a>,
+user guide <a
+href="../guides/AUTH.md"><code>docs/guides/AUTH.md</code></a>, feature
+ledger <a
+href="../features/Status.md"><code>docs/features/Status.md</code></a>.</p>
+<h2 id="feature-real-account-ssh-key-login">Feature — real-account
+SSH-key login</h2>
+<ul>
+<li><strong>Sessions tied to the real host account
+(<code>milosvasic</code>).</strong> code-server runs <strong>host-native
+as that user</strong>, so the editor session <strong>natively</strong>
+has the real user’s identity and environment — nothing copied or synced:
+<ul>
+<li><strong><code>~/.ssh</code> keys</strong> — every key the account
+already registered with Git services works for git-over-SSH straight
+from the integrated terminal.</li>
+<li><strong>Full <code>.bashrc</code> / profile</strong> — the terminal
+spawns a login shell (<code>bash -l</code>), so exported vars, PATH
+additions, and init steps are all present.</li>
+<li><strong>All host binaries / utilities</strong> — every tool the user
+normally has.</li>
+</ul></li>
+<li><strong>SSH-key challenge-response login (no password, nothing
+stored).</strong>
+<ol type="1">
+<li><code>GET /login</code> issues a <strong>fresh 32-byte
+nonce</strong>, HMAC-signed by the server and bound to a short TTL
+(unforgeable, non-replayable), and shows the exact local command to
+run.</li>
+<li>The user signs it locally:
+<code>printf %s '&lt;challenge&gt;' | ssh-keygen -Y sign -n helixcode-login -f ~/.ssh/id_ed25519</code>
+— the <strong>private key never leaves the user’s machine.</strong></li>
+<li>The signature is pasted back (<code>POST /login</code> →
+<code>{ principal, signature }</code>).</li>
+<li>The gate verifies the challenge is server-issued + unexpired, then
+runs
+<code>ssh-keygen -Y verify -n helixcode-login -f &lt;allowed_signers&gt; -I &lt;principal&gt; -s &lt;sig&gt;</code>
+where <code>&lt;allowed_signers&gt;</code> is derived from the account’s
+<code>~/.ssh/authorized_keys</code>. Success → a
+<code>__Host-</code>-prefixed signed session cookie; failure → generic
+401, rate-limited.</li>
+</ol></li>
+<li><strong>Nothing stored — anywhere.</strong> No password parameter,
+no stored password: not in the repo, config, env, logs, or captured
+evidence (§11.4.10). The gate reads only the account’s public
+<code>authorized_keys</code>; it never reads a private key.</li>
+<li><strong>Editor Explorer defaults to <code>PROJECTS_ROOT</code> — a
+convenience view, NOT a jail (§11.4.6).</strong> The integrated
+terminal, <strong>File &gt; Open Folder</strong>, tasks, the debugger,
+and extensions retain <strong>full real-user (<code>milosvasic</code>)
+host-filesystem access by design</strong> — there is no code-server flag
+that confines the process to <code>PROJECTS_ROOT</code>. Real isolation
+would need a container / VM / chroot (out of scope per operator
+decision).</li>
+</ul>
+<h2 id="architecture">Architecture</h2>
+<p>Host-native editor + auth behind a containerized TLS edge:</p>
+<pre><code>Browser ──HTTPS──▶ Caddy (TLS edge, CONTAINERIZED, rootless Podman)
+                    ├─ forward_auth ─▶ helix-auth (host-native, systemd --user, loopback:8081, NON-root)
+                    └─ reverse_proxy ─▶ code-server (host-native AS milosvasic, systemd --user,
+                                          --auth none, loopback:8080)
+                                          inherits ~/.ssh, ~/.bashrc, all host binaries
+                                          workspace = PROJECTS_ROOT (Explorer default view, NOT a jail)</code></pre>
+<ul>
+<li><strong>code-server</strong> — host-native
+<code>systemd --user</code> service, <code>--auth none</code>, bound to
+loopback <code>127.0.0.1:8080</code> (auth is enforced entirely at the
+gate/edge).</li>
+<li><strong>helix-auth</strong> — host-native
+<code>systemd --user</code> <strong>Gin</strong> gate, loopback
+<code>127.0.0.1:8081</code>, non-root. Runs the challenge/verify flow,
+issues + validates the session cookie, <strong>fails
+closed</strong>.</li>
+<li><strong>Caddy TLS edge</strong> — the only containerized component
+(rootless Podman, §11.4.76 / §11.4.161). Terminates TLS, gates every
+request via <code>forward_auth</code> to <code>helix-auth</code>’s
+<code>GET /auth</code> (valid cookie → proxy to code-server; otherwise
+denied — <strong>never bypassed on gate failure</strong>), speaks
+<strong>HTTP/3 (QUIC)</strong>, compresses responses
+(<code>encode zstd br gzip</code>) via a <strong>custom
+xcaddy-brotli</strong> image, <strong>blocks
+<code>/proxy</code></strong> with 403, and <strong>strips the
+<code>X-Helix-User</code> header</strong> from client requests so only
+the gate can set it.</li>
+</ul>
+<h2 id="stack-directive">Stack directive</h2>
+<p>This release adopts, for the auth surface: <strong>Go + Gin
+(gin-gonic)</strong> for the gate, <strong>HTTP/3 (QUIC)</strong> at the
+Caddy edge, and <strong>Brotli</strong> response compression (via a
+custom xcaddy build). These are the sanctioned building blocks for the
+authentication + edge stack going forward.</p>
+<h2 id="security-hardening-independent-review-research">Security
+hardening (independent review + research)</h2>
+<p>Findings from an independent code review + security research, all
+addressed:</p>
+<ul>
+<li><strong>CVE-2026-35414 “SplitSSHell” closed</strong> — the verified
+principal is now <strong>server-pinned</strong> (the client cannot
+smuggle a mismatched / attacker-chosen principal past
+<code>ssh-keygen -Y verify</code>).</li>
+<li><strong>Rate-limiter DoS fixed</strong> — keying on the
+<strong>rightmost X-Forwarded-For</strong> entry (the real client IP
+behind the single trusted Caddy hop), <strong>counting only after CSRF
+validation</strong>, a <strong>per-client spawn ceiling</strong> on
+verify subprocesses, and <strong>stale-entry purging</strong> so the
+limiter map cannot be flooded into exhaustion.</li>
+<li><strong><code>__Host-</code> session cookie</strong> —
+<code>__Host-</code> prefix + <code>SameSite=Strict</code> + Secure +
+HttpOnly, with <strong>session regeneration</strong> on login (no
+fixation).</li>
+<li><strong>CSRF double-submit</strong> protection on the login
+POST.</li>
+<li><strong>Key-type allow-list</strong> — DSA keys,
+<code>cert-authority</code> lines, and weak/short RSA keys are
+<strong>rejected</strong> from the allowed-signers set.</li>
+<li><strong>Exec / temp hygiene</strong> — signature material handled
+via securely-created temp files, cleaned up on every path; subprocess
+invocation hardened.</li>
+<li><strong>OpenSSH version floor</strong> — a minimum
+<code>ssh-keygen</code> version is required so the <code>-Y sign</code>
+/ <code>-Y verify</code> semantics the gate relies on are present.</li>
+</ul>
+<h2 id="testing-11.4.169">Testing (§11.4.169)</h2>
+<p>Full test-type matrix covering the new auth surface:</p>
+<ul>
+<li><strong>Go layer</strong> — unit / integration / race suites for the
+<code>helix-auth</code> gate: <strong>70 tests</strong>, run with
+<code>-race</code>, <strong>81.8% coverage</strong>.</li>
+<li><strong>Shell suites</strong> (<code>tests/types/</code>):
+<code>e2e_auth</code>, <code>security_auth</code>,
+<code>stress_chaos_auth</code>, <code>concurrency_auth</code>,
+<code>load_auth</code>, <code>memory_auth</code>,
+<code>benchmark_auth</code>, <code>challenges_auth</code>,
+<code>helixqa_auth</code> — plus the HelixQA banks
+<code>tests/banks/helixcode-auth-challenges.yaml</code> and
+<code>tests/banks/helixcode-auth-helixqa.yaml</code>.</li>
+<li>Autonomous, no-operator, no-password evidence path (§11.4.98): tests
+generate a challenge, sign it with the real key via
+<code>ssh-keygen -Y sign</code>, POST it → expect 302 + cookie; tampered
+signature / non-authorized key / replayed challenge → expect 401 — all
+with captured evidence.</li>
+</ul>
+<p><strong>LIVE VALIDATION AGGREGATE (release-gate run, this host, real
+<code>id_ed25519</code> key): full §11.4.169 matrix = 23/23 suites PASS,
+0 FAIL</strong> (evidence root
+<code>qa-results/run_all/20260701T151300Z-3182121</code>). Auth surface
+green LIVE against the deployed stack: <code>e2e_auth</code> 5/5,
+<code>security_auth</code> 5/5, <code>challenges_auth</code> 5/5,
+<code>concurrency_auth</code> 5/5, <code>helixqa_auth</code> 4/0/1,
+<code>load_auth</code> 3/0/1, <code>memory_auth</code> 2/2,
+<code>benchmark_auth</code> 4/4, <code>stress_chaos_auth</code> 5/0/1
+(live kill+recover of the gate and code-server, fail-closed verified) —
+plus <code>unit</code> 5/5, <code>race</code> 2/2 (<code>-race</code>),
+<code>load</code> 3/3. The 10 legacy prior-release suites
+(<code>integration</code>, <code>e2e</code>, <code>security</code>,
+<code>tls_letsencrypt</code>, <code>full_automation</code>,
+<code>concurrency</code>, <code>memory</code>, <code>benchmark</code>,
+<code>helixqa</code>, <code>challenges</code>) test the RETIRED
+container+password model and now report an honest <strong>SKIP</strong>
+(<code>topology_unsupported</code>, “superseded by
+<code>&lt;name&gt;_auth</code>”) — no false-FAIL (§11.4.1). Go gate
+tests: <strong>70 tests, <code>-race</code>, 81.8% coverage</strong>.
+Full end-to-end edge journey proven: browser → HTTPS <code>:52443</code>
+(Caddy HTTP/3 + Brotli) → <code>forward_auth</code> ssh-key gate →
+host-native code-server → editor loads (login <code>303</code> → authed
+<code>200</code>, <code>X-Helix-User: milosvasic</code>).</p>
+<h2 id="honest-boundaries-11.4.6">Honest boundaries (§11.4.6)</h2>
+<ul>
+<li><strong>Editor “jail” is cosmetic.</strong> The Explorer defaults to
+<code>PROJECTS_ROOT</code>, but the terminal / Open Folder / extensions
+keep full real-user host access by design — this is a convenience view,
+not a security boundary.</li>
+<li><strong><code>--auth none</code> on loopback:8080 residual.</strong>
+code-server itself runs unauthed on loopback; all auth is at the
+gate/edge. If a local process on the host reaches
+<code>127.0.0.1:8080</code> it bypasses the gate — a <strong>host
+firewall rule</strong> restricting loopback:8080 is recommended and
+documented.</li>
+<li><strong>code-server pinned to 4.117.0</strong> (the newest on npm at
+release time).</li>
+<li><strong>Real, publicly-trusted Let’s Encrypt is
+operator-gated</strong> — it needs a public domain + reachable
+<code>:80</code>/<code>:443</code> or a DNS-01 token (LAN box); the ACME
+machinery is proven against a local CA (see
+<code>docs/guides/TLS.md</code>).</li>
+</ul>
+<h2 id="migration">Migration</h2>
+<ul>
+<li><strong>Install:</strong> <code>scripts/install-auth.sh</code>
+(host-native, <strong>no sudo</strong>) provisions the
+<code>systemd --user</code> code-server + helix-auth units;
+<code>deploy/up.sh</code> brings up the containerized Caddy edge.</li>
+<li><strong><code>CODE_SERVER_PASSWORD</code> is retired.</strong> The
+single-password model is gone. Replacement parameters (see
+<code>deploy/.env.example</code> / <code>docs/guides/AUTH.md</code>):
+<code>HELIX_AUTH_MODE=sshkey</code>, <code>HELIX_AUTH_ACCOUNT</code>,
+<code>HELIX_AUTH_AUTHORIZED_KEYS</code>,
+<code>HELIX_AUTH_PRINCIPAL</code>, <code>PROJECTS_ROOT</code>. There is
+<strong>no password parameter</strong>.</li>
+</ul>
+</body>
+</html>

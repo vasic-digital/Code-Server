@@ -1,0 +1,767 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>FINDINGS</title>
+  <style>
+    /* Default styles provided by pandoc.
+    ** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
+    */
+    html {
+      color: #1a1a1a;
+      background-color: #fdfdfd;
+    }
+    body {
+      margin: 0 auto;
+      max-width: 36em;
+      padding-left: 50px;
+      padding-right: 50px;
+      padding-top: 50px;
+      padding-bottom: 50px;
+      hyphens: auto;
+      overflow-wrap: break-word;
+      text-rendering: optimizeLegibility;
+      font-kerning: normal;
+    }
+    @media (max-width: 600px) {
+      body {
+        font-size: 0.9em;
+        padding: 12px;
+      }
+      h1 {
+        font-size: 1.8em;
+      }
+    }
+    @media print {
+      html {
+        background-color: white;
+      }
+      body {
+        background-color: transparent;
+        color: black;
+        font-size: 12pt;
+      }
+      p, h2, h3 {
+        orphans: 3;
+        widows: 3;
+      }
+      h2, h3, h4 {
+        page-break-after: avoid;
+      }
+    }
+    p {
+      margin: 1em 0;
+    }
+    a {
+      color: #1a1a1a;
+    }
+    a:visited {
+      color: #1a1a1a;
+    }
+    img {
+      max-width: 100%;
+    }
+    svg {
+      height: auto;
+      max-width: 100%;
+    }
+    h1, h2, h3, h4, h5, h6 {
+      margin-top: 1.4em;
+    }
+    h5, h6 {
+      font-size: 1em;
+      font-style: italic;
+    }
+    h6 {
+      font-weight: normal;
+    }
+    ol, ul {
+      padding-left: 1.7em;
+      margin-top: 1em;
+    }
+    li > ol, li > ul {
+      margin-top: 0;
+    }
+    blockquote {
+      margin: 1em 0 1em 1.7em;
+      padding-left: 1em;
+      border-left: 2px solid #e6e6e6;
+      color: #606060;
+    }
+    code {
+      font-family: Menlo, Monaco, Consolas, 'Lucida Console', monospace;
+      font-size: 85%;
+      margin: 0;
+      hyphens: manual;
+    }
+    pre {
+      margin: 1em 0;
+      overflow: auto;
+    }
+    pre code {
+      padding: 0;
+      overflow: visible;
+      overflow-wrap: normal;
+    }
+    .sourceCode {
+     background-color: transparent;
+     overflow: visible;
+    }
+    hr {
+      border: none;
+      border-top: 1px solid #1a1a1a;
+      height: 1px;
+      margin: 1em 0;
+    }
+    table {
+      margin: 1em 0;
+      border-collapse: collapse;
+      width: 100%;
+      overflow-x: auto;
+      display: block;
+      font-variant-numeric: lining-nums tabular-nums;
+    }
+    table caption {
+      margin-bottom: 0.75em;
+    }
+    tbody {
+      margin-top: 0.5em;
+      border-top: 1px solid #1a1a1a;
+      border-bottom: 1px solid #1a1a1a;
+    }
+    th {
+      border-top: 1px solid #1a1a1a;
+      padding: 0.25em 0.5em 0.25em 0.5em;
+    }
+    td {
+      padding: 0.125em 0.5em 0.25em 0.5em;
+    }
+    header {
+      margin-bottom: 4em;
+      text-align: center;
+    }
+    #TOC li {
+      list-style: none;
+    }
+    #TOC ul {
+      padding-left: 1.3em;
+    }
+    #TOC > ul {
+      padding-left: 0;
+    }
+    #TOC a:not(:hover) {
+      text-decoration: none;
+    }
+    code{white-space: pre-wrap;}
+    span.smallcaps{font-variant: small-caps;}
+    div.columns{display: flex; gap: min(4vw, 1.5em);}
+    div.column{flex: auto; overflow-x: auto;}
+    div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+    /* The extra [class] is a hack that increases specificity enough to
+       override a similar rule in reveal.js */
+    ul.task-list[class]{list-style: none;}
+    ul.task-list li input[type="checkbox"] {
+      font-size: inherit;
+      width: 0.8em;
+      margin: 0 0.8em 0.2em -1.6em;
+      vertical-align: middle;
+    }
+    .display.math{display: block; text-align: center; margin: 0.5rem auto;}
+  </style>
+</head>
+<body>
+<header id="title-block-header">
+<h1 class="title">FINDINGS</h1>
+</header>
+<h1
+id="deep-security-research-ssh-key-challenge-response-web-login-helix-auth">Deep
+security research — SSH-key challenge-response web login
+(<code>helix-auth</code>)</h1>
+<p><strong>Revision:</strong> 1 <strong>Last modified:</strong>
+2026-07-01T00:00:00Z <strong>Authority:</strong> §11.4.150 (deep
+multi-angle research per change) + §11.4.99 (latest-source
+cross-reference) + §11.4.8 (deep-web-research-before-implementation) +
+§11.4.6 (no-guessing — sparse/contradictory sources flagged inline).
+<strong>Scope:</strong> security review of the
+<code>helix-auth</code>/<code>auth_gate</code> design in
+<code>docs/superpowers/specs/2026-07-01-auth-pivot-ssh-key.md</code>.
+READ + WRITE-A-DOC only. No code changed, no git. <strong>Subject under
+review:</strong> <code>GET /login</code> mints a server-HMAC-signed
+random nonce; user signs it with
+<code>ssh-keygen -Y sign -n helixcode-login</code>;
+<code>POST /login</code> verifies with <code>ssh-keygen -Y verify</code>
+against an <code>allowed_signers</code> file derived from the account’s
+<code>~/.ssh/authorized_keys</code>; success issues a signed-HMAC
+session cookie; runs non-root behind a Caddy HTTPS
+<code>forward_auth</code> gate; fail-closed.</p>
+<hr />
+<h2
+id="actionable-hardening-checklist-for-helix-auth-verifier-stream-applies-these">Actionable
+hardening checklist for <code>helix-auth</code> (verifier stream applies
+these)</h2>
+<p>Ordered by severity. Each maps to a numbered angle below.</p>
+<ul>
+<li><strong>[A1-1] Enforce the namespace on BOTH ends AND pin it in
+<code>allowed_signers</code>.</strong> Sign with
+<code>-n helixcode-login</code>, verify with the identical
+<code>-n helixcode-login</code>, AND emit each
+<code>allowed_signers</code> line with a
+<code>namespaces="helixcode-login"</code> restriction so a signature
+minted for any other namespace (git/email/file/another service reusing
+the same keys) is structurally rejected. Prefer a domain-qualified,
+versioned namespace — e.g. <code>helixcode-login-v1@vasic.digital</code>
+— per the OpenSSH-recommended <code>NAMESPACE@YOUR.DOMAIN</code>
+convention. (Angle 1, 2)</li>
+<li><strong>[A1-2] Do NOT trust the user-supplied <code>principal</code>
+for identity matching.</strong> The SSHSIG signature does not carry an
+identity — <code>-I</code> is an <em>assertion</em> the verifier makes.
+Use the SERVER-configured <code>HELIX_AUTH_PRINCIPAL</code> for
+<code>-I</code> and for every <code>allowed_signers</code> principals
+field; ignore/validate the form’s <code>principal</code> to equal the
+configured value. Never let request input drive pattern-list matching.
+(Angle 1, 3, 7 — this is the direct lesson of CVE-2026-35414
+SplitSSHell.)</li>
+<li><strong>[A1-3] Use a literal principal with NO commas and NO
+wildcards (<code>*</code>,<code>?</code>,<code>!</code>)</strong> in
+both <code>-I</code> and the <code>allowed_signers</code> principals
+field. The principals field is a <code>PATTERNS</code> pattern-list; a
+wildcard or comma there widens who is accepted. (Angle 1, 7)</li>
+<li><strong>[A2-1] Server-issued, single-use, short-TTL, HMAC-bound
+challenge.</strong> The nonce MUST be server-minted (&gt;=32 bytes
+CSPRNG), carry a server HMAC over
+<code>nonce | issued-at | TTL | binding</code>, expire in a short window
+(&lt;=2-5 min), and be consumed exactly once (replay cache / one-shot
+store). <code>ssh-keygen -Y verify</code> gives ZERO freshness guarantee
+— freshness is entirely the app’s job. (Angle 2)</li>
+<li><strong>[A2-2] Feed verify the EXACT challenge bytes.</strong> Show
+the user
+<code>printf %s '&lt;challenge&gt;' | ssh-keygen -Y sign ...</code> (no
+trailing newline — the spec already uses <code>printf %s</code>, keep
+it; <code>echo</code> would append <code>\n</code>). At verify, pipe the
+byte-identical challenge to <code>ssh-keygen -Y verify</code> stdin. A
+byte mismatch -&gt; verify fails (fail-closed is correct); never
+“normalize” or trim to make a mismatch pass. (Angle 1, 2)</li>
+<li><strong>[A2-3] Reject a client-supplied challenge.</strong> Only
+accept challenges the server HMAC validates as its own + unexpired +
+unconsumed. Add login-CSRF defense on <code>POST /login</code> (SameSite
+cookie on the challenge state, per-request CSRF token, and
+Origin/Referer check). (Angle 2)</li>
+<li><strong>[A3-1] Convert <code>authorized_keys</code> -&gt;
+<code>allowed_signers</code> defensively:</strong> parse each line, take
+ONLY <code>keytype</code>+<code>base64</code> (drop options and the
+trailing comment), prepend the server principal, append the
+<code>namespaces=</code> restriction. Do not copy the comment or options
+verbatim. (Angle 3)</li>
+<li><strong>[A3-2] Key-type allow-list.</strong> Accept
+<code>ssh-ed25519</code>, <code>sk-ssh-ed25519@openssh.com</code>,
+<code>sk-ecdsa-sha2-*</code>, <code>ecdsa-sha2-*</code>,
+<code>rsa-sha2-*</code>/<code>ssh-rsa</code> (RSA &gt;= 3072-bit).
+REJECT <code>ssh-dss</code> (DSA) and any unknown/weak type. (Angle
+3)</li>
+<li><strong>[A3-3] Reject <code>cert-authority</code> lines in
+<code>authorized_keys</code></strong> when building
+<code>allowed_signers</code> (unless a CA login is explicitly intended
+and separately reviewed) — a CA key converted to a raw allowed-signer,
+or kept as <code>cert-authority</code>, broadens trust to every
+certificate that CA ever signs. (Angle 3, 7)</li>
+<li><strong>[A4-1] Never shell out through <code>sh -c</code>.</strong>
+Use Go <code>exec.CommandContext</code> with an explicit argument slice;
+pass principal/namespace as discrete args (a leading-dash value is still
+a data arg, but see A1-3). Signature + allowed_signers are FILES
+(<code>-s</code>, <code>-f</code>), so no signature bytes reach argv.
+(Angle 4)</li>
+<li><strong>[A4-2] Temp-file hygiene.</strong> Write the signature and
+the freshly-generated <code>allowed_signers</code> into files created
+under a private, <code>0700</code>-mode, per-request/per-process
+directory with <code>0600</code> file perms
+(<code>os.MkdirTemp</code>/<code>os.CreateTemp</code>),
+<code>defer</code> cleanup on every path, and never in a
+world-writable/shared location. The <code>allowed_signers</code> file
+must not be attacker-writable. (Angle 4)</li>
+<li><strong>[A4-3] Bound the verify.</strong>
+<code>context.WithTimeout</code> (e.g. 3-5 s) on the
+<code>ssh-keygen</code> exec; cap the accepted signature size
+(e.g. &lt;=16 KiB) and reject oversized/malformed input before spawning,
+to blunt DoS via huge/malformed signatures. Rate-limit
+<code>POST /login</code> (already planned) and keep failures generic +
+fail-closed. (Angle 4)</li>
+<li><strong>[A5-1] Session cookie:</strong> <code>__Host-</code> prefix,
+<code>Secure</code>, <code>HttpOnly</code>, <code>SameSite=Strict</code>
+(or <code>Lax</code> if strict breaks the flow), <code>Path=/</code>, no
+<code>Domain</code>; keep the HMAC integrity + short TTL. Add:
+<strong>regenerate the session identifier on successful login</strong>
+(anti session-fixation), support real logout/invalidation (already have
+<code>/logout</code>), and rotate/expire on TTL. (Angle 5)</li>
+<li><strong>[A6-1] Consider a pure-Go SSHSIG verifier</strong>
+(<code>github.com/42wim/sshsig</code> on
+<code>golang.org/x/crypto/ssh</code>) to eliminate the exec + temp-file
+surface entirely — but only if it verifies namespace + is
+well-maintained; otherwise shelling to the system
+<code>ssh-keygen</code> (with A4-*) is the conservative, spec-faithful
+choice. Decide explicitly; don’t do both. (Angle 6)</li>
+<li><strong>[A7-1] Require a patched OpenSSH (&gt;= 10.3 /
+10.3p1)</strong> on the host, because CVE-2026-35414
+(comma-in-principal) and the OpenSSH 10.3 command-execution/scp fixes
+(CVE-2026-35386 class) land there. Record the host
+<code>ssh-keygen</code>/<code>ssh -V</code> version as captured
+evidence. (Angle 7)</li>
+</ul>
+<hr />
+<h2 id="angle-1-ssh-keygen--y-sign--y-verify-correctness-pitfalls">Angle
+1 — <code>ssh-keygen -Y sign</code> / <code>-Y verify</code> correctness
+pitfalls</h2>
+<p><strong>How it actually works (OpenSSH man page, current):</strong>
+<code>-Y sign</code> signs stdin (or files) with the key from
+<code>-f</code>, and <strong>requires</strong> a namespace via
+<code>-n</code> “used to prevent signature confusion across different
+domains of use.” <code>-Y verify</code> reads the message on
+<strong>stdin</strong>, and requires: <code>-n</code> (namespace),
+<code>-s</code> (signature file), <code>-I</code> (signer identity),
+<code>-f</code> (allowed_signers file). The <code>allowed_signers</code>
+line format is <code>principals options keytype base64-key</code>; “the
+identity presented via the <code>-I</code> option must match a
+principals pattern in order for the corresponding key to be considered
+acceptable for verification.” The <code>principals</code> field is a
+<strong>pattern-list</strong> (<code>PATTERNS</code> in
+<code>ssh_config(5)</code>). (<a
+href="https://man.openbsd.org/ssh-keygen.1">OpenBSD ssh-keygen(1)</a>,
+accessed 2026-07-01)</p>
+<p><strong>Namespace binding is the load-bearing control.</strong>
+SSHSIG prepends a 6-byte <code>SSHSIG</code> magic + the namespace to
+the signed blob; a raw SSH <em>authentication</em> signature starts
+differently, so “the SSH client and ssh-keygen will never produce
+identical signatures” — this is the cross-protocol firewall. The
+namespace stops a signature minted for one purpose (git commit signing,
+email, another service) being replayed as a login. (<a
+href="https://www.agwa.name/blog/post/ssh_signatures">Andrew Ayer —
+“It’s Now Possible To Sign Arbitrary Data With Your SSH Keys”</a>,
+accessed 2026-07-01; <a
+href="https://www.ietf.org/archive/id/draft-josefsson-sshsig-format-00.html">IETF
+draft-josefsson-sshsig-format-00</a>, accessed 2026-07-01)</p>
+<p><strong>Identity (<code>-I</code>) semantics — the subtle
+part.</strong> The SSHSIG blob contains the <strong>public key +
+namespace only — NOT an identity</strong>. <code>-I</code> is the
+verifier <em>asserting</em> “treat the signer as this principal”;
+verification succeeds when the signature’s key appears in
+<code>allowed_signers</code> under a <code>principals</code> pattern
+that matches <code>-I</code> (and namespace/validity options pass).
+Therefore <strong>the security does not come from <code>-I</code>; it
+comes from the key being in the allowed list.</strong> Letting the
+<em>client</em> choose <code>-I</code> (as the spec’s
+<code>POST /login {principal, signature}</code> currently does) is
+unnecessary and risky — it hands request input to pattern-list matching.
+(Man page + agwa blog, both above.)</p>
+<p><strong><code>-Y check-novalidate</code> is NOT
+authentication.</strong> It “checks that a signature … has a valid
+structure. This does not validate if a signature comes from an
+authorized signer.” Never treat a <code>check-novalidate</code> pass as
+a login. Always use <code>-Y verify</code> with <code>-I</code> +
+<code>-f</code>. (<a href="https://man.openbsd.org/ssh-keygen.1">OpenBSD
+ssh-keygen(1)</a>, accessed 2026-07-01)</p>
+<p><strong>Certificate vs raw-key handling.</strong> If a signature is
+made by a certificate, <code>allowed_signers</code> must mark the
+signer’s CA key <code>cert-authority</code>, and “the expected principal
+name must match both the principals pattern in the allowed signers file
+and the principals embedded in the certificate itself.” For a raw-key
+login gate you want raw-key lines only (see Angle 3). (<a
+href="https://man.openbsd.org/ssh-keygen.1">OpenBSD ssh-keygen(1)</a>,
+accessed 2026-07-01)</p>
+<p><strong>Can <code>-Y verify</code> be “tricked into verifying
+different data”?</strong> Not cryptographically — the message is hashed
+inside the SSHSIG envelope and the namespace is bound in. The realistic
+failure mode is <em>operational</em>: the server verifies a message that
+is <strong>not</strong> the exact challenge it issued (e.g. a
+stale/attacker-chosen challenge, or a byte-differing challenge), which
+is a freshness/replay problem the crypto cannot catch (Angle 2), not a
+signature-forgery problem.</p>
+<p><strong>DO</strong> - Require <code>-n &lt;namespace&gt;</code> on
+sign AND verify; use a unique, domain-qualified, versioned namespace;
+additionally restrict via <code>namespaces=</code> in
+<code>allowed_signers</code> (defense in depth). - Set <code>-I</code>
+from server config, matched against a <strong>literal</strong>
+server-controlled principal. - Always use <code>-Y verify</code> (never
+<code>check-novalidate</code>) for the auth decision.</p>
+<p><strong>DON’T</strong> - Don’t omit <code>-n</code>, and don’t let
+sign/verify namespaces differ. - Don’t accept a client-chosen
+<code>-I</code>/principal for matching. - Don’t put commas or wildcards
+(<code>*</code>,<code>?</code>,<code>!</code>) in the principals
+field.</p>
+<hr />
+<h2 id="angle-2-replay-challenge-binding">Angle 2 — Replay &amp;
+challenge binding</h2>
+<p><strong>Hard fact (honest gap flagged per §11.4.6):</strong> the agwa
+write-up and the man page <strong>do not</strong> provide any
+replay/freshness protection — <code>-Y verify</code> confirms “this key
+signed these exact bytes under this namespace” and nothing about
+<em>when</em> or <em>how many times</em>. (“The <code>-Y verify</code>
+command confirms cryptographic validity but provides no timestamp or
+freshness assurances,” per the agwa analysis, accessed 2026-07-01.)
+<strong>All replay defense is the application’s
+responsibility.</strong></p>
+<p><strong>Binding pattern (matches precedent — Gitea/GitLab SSH-key
+verification all use a short-lived server token the user
+signs):</strong> (<a
+href="https://docs.gitea.com/administration/signing">Gitea “GPG/SSH
+signing”/verify flow</a> and <a
+href="https://forum.gitea.com/t/the-provided-ssh-key-signature-or-token-do-not-match-or-token-is-out-of-date/7866">Gitea
+forum: “token is out-of-date”</a>, accessed 2026-07-01 — Gitea signs a
+time-limited token with <code>ssh-keygen -Y sign -n gitea</code>; a slow
+user must restart because the token expires.)</p>
+<ul>
+<li><strong>Server-minted only:</strong> nonce = &gt;=32 bytes from a
+CSPRNG. Attach a server HMAC over
+<code>nonce | issued_at | ttl | optional client-binding</code>. On
+<code>POST</code>, recompute + constant-time-compare the HMAC; reject
+anything the server didn’t mint. (The spec already plans “HMAC-signed by
+the server, bind to a short TTL + client” — keep it; this is the correct
+shape.)</li>
+<li><strong>Single-use:</strong> record consumed nonces (or a signed
+one-time state) so a captured signature can’t be replayed within its
+TTL. Without single-use, replay within the TTL window is possible even
+with a valid HMAC.</li>
+<li><strong>Short TTL:</strong> &lt;= 2-5 minutes. Balance against the
+human latency of running the local <code>ssh-keygen</code> command.</li>
+<li><strong>Optional client binding:</strong> bind the challenge to the
+browser session (e.g. a <code>SameSite</code> state cookie or a hash of
+a per-visit token) so a challenge minted in attacker context can’t be
+completed in victim context.</li>
+</ul>
+<p><strong>Login-CSRF / cross-site on the POST:</strong> an attacker who
+can make the victim’s browser POST a <em>valid attacker-signed</em>
+login would log the victim into the attacker’s identity. Defenses: (1)
+the challenge state cookie is
+<code>SameSite=Strict</code>/<code>Lax</code>; (2) a synchronizer CSRF
+token tied to the <code>GET /login</code> render; (3) verify
+<code>Origin</code>/<code>Referer</code>. (<a
+href="https://cheatsheetseries.owasp.org/cheatsheets/Session_Management_Cheat_Sheet.html">OWASP
+Session Management Cheat Sheet</a>, accessed 2026-07-01.)</p>
+<p><strong>DO</strong> mint server-side, HMAC-bind, expire fast, consume
+once, feed byte-identical bytes to verify, add login-CSRF defenses.
+<strong>DON’T</strong> accept a client-supplied challenge, reuse a
+nonce, rely on <code>-Y verify</code> for freshness, or normalize/trim
+the challenge to force a match.</p>
+<hr />
+<h2 id="angle-3-authorized_keys---allowed_signers-conversion">Angle 3 —
+<code>authorized_keys</code> -&gt; <code>allowed_signers</code>
+conversion</h2>
+<p>The two formats are deliberately similar (“patterned after the
+AUTHORIZED_KEYS FILE FORMAT”) but <strong>semantically
+different</strong>: <code>authorized_keys</code> options
+(<code>command=</code>, <code>restrict</code>, <code>no-pty</code>,
+<code>from=</code>, <code>permitopen=</code>, …) govern
+<strong>interactive SSH sessions</strong> and have NO meaning for
+signature verification; <code>allowed_signers</code> options are
+<code>cert-authority</code>, <code>namespaces=</code>,
+<code>valid-after=</code>, <code>valid-before=</code>. (<a
+href="https://man.openbsd.org/ssh-keygen.1">OpenBSD ssh-keygen(1)</a> +
+sshd(8) AUTHORIZED_KEYS FILE FORMAT, accessed 2026-07-01.)</p>
+<p><strong>Safe conversion recipe:</strong> 1. <strong>Parse, don’t
+copy.</strong> For each non-empty, non-<code>#</code> line: split off
+optional leading options, then read
+<code>keytype base64 [comment]</code>. <strong>Emit only</strong>
+<code>&lt;server-principal&gt; namespaces="&lt;ns&gt;" &lt;keytype&gt; &lt;base64&gt;</code>.
+Drop the comment and the SSH-session options entirely (they don’t
+translate — copying a comment/option verbatim risks smuggling a
+<code>namespaces=</code>/principal token or whitespace into the line you
+build). This closes the “comment/whitespace injection when building the
+allowed_signers line” vector. 2. <strong>Multiple keys:</strong> one
+output line per accepted key; all under the same literal server
+principal. Any of the account’s keys may then log in (matches “6 keys”
+in the spec). 3. <strong>Key-type policy:</strong> allow
+<code>ssh-ed25519</code>, <code>sk-ssh-ed25519@openssh.com</code>,
+<code>sk-ecdsa-sha2-nistp256@openssh.com</code>,
+<code>ecdsa-sha2-*</code>, <code>rsa-sha2-256/512</code> /
+<code>ssh-rsa</code> with RSA modulus &gt;= 3072-bit. <strong>Reject
+<code>ssh-dss</code>/DSA</strong> and anything unknown. (Modern OpenSSH
+already refuses DSA, but reject explicitly so behavior doesn’t depend on
+the host build.) 4. <strong>Reject <code>cert-authority</code>
+lines</strong> during conversion unless a CA-based login is an explicit,
+separately-reviewed feature — otherwise you silently broaden trust to
+every cert that CA signs (and this is the exact class the SplitSSHell
+CVE lives in — Angle 7). 5. <strong>Principal hygiene:</strong> the
+server principal you write is a fixed literal — <strong>no commas, no
+<code>PATTERNS</code> wildcards</strong>. This is what makes A1-2/A1-3
+safe. 6. <strong>Trust boundary honesty (§11.4.6):</strong>
+<code>~/.ssh/authorized_keys</code> is the account owner’s own file, so
+the owner is already trusted; the defensive parsing above is about not
+letting a malformed/hostile <em>line</em> corrupt the generated
+<code>allowed_signers</code>, and about not accidentally widening trust
+(DSA/CA/wildcards).</p>
+<p><strong>Contradiction/sparseness noted:</strong> community sources on
+<code>allowed_signers</code> focus on git-commit verification and
+repeatedly flag two <em>operational</em> gotchas — you can’t easily
+revoke a listed key, and a missing <code>allowed_signers</code> file
+makes verification hard-fail. (<a
+href="https://dbushell.com/2023/06/20/git-ssh-verify-allowed-signers/">dbushell</a>,
+<a href="https://calebhearth.com/sign-git-with-ssh">Caleb Hearth</a>,
+accessed 2026-07-01.) For <code>helix-auth</code> these translate to:
+(a) regenerate <code>allowed_signers</code> from
+<code>authorized_keys</code> on each start / on change so key removal
+takes effect (revocation-by-regeneration), and (b) fail-closed if the
+file is empty/absent (which the spec already mandates).</p>
+<p><strong>DO</strong> parse-and-rebuild, keytype allow-list, reject
+DSA/CA/wildcards, regenerate on change, fail-closed on empty.
+<strong>DON’T</strong> copy options/comments verbatim, honor SSH-session
+options as if they were signer options, or accept a CA/DSA key
+silently.</p>
+<hr />
+<h2
+id="angle-4-command-injection-temp-file-dos-safety-when-shelling-to-ssh-keygen">Angle
+4 — Command-injection / temp-file / DoS safety when shelling to
+<code>ssh-keygen</code></h2>
+<p><strong>Go exec model.</strong>
+<code>exec.Command</code>/<code>exec.CommandContext</code> pass args as
+a slice directly to <code>execve</code> — there is <strong>no
+shell</strong>, so classic shell metacharacter injection does not apply
+as long as you never route through <code>sh -c "..."</code>. The
+documented rule: “avoid shell invocation altogether … pass individual
+program arguments … do not use <code>sh</code>, because internal
+protection does not work in this case.” (<a
+href="https://snyk.io/blog/understanding-go-command-injection-vulnerabilities/">Snyk
+— Go command injection</a>; <a
+href="https://semgrep.dev/docs/cheat-sheets/go-command-injection">Semgrep
+Go command-injection cheat sheet</a>; <a
+href="https://www.sourcery.ai/vulnerabilities/command-line-arguments-go">Sourcery</a>,
+all accessed 2026-07-01.)</p>
+<p><strong>Residual argument-injection nuance.</strong> Even with a
+slice, a <em>value</em> that begins with <code>-</code> is a real gotcha
+for some CLIs. For <code>ssh-keygen -Y verify</code>, the
+attacker-influenced positions are <code>-I &lt;principal&gt;</code> and
+(via files) <code>-s</code>/<code>-f</code>.
+<code>-I &lt;principal&gt;</code> consumes the next argv as the value
+regardless of leading dash, so it can’t “become another flag” — but
+combined with A1-2 you should not accept a client principal at all. The
+<strong>signature never appears in argv</strong> — it goes into the
+<code>-s</code> file — so a huge/garbage signature can’t inject args; it
+can only cause parse work (see DoS). Where a CLI supports it, a
+<code>--</code> end-of-options terminator before positional/user values
+is a cheap extra guard.</p>
+<p><strong>Temp-file safety.</strong> - Create both the signature file
+and the generated <code>allowed_signers</code> under a per-process
+private dir: <code>os.MkdirTemp("", ...)</code> (0700), files
+<code>0600</code> (<code>os.CreateTemp</code>). Never a predictable path
+in <code>/tmp</code> shared world-writable — that invites a
+symlink/TOCTOU swap of the <code>allowed_signers</code> (which would let
+an attacker substitute the trusted key set). - <code>defer</code> remove
+the dir on <strong>every</strong> return path (success and error) —
+§11.4.14 cleanup discipline. - The <code>allowed_signers</code> file is
+trust-critical: generate it yourself with <code>0600</code>, never read
+one an attacker could have written.</p>
+<p><strong>DoS / resource limits.</strong> - Wrap the exec in
+<code>context.WithTimeout</code> (~3-5 s) so a hung/slow
+<code>ssh-keygen</code> can’t pin a worker; kill on timeout. - Reject
+the input before spawning if the pasted signature exceeds a sane cap
+(e.g. 16 KiB) or fails a cheap
+<code>-----BEGIN SSH SIGNATURE-----</code> shape check. - Keep the
+existing rate-limiter on <code>POST /login</code>; return a generic 401
+on all failures (no oracle about <em>why</em> it failed).</p>
+<p><strong>DO</strong> slice-args (no <code>sh -c</code>), private 0700
+temp dir + 0600 files, <code>defer</code> cleanup,
+<code>CommandContext</code> timeout, size-cap + rate-limit, generic
+errors. <strong>DON’T</strong> build a shell string, put user bytes in
+argv positions that could be read as flags, write temp files to
+shared/predictable paths, or run <code>ssh-keygen</code> without a
+timeout.</p>
+<hr />
+<h2 id="angle-5-session-cookie-hardening">Angle 5 — Session cookie
+hardening</h2>
+<p>The spec already plans HttpOnly/Secure/SameSite/HMAC/TTL — good. Add,
+per <a
+href="https://cheatsheetseries.owasp.org/cheatsheets/Session_Management_Cheat_Sheet.html">OWASP
+Session Management Cheat Sheet</a> (accessed 2026-07-01) and <a
+href="https://owasp.org/www-project-web-security-testing-guide/latest/4-Web_Application_Security_Testing/06-Session_Management_Testing/02-Testing_for_Cookies_Attributes">OWASP
+WSTG cookie-attributes</a> (accessed 2026-07-01):</p>
+<ul>
+<li><strong><code>__Host-</code> name prefix.</strong>
+<code>Set-Cookie: __Host-helixsid=...; Path=/; Secure; HttpOnly; SameSite=Strict</code>.
+The prefix forces <code>Secure</code>, <code>Path=/</code>, and
+<strong>no <code>Domain</code></strong> — “integrity against
+network-based session fixation.” Since Caddy terminates HTTPS,
+<code>Secure</code> + <code>__Host-</code> are satisfiable.</li>
+<li><strong><code>SameSite=Strict</code></strong> preferred (this is a
+single-origin editor gate, so Strict rarely breaks anything); fall back
+to <code>Lax</code> only if a cross-site entry link is required. Never
+<code>None</code> without <code>Secure</code>; never rely on the browser
+default.</li>
+<li><strong>Session-fixation defense (currently unstated in the
+spec):</strong> regenerate / re-mint the session identifier on
+successful login, and invalidate any pre-auth session — “invalidate the
+old session and create a new one after login.” With a self-contained
+HMAC token this means: issue a <em>fresh</em> token at login bound to a
+fresh session-id, and don’t accept any pre-login token as
+post-login.</li>
+<li><strong>Logout + rotation:</strong> <code>/logout</code> must
+actually invalidate (short TTL + server-side revocation list if you need
+instant kill; otherwise rely on TTL). Rotate the cookie-signing secret
+on a schedule and on suspected compromise (§11.4.10).</li>
+<li><strong>HMAC token content:</strong> keep it minimal +
+integrity-protected (e.g. <code>subject | issued-at | expiry</code>,
+HMAC-SHA256, constant-time verify). Don’t store anything the client
+shouldn’t see; don’t trust any field before HMAC check.</li>
+</ul>
+<p><strong>DO</strong> <code>__Host-</code> + <code>Secure</code> +
+<code>HttpOnly</code> + <code>SameSite=Strict</code> + short TTL +
+regenerate-on-login + real logout. <strong>DON’T</strong> ship a
+<code>Domain=</code> cookie, skip session regeneration, accept pre-auth
+tokens post-auth, or use <code>SameSite=None</code>.</p>
+<hr />
+<h2 id="angle-6-alternatives-precedent-shell-out-vs-go-native">Angle 6 —
+Alternatives / precedent (shell-out vs Go-native)</h2>
+<p><strong>Precedent — everyone uses the same challenge-sign-verify
+shape.</strong> Gitea and GitLab both verify a user’s SSH key on the web
+by having the user sign a short-lived server token with
+<code>ssh-keygen -Y sign -n &lt;service-namespace&gt;</code> and pasting
+the <code>-----BEGIN SSH SIGNATURE-----</code> blob; the server verifies
+it. This validates the <code>helix-auth</code> approach as mainstream.
+(<a href="https://docs.gitea.com/administration/signing">Gitea signing
+docs</a>; <a
+href="https://www.techaddressed.com/tutorials/add-verify-ssh-keys-gitea/">Tech
+Addressed Gitea verify walkthrough</a>; <a
+href="https://docs.gitlab.com/user/project/repository/signed_commits/ssh/">GitLab
+SSH signed-commits docs</a>, accessed 2026-07-01.) Broader identity
+systems (HashiCorp Vault SSH secrets engine, smallstep, Teleport) issue
+<strong>short-lived SSH certificates</strong> rather than verifying
+ad-hoc SSHSIG blobs — a heavier model than needed for a single-account
+editor gate, but the direction to grow toward if
+multi-user/expiry/revocation becomes a requirement.</p>
+<p><strong>Shell-out to <code>ssh-keygen</code> (spec’s choice)</strong>
+- <strong>Pros:</strong> uses the exact, audited OpenSSH implementation
+(bug-for-bug identical to what the user runs); zero crypto to get wrong
+in-house; trivially matches <code>-Y sign</code> output; easy to test
+with the real key (spec’s §11.4.98 autonomous path). -
+<strong>Cons:</strong> process-spawn + two temp files per login (the
+Angle-4 surface); depends on host OpenSSH version (Angle 7); harder to
+unit-test in isolation; per-call latency.</p>
+<p><strong>Go-native SSHSIG
+(<code>github.com/42wim/sshsig</code>)</strong> - Pure Go on
+<code>golang.org/x/crypto/ssh</code>;
+<code>Sign(privkey,data,namespace)</code> /
+<code>SignWithAgent(...)</code> and verification; output compatible with
+<code>ssh-keygen -Y sign</code>; derived from Sigstore Rekor’s SSH PKI.
+(<a href="https://github.com/42wim/sshsig">42wim/sshsig</a>; <a
+href="https://pkg.go.dev/github.com/42wim/sshsig">pkg.go.dev/github.com/42wim/sshsig</a>,
+accessed 2026-07-01.) - <strong>Pros:</strong> no exec, no temp files,
+no host-OpenSSH dependency, in-process timeouts, easier tests. -
+<strong>Cons/caveats (§11.4.6):</strong>
+<code>golang.org/x/crypto/ssh</code> itself “does not yet support SSH
+file signing,” so you’re trusting a third-party lib’s SSHSIG
+parsing/namespace-checking; the README does not explicitly document an
+<code>allowed_signers</code>-style trusted-key API,
+<code>namespaces=</code> restriction handling, or a security-audit
+status. If you adopt it you MUST verify it enforces namespace binding
+and does key-set matching yourself, and pin+review the version (§11.4.74
+catalogue-check).</p>
+<p><strong>Recommendation:</strong> default to shelling to the system
+<code>ssh-keygen</code> (conservative, spec-faithful, real-crypto) with
+the Angle-4 hardening; treat Go-native as an optimization only after
+auditing that <code>sshsig</code> enforces the namespace + key
+allow-list. Do NOT run both paths. (<a
+href="https://pkg.go.dev/golang.org/x/crypto/ssh">golang.org/x/crypto/ssh
+docs</a>, accessed 2026-07-01.)</p>
+<hr />
+<h2
+id="angle-7-known-cves-advisories-relevant-to-ssh-signature-verification">Angle
+7 — Known CVEs / advisories relevant to SSH signature verification</h2>
+<p><strong>CVE-2026-35414 — “SplitSSHell” (comma-in-principal
+access-control bypass).</strong> In OpenSSH <strong>5.6 through
+10.2p1</strong>, <code>sshd</code>’s <code>authorized_keys</code>
+<code>cert-authority,principals=</code> path used
+<code>match_list()</code> (comma-splitting, built for algorithm
+negotiation) where <code>strcmp()</code> was correct, so a certificate
+principal like <code>deploy,root</code> was split into
+<code>deploy</code> + <code>root</code>; if <code>root</code> was
+allowed, auth succeeded though no principal equals <code>root</code>
+exactly. CVSS ~8.1; <strong>fixed in OpenSSH 10.3/10.3p1.</strong> (<a
+href="https://www.cisecurity.org/advisory/a-vulnerability-in-openssh-could-allow-for-authentication-bypass_2026-040">CIS
+advisory 2026-040</a>; <a
+href="https://www.cve.news/cve-2026-35414/">cve.news CVE-2026-35414</a>;
+<a
+href="https://www.cyera.com/research/splitsshell-when-a-comma-becomes-root-how-a-single-character-broke-openssh-certificate-authentication">Cyera
+SplitSSHell root-cause writeup</a>, all accessed 2026-07-01.)</p>
+<p><strong>Direct relevance to <code>helix-auth</code> (honest scope
+note, §11.4.6):</strong> this CVE is in <strong><code>sshd</code>’s
+<code>authorized_keys</code> cert path</strong>, NOT in
+<code>ssh-keygen -Y verify</code>. But <code>helix-auth</code> lives in
+the <em>same design space</em> — matching a signer identity against a
+principals <strong>pattern-list</strong>. The transferable lessons are
+exactly A1-2/A1-3/A3-5: <strong>never let untrusted input drive
+pattern-list matching; treat identities as opaque atomic strings; keep
+the server-controlled principal a literal with no commas/wildcards;
+reject <code>cert-authority</code> conversion.</strong> Following those,
+<code>helix-auth</code> avoids the whole comma/pattern-splitting hazard
+class regardless of host OpenSSH version — but you should still require
+&gt;= 10.3 on the host.</p>
+<p><strong>OpenSSH 10.3 (2026-04) hardening bundle.</strong> 10.3 also
+fixed a <code>scp</code>/command-execution/privilege-escalation class
+(reported around CVE-2026-35386 and siblings) and dropped legacy
+rekeying. Running &gt;= 10.3 gets all of these. (<a
+href="https://www.helpnetsecurity.com/2026/04/02/openssh-10-3-released/">Help
+Net Security — OpenSSH 10.3</a>; <a
+href="https://securityonline.info/openssh-10-3-security-patch-cve-2026-35386-vulnerabilities/">securityonline.info
+— OpenSSH 10.3 / CVE-2026-35386</a>, accessed 2026-07-01.)</p>
+<p><strong>No SSHSIG-specific <code>-Y verify</code> CVE found.</strong>
+An enumerated search across CIS, cve.news, OpenSSH release notes and the
+man page surfaced <strong>no</strong> CVE specific to
+<code>ssh-keygen -Y verify</code> / <code>allowed_signers</code>
+signature verification as of 2026-07-01. Per §11.4.6/§11.4.118 this is
+“none found in the enumerated sources,” not a proof of “none exists” —
+re-verify at each release boundary.</p>
+<p><strong>DO</strong> require OpenSSH &gt;= 10.3 on the host, record
+its version as evidence, and apply the atomic-identity/literal-principal
+lessons. <strong>DON’T</strong> enable CA-based
+(<code>cert-authority</code>) signer conversion, use comma/wildcard
+principals, or run an OpenSSH &lt; 10.3 build under this gate.</p>
+<hr />
+<h2 id="sources-verified-2026-07-01">Sources verified 2026-07-01</h2>
+<ul>
+<li>OpenBSD ssh-keygen(1) manual —
+https://man.openbsd.org/ssh-keygen.1</li>
+<li>man7 ssh-keygen(1) —
+https://man7.org/linux/man-pages/man1/ssh-keygen.1.html</li>
+<li>Andrew Ayer, “It’s Now Possible To Sign Arbitrary Data With Your SSH
+Keys” — https://www.agwa.name/blog/post/ssh_signatures</li>
+<li>IETF draft-josefsson-sshsig-format-00 (SSHSIG format) —
+https://www.ietf.org/archive/id/draft-josefsson-sshsig-format-00.html</li>
+<li>CVE-2026-35414 — CIS advisory 2026-040 —
+https://www.cisecurity.org/advisory/a-vulnerability-in-openssh-could-allow-for-authentication-bypass_2026-040</li>
+<li>CVE-2026-35414 — cve.news —
+https://www.cve.news/cve-2026-35414/</li>
+<li>Cyera “SplitSSHell” root-cause analysis —
+https://www.cyera.com/research/splitsshell-when-a-comma-becomes-root-how-a-single-character-broke-openssh-certificate-authentication</li>
+<li>Help Net Security — OpenSSH 10.3 released —
+https://www.helpnetsecurity.com/2026/04/02/openssh-10-3-released/</li>
+<li>securityonline.info — OpenSSH 10.3 / CVE-2026-35386 —
+https://securityonline.info/openssh-10-3-security-patch-cve-2026-35386-vulnerabilities/</li>
+<li>OWASP Session Management Cheat Sheet —
+https://cheatsheetseries.owasp.org/cheatsheets/Session_Management_Cheat_Sheet.html</li>
+<li>OWASP WSTG — Testing for Cookie Attributes —
+https://owasp.org/www-project-web-security-testing-guide/latest/4-Web_Application_Security_Testing/06-Session_Management_Testing/02-Testing_for_Cookies_Attributes</li>
+<li>Snyk — Understanding Go command-injection vulnerabilities —
+https://snyk.io/blog/understanding-go-command-injection-vulnerabilities/</li>
+<li>Semgrep — Go command-injection cheat sheet —
+https://semgrep.dev/docs/cheat-sheets/go-command-injection</li>
+<li>Sourcery — Go command-line argument injection —
+https://www.sourcery.ai/vulnerabilities/command-line-arguments-go</li>
+<li>Gitea — GPG/SSH signing docs —
+https://docs.gitea.com/administration/signing</li>
+<li>Gitea forum — “token is out-of-date” (time-limited challenge) —
+https://forum.gitea.com/t/the-provided-ssh-key-signature-or-token-do-not-match-or-token-is-out-of-date/7866</li>
+<li>Tech Addressed — Add &amp; verify SSH keys in Gitea —
+https://www.techaddressed.com/tutorials/add-verify-ssh-keys-gitea/</li>
+<li>GitLab — Sign commits with SSH keys —
+https://docs.gitlab.com/user/project/repository/signed_commits/ssh/</li>
+<li>42wim/sshsig (Go SSHSIG library) —
+https://github.com/42wim/sshsig</li>
+<li>pkg.go.dev — github.com/42wim/sshsig —
+https://pkg.go.dev/github.com/42wim/sshsig</li>
+<li>pkg.go.dev — golang.org/x/crypto/ssh —
+https://pkg.go.dev/golang.org/x/crypto/ssh</li>
+<li>dbushell — Verify signed git commits (allowed_signers) —
+https://dbushell.com/2023/06/20/git-ssh-verify-allowed-signers/</li>
+<li>Caleb Hearth — Signing git commits with your SSH key —
+https://calebhearth.com/sign-git-with-ssh</li>
+</ul>
+</body>
+</html>
