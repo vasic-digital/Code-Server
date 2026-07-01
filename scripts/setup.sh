@@ -74,4 +74,5 @@ ENV
 chmod 600 "$HC_DEPLOY/.env"
 hc_info "wrote $HC_DEPLOY/.env (mode 600)"
 hc_info "exposed: https on ${PREFIX}443, http on ${PREFIX}080"
-hc_info "next: scripts/start.sh"
+hc_info "next: scripts/start.sh   (or scripts/install.sh for a full, reboot-persistent install)"
+hc_info "change the password later with: scripts/set-password.sh"

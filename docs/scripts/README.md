@@ -1,6 +1,6 @@
 # HelixCode operator scripts
 
-**Revision:** 1 · **Last modified:** 2026-06-30 · **Last verified:** 2026-06-30
+**Revision:** 2 · **Last modified:** 2026-07-01 · **Last verified:** 2026-07-01
 
 Companion documentation (constitution §11.4.18) for every script under
 `scripts/`. Each script also carries an in-source documentation block. Run any
@@ -8,16 +8,50 @@ script from the repo root, e.g. `scripts/start.sh`.
 
 ## Quick start
 
+**One command (recommended — reproducible on any host, survives reboot):**
+
+```bash
+scripts/install.sh       # preflight → wizard (if needed) → start → boot service
+```
+
+Or step by step:
+
 ```bash
 scripts/doctor.sh        # preflight checks
 scripts/setup.sh         # wizard → writes deploy/.env
 scripts/start.sh         # bring the stack up
 scripts/status.sh        # verify it's reachable
 # … work in the browser at https://<host>:52443 …
+scripts/set-password.sh  # change the login password (any time)
 scripts/stop.sh          # bring it down
 ```
 
-To run on boot: `scripts/install-service.sh` (rootless systemd user service).
+---
+
+## `install.sh`
+- **Overview:** One-shot installer that makes a deployment reproducible on any
+  host and reboot-persistent: runs `doctor.sh`, launches `setup.sh` if
+  `deploy/.env` is missing, starts the stack, then installs the boot-survival
+  systemd service (user service by default; `--system` for a root unit;
+  `--no-service` to skip). This is the canonical install path.
+- **Prerequisites:** bash; podman or docker; systemd.
+- **Usage:** `scripts/install.sh` · `scripts/install.sh --system` ·
+  `scripts/install.sh --no-service`
+- **Edge cases:** on re-install `doctor.sh` may warn that ports are in use
+  (the running stack) — advisory, install continues.
+- **Related:** `setup.sh`, `start.sh`, `install-service.sh`, `set-password.sh`.
+
+## `set-password.sh`
+- **Overview:** Changes the code-server login password: rewrites
+  `CODE_SERVER_PASSWORD` in `deploy/.env` (keeping the port prefix + projects,
+  mode 600) and restarts the stack so it takes effect immediately.
+- **Prerequisites:** `deploy/.env` present (run `setup.sh`/`install.sh` first).
+- **Usage:** `scripts/set-password.sh` (interactive, recommended) ·
+  `NEW_PASSWORD=… scripts/set-password.sh` · `scripts/set-password.sh --password …`
+- **Edge cases:** `--password` puts the secret in the process list — prefer the
+  interactive prompt or `NEW_PASSWORD` env. If the stack is stopped, the new
+  password applies on the next `start.sh`.
+- **Related:** `setup.sh`, `restart.sh`, `install.sh`.
 
 ---
 

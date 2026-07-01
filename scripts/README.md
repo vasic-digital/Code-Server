@@ -7,7 +7,9 @@ Dependencies / Cross-references).
 
 | Script | What it does |
 |---|---|
+| `install.sh` | **One-shot install** → preflight → configure → start → boot service |
 | `setup.sh` | Setup wizard (CLI + `--tui`) → writes `deploy/.env` |
+| `set-password.sh` | Change the login password + restart to apply |
 | `start.sh` | Start (build + up) the stack |
 | `stop.sh` | Stop the stack (`--volumes` to drop volumes) |
 | `restart.sh` | Stop then start |
@@ -18,4 +20,8 @@ Dependencies / Cross-references).
 | `uninstall-service.sh` | Remove the systemd service |
 | `lib.sh` | Shared helpers (sourced, not run directly) |
 
-Typical flow: `doctor.sh` → `setup.sh` → `start.sh` → `status.sh`.
+**Fresh host, reboot-persistent, one command:** `scripts/install.sh`
+(runs the wizard if needed, starts the stack, installs the boot service).
+
+Manual flow: `doctor.sh` → `setup.sh` → `start.sh` → `status.sh`.
+Change password anytime: `set-password.sh`.
