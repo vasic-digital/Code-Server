@@ -1,0 +1,108 @@
+# deploy/systemd/helix-code-server.service — systemd --user unit TEMPLATE.
+#
+# Purpose      : Run host-native code-server AS the invoking user, bound to
+#                loopback :8080, behind the helix-auth forward-auth gate
+#                (see the Caddyfile render in deploy/up.sh). Because the process
+#                runs as the real account it inherits that user's full
+#                capability — ALL ~/.ssh keys, ~/.bashrc-style exports, and every
+#                host binary/utility the user normally has. The editor opens
+#                ${PROJECTS_ROOT} as its default workspace (the Explorer's default
+#                VIEW) — this is NOT a filesystem jail: the integrated terminal +
+#                editor internals (Open Folder, tasks, debugger, extensions) retain
+#                full host FS access as the real user, by operator design
+#                (docs/research/host_native_codeserver_jail_20260701/FINDINGS.md
+#                Angle 1). The integrated terminal is a NON-login interactive shell
+#                and therefore ALREADY sources ~/.bashrc by default — do NOT force
+#                `bash -l` (on a host whose ~/.bash_profile does not source
+#                ~/.bashrc that would SKIP it; FINDINGS Angle 5).
+#
+# Placeholders : %h              — systemd specifier, expanded at runtime to the
+#                                  invoking user's home. (Native systemd feature;
+#                                  no substitution needed.)
+#                ${PROJECTS_ROOT} — the default workspace root. FILLED at install
+#                                  time by scripts/install-auth.sh, which reads
+#                                  PROJECTS_ROOT from deploy/.env and substitutes
+#                                  the concrete absolute path into the copy placed
+#                                  at ~/.config/systemd/user/helix-code-server.service.
+#
+# Install      : cp -> ~/.config/systemd/user/helix-code-server.service
+#                systemctl --user daemon-reload
+#                systemctl --user enable --now helix-code-server
+#                (all performed by scripts/install-auth.sh).
+
+[Unit]
+Description=HelixCode host-native code-server (real-account editor, loopback:8080)
+Documentation=file://%h/.config/systemd/user/helix-code-server.service
+After=default.target
+# Restart rate-limit window (StartLimit* are [Unit]-section directives).
+StartLimitIntervalSec=60s
+StartLimitBurst=5
+
+[Service]
+Type=exec
+# Runs as the invoking user (systemd --user) => the real account: all ~/.ssh
+# keys, ~/.bashrc exports (via the integrated NON-login terminal), and every host
+# binary the user normally has are available natively.
+WorkingDirectory=%h
+# PATH so the bare `code-server` binary (user npm global, typically ~/.local/bin)
+# resolves under systemd's minimal user PATH. install-auth.sh may instead rewrite
+# ExecStart to the absolute code-server path it resolved.
+# ${CS_BIN_DIR} is the directory of the resolved code-server binary (the user's npm
+# global prefix bin, e.g. ~/.npm-global/bin) — install-auth.sh substitutes it so the
+# bare `code-server` ExecStart resolves under systemd's minimal --user PATH.
+Environment=PATH=${CS_BIN_DIR}:%h/.local/bin:%h/bin:/usr/local/bin:/usr/bin:/bin
+# Forward the ssh-agent socket so git-over-SSH from the terminal can reach a
+# running agent for PASSPHRASE-PROTECTED keys. A linger-started --user service
+# inherits the user-manager environment; PassEnvironment forwards SSH_AUTH_SOCK
+# when the user manager has it (publish it via ~/.config/environment.d/ or a
+# systemd --user ssh-agent for a stable socket). Passphrase-LESS on-disk ~/.ssh
+# keys need no agent and work unconditionally (FINDINGS Angle 5). The login GATE
+# reads only authorized_keys — git-over-SSH auth (private keys) is independent.
+PassEnvironment=SSH_AUTH_SOCK
+# --auth none: authentication is enforced upstream by the Caddy forward_auth gate
+# (helix-auth). --user-data-dir + --extensions-dir keep code-server state under a
+# HelixCode-PRIVATE path so this instance never shares the operator's real
+# ~/.local/share/code-server or ~/.vscode. Hardening flags (FINDINGS Angle 1/4):
+# --disable-telemetry + --disable-update-check (version is pinned — no phone-home),
+# --disable-workspace-trust (single workspace; NOT a boundary), --disable-file-
+# downloads/-uploads (editor-egress reduction only — the terminal can still
+# scp/curl), --ignore-last-opened (always reopen ${PROJECTS_ROOT}). Trailing
+# ${PROJECTS_ROOT} is the default workspace folder.
+ExecStart=${CS_BIN_DIR}/code-server --auth none --bind-addr 127.0.0.1:8080 --user-data-dir %h/.local/share/helixcode/code-server --extensions-dir %h/.local/share/helixcode/code-server/extensions --disable-telemetry --disable-update-check --disable-workspace-trust --disable-file-downloads --disable-file-uploads --ignore-last-opened ${PROJECTS_ROOT}
+Restart=on-failure
+RestartSec=5s
+# Resource ceilings only (§12.6-style). cgroup-v2 with the `memory`+`pids`
+# controllers DELEGATED to user@.service (verified present on this host) — confirm
+# honored: systemctl --user show helix-code-server -p MemoryMax -p TasksMax
+MemoryHigh=3G
+MemoryMax=4G
+TasksMax=4096
+# Capability-NEUTRAL protections only — these do NOT restrict the child terminal's
+# capabilities, so they are safe here.
+ProtectClock=true
+ProtectKernelTunables=true
+# DELIBERATELY PERMISSIVE — do NOT add NoNewPrivileges / ProtectSystem /
+# PrivateUsers / ProtectHome / RestrictNamespaces to this unit. code-server is the
+# PARENT of every integrated-terminal shell, and those sandboxes are INHERITED by
+# children and cannot be relaxed by them — each would break the required full
+# real-user capability (setuid sudo/su/newgrp, rootless podman/unshare, /usr
+# writes, ~/.ssh access, terminal namespaces). Hardening is concentrated on
+# helix-auth.service (which spawns no shell) instead. See FINDINGS Angle 3.
+#
+# RESIDUAL RISK — loopback reachability (FINDINGS Angle 2/D; honest per §11.4.6):
+# with --auth none, 127.0.0.1:8080 has NO per-UID access control, so ANY local
+# process/user in the host network namespace can reach it and get a shell as this
+# account, bypassing the Caddy gate. The STRONGEST fix — a unix socket (`--socket
+# %t/helixcode/cs.sock --socket-mode 0600`) bind-mounted into the rootless Caddy
+# container — was assessed and DEFERRED as fragile on this two-lifecycle topology
+# (see the note in deploy/compose.codeserver.yml). Recommended host-side
+# mitigation until then: a UID-scoped loopback OUTPUT firewall rule (needs root,
+# operator-applied), e.g.
+#   iptables -A OUTPUT -o lo -p tcp --dport 8080 -m owner ! --uid-owner ${HELIX_AUTH_ACCOUNT} -j DROP
+# (rootless Caddy connects AS ${HELIX_AUTH_ACCOUNT} via host.containers.internal,
+# so it stays allowed). Rootless-Podman pods sit in their own netns and do NOT
+# reach host loopback unless host-networked. Keep the gate fail-closed; NEVER bind
+# 0.0.0.0.
+
+[Install]
+WantedBy=default.target

@@ -22,6 +22,16 @@ h_init helixqa
 BANK="$HC_ROOT/tests/banks/helixcode-helixqa.yaml"
 [ -f "$BANK" ] && h_log "bank: ${BANK#$HC_ROOT/}"
 
+# §11.4.1 / §11.4.90 — SUPERSEDED. This bank (HC-QA-002 CODE_SERVER_PASSWORD login,
+# HC-QA-003/004 in-container exec) validates the RETIRED containerized-password
+# model; on the 2026-07-01 host-native SSH-key auth-pivot stack it is superseded by
+# helixqa_auth (tests/banks/helixcode-auth-helixqa.yaml). The old model is gone, so
+# these would FALSE-FAIL — SKIP-with-reason (§11.4.6 detection). Old stack runs it.
+if hc_legacy_model_retired; then
+  ab_skip_with_reason "helixqa suite: superseded by helixqa_auth — legacy container+password model retired (see docs/superpowers/specs/2026-07-01-auth-pivot-ssh-key.md)" topology_unsupported
+  h_summary; exit $?
+fi
+
 if ! hc_stack_up; then
   ab_skip_with_reason "HelixQA autonomous session (stack could not be booted)" topology_unsupported
   h_summary; exit $?

@@ -1,0 +1,9 @@
+# Compiled helix-auth binary (build artifact — regenerate with `go build`).
+# Never version build derivatives (§11.4.30).
+/auth_gate
+/helix-auth
+
+# Go test/coverage scratch.
+*.test
+*.out
+coverage.*

@@ -24,6 +24,16 @@
 . "$(dirname "$0")/../lib/stack_fixture.sh"
 h_init full_automation
 
+# §11.4.1 / §11.4.90 — SUPERSEDED. The deterministic journey it repeats is the
+# RETIRED CODE_SERVER_PASSWORD login (correct=302+cookie); on the 2026-07-01
+# host-native SSH-key auth-pivot stack it is superseded by e2e_auth. The password
+# model is gone, so every iteration would FALSE-FAIL — SKIP-with-reason (§11.4.6
+# detection), never a false FAIL. On the OLD stack it still runs unchanged.
+if hc_legacy_model_retired; then
+  ab_skip_with_reason "full_automation suite: superseded by e2e_auth — legacy container+password model retired (see docs/superpowers/specs/2026-07-01-auth-pivot-ssh-key.md)" topology_unsupported
+  h_summary; exit $?
+fi
+
 ITERS="${HC_FA_ITERS:-3}"
 
 if ! h_require podman && ! h_require docker; then

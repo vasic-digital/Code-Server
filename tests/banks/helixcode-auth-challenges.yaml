@@ -1,0 +1,74 @@
+# SPDX-License-Identifier: Apache-2.0
+#
+# HelixCode SSH-KEY AUTH Challenge bank (§11.4.169 Challenges / §11.4.27(B)).
+#
+# The 2026-07-01 auth pivot (docs/superpowers/specs/2026-07-01-auth-pivot-ssh-key.md)
+# replaced password login with a host-native ssh-key challenge-response gate
+# (`helix-auth`, loopback :8081) fronting host-native code-server (:8080, --auth none)
+# AS the real user. This bank exercises the pivot's user-facing capabilities LIVE and
+# scores PASS ONLY on captured positive evidence (§11.4.69) — no metadata-only /
+# absence-of-error passes. Executed faithfully by tests/types/challenges_auth.sh.
+#
+# Schema-compatible with the vasic-digital/challenges engine (pkg/bank), matching the
+# sibling bank tests/banks/helixcode-challenges.yaml (steps[] + success_criteria +
+# report). Kept in the PROJECT tree (tests/banks/), NOT inside the challenges
+# submodule, to keep that submodule project-agnostic (§11.4.28).
+#
+# feature_class values are drawn from the §11.4.69 taxonomy (an OPEN set): the
+# enumerated `network_connectivity`, `boot_service`, `storage_read` are used as-is;
+# `authn` (login authentication) and `authz` (fail-closed authorization) are
+# documented §11.4.69 additions for the auth surface.
+
+name: helixcode-sshkey-auth-capabilities
+version: 1.0.0
+description: |
+  End-to-end anti-bluff Challenges for the HelixCode ssh-key auth pivot: real login,
+  fail-closed default-deny, ssh-key git from the editor terminal, .bashrc-sourced
+  fresh terminal, and the PROJECTS_ROOT Explorer default (a convenience view, NOT a
+  security jail) — each exercised live and scored PASS only on captured evidence.
+platforms: [linux]
+timeout: 5m
+
+steps:
+  - name: real-account-sshkey-login
+    type: shell
+    feature_class: authn
+    params:
+      command: "GET challenge -> ssh-keygen -Y sign -> POST -> 302 + session cookie -> authed GET / serves the editor"
+    on_failure: "Real ssh-key login broken — the real user cannot authenticate into the editor"
+
+  - name: auth-fails-closed
+    type: shell
+    feature_class: authz
+    params:
+      command: "an unreachable/down gate emits no allow; gate /auth denies (401) without/with-forged cookie; the edge never serves the editor unauthenticated"
+    on_failure: "Auth does not fail closed — a down gate or absent session could still reach the editor"
+
+  - name: sshkey-git-from-editor-terminal
+    type: shell
+    feature_class: network_connectivity
+    params:
+      command: "git ls-remote git@github.com:vasic-digital/Code-Server.git succeeds as the real user from a fresh editor-style terminal (ssh-key auth over the network)"
+    on_failure: "ssh-key git does not work from the editor terminal — the user cannot push/pull with their keys"
+
+  - name: fresh-terminal-bashrc-exports
+    type: shell
+    feature_class: boot_service
+    params:
+      command: "a fresh editor terminal (non-login interactive shell) sources ~/.bashrc so its exported vars are present"
+    on_failure: "A fresh terminal does not inherit ~/.bashrc exports — the user's environment is missing"
+
+  - name: explorer-defaults-to-projects-root
+    type: shell
+    feature_class: storage_read
+    params:
+      command: "the running code-server opens PROJECTS_ROOT as its default workspace (Explorer default view) — asserted honestly as a convenience default, NOT an access jail"
+    on_failure: "The Explorer does not default to PROJECTS_ROOT (the configured default workspace)"
+
+success_criteria:
+  all_steps_passed: true
+  no_crashes: true
+
+report:
+  format: markdown
+  sections: [summary, step_results]

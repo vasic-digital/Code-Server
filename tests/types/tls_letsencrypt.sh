@@ -45,6 +45,18 @@ HERE="$(cd "$(dirname "$0")" && pwd)"
 h_init tls_letsencrypt
 DEP="$HC_ROOT/deploy"
 
+# §11.4.1 / §11.4.90 — SUPERSEDED. Layer A asserts byte-identity of the OLD
+# compose/up.sh/Caddyfile deploy render (reverse_proxy code-server:8080) and Layer B
+# drives the old containerized ACME flow — both belong to the RETIRED containerized
+# code-server + password model. The 2026-07-01 host-native SSH-key auth-pivot stack
+# reworked the deploy topology (Caddy edge -> forward_auth -> host-native gate); TLS
+# for the new edge is exercised by the *_auth suites. Its assertions would now
+# FALSE-FAIL, so SKIP-with-reason (§11.4.6 detection). Old stack still runs it.
+if hc_legacy_model_retired; then
+  ab_skip_with_reason "tls_letsencrypt suite: superseded by the *_auth suites (host-native TLS edge) — legacy container+password deploy model retired (see docs/superpowers/specs/2026-07-01-auth-pivot-ssh-key.md)" topology_unsupported
+  h_summary; exit $?
+fi
+
 # ===========================================================================
 # Layer A — source/static, always runs
 # ===========================================================================

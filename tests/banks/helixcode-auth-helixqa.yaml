@@ -1,0 +1,88 @@
+# SPDX-License-Identifier: Apache-2.0
+#
+# HelixCode SSH-KEY AUTH HelixQA bank (§11.4.169 HelixQA). Schema-compatible with the
+# HelixDevelopment/helix_qa bank format (test_cases[]), matching the sibling bank
+# tests/banks/helixcode-helixqa.yaml. Kept in the project tree (tests/banks/), not
+# inside the helix_qa submodule (§11.4.28 decoupling).
+#
+# tests/types/helixqa_auth.sh runs this bank as an AUTONOMOUS QA session for the
+# 2026-07-01 ssh-key auth pivot: every autonomously-HTTP-drivable case is executed
+# live with captured positive evidence (§11.4.69). The valid-login case binds to a
+# real authorized key ($HELIX_TEST_SSH_KEY) and SKIPs credential_absent otherwise —
+# never a faked pass. The real in-browser editor interaction (HCA-QA-UI-001) is an
+# honest operator_attended SKIP per §11.4.3/§11.4.52 (tracked: wire a browser-
+# automation adapter) — never a faked UI pass.
+
+version: "1.0"
+name: "HelixCode SSH-Key Auth QA Bank"
+description: "Autonomous QA journeys for the ssh-key auth pivot (TLS edge, challenge page, fail-closed forward-auth, valid login journey)."
+metadata:
+  author: "vasic-digital"
+  app: "HelixCode"
+  version: "1.0.0"
+
+test_cases:
+  - id: HCA-QA-001
+    name: "TLS edge reachable"
+    category: functional
+    priority: critical
+    driver: autonomous_http
+    platforms: [linux]
+    steps:
+      - name: "GET / over HTTPS"
+        action: "curl -k https://<host>:52443/"
+        expected: "HTTP responds (unauthenticated request is denied, not 000)"
+    expected_result: "The editor edge is reachable over TLS"
+
+  - id: HCA-QA-002
+    name: "Login page issues an ssh-key challenge, no password field"
+    category: functional
+    priority: critical
+    driver: autonomous_http
+    platforms: [linux]
+    steps:
+      - name: "GET /login"
+        action: "fetch the login page"
+        expected: "shows the `ssh-keygen -Y sign` command + a challenge nonce; NO password input"
+    expected_result: "Login is ssh-key challenge-response, not password"
+
+  - id: HCA-QA-003
+    name: "Forward-auth fails closed"
+    category: security
+    priority: critical
+    driver: autonomous_http
+    platforms: [linux]
+    steps:
+      - name: "GET /auth with no cookie"
+        action: "call the gate's forward-auth endpoint unauthenticated"
+        expected: "HTTP 401 (deny)"
+      - name: "GET /auth with a forged cookie"
+        action: "call it with an invalid session cookie"
+        expected: "HTTP 401 (deny)"
+    expected_result: "The gate denies by default (fail-closed)"
+
+  - id: HCA-QA-004
+    name: "Valid ssh-key login journey"
+    category: functional
+    priority: critical
+    driver: autonomous_http
+    platforms: [linux]
+    steps:
+      - name: "Challenge -> sign -> POST"
+        action: "GET a challenge, sign it with an authorized key via ssh-keygen -Y sign, POST the signature"
+        expected: "HTTP 302/303 + a session cookie; authed GET / serves the editor"
+    expected_result: "An authorized key authenticates end-to-end"
+    notes: "Binds to a key in the gate's allowed_signers via HELIX_TEST_SSH_KEY; honest credential_absent SKIP otherwise (§11.4.98), never a faked pass."
+
+  - id: HCA-QA-UI-001
+    name: "In-editor typing + file-tree interaction (real browser UI)"
+    category: ui
+    priority: high
+    driver: operator_attended
+    platforms: [linux]
+    steps:
+      - name: "Open a file via the file tree, type, save with Ctrl+S"
+        action: "drive the code-server web UI in a real browser after ssh-key login"
+        expected: "edits appear and persist to disk"
+    expected_result: "Full in-browser editing works after ssh-key login"
+    notes: "Requires a browser-automation adapter (Playwright/CDP). Tracked HCA-QA-UI-001; honest operator_attended SKIP until wired (§11.4.52)."

@@ -47,3 +47,8 @@ go.work.sum
 # suites under tests/types/ (§11.4.77 regen mechanism). Curated evidence for a
 # release is copied to docs/qa/<run-id>/ (§11.4.83), which IS tracked.
 qa-results/
+
+# Test-time host credentials — §11.4.10 (never versioned)
+scripts/testing/secrets/*
+!scripts/testing/secrets/*.example
+!scripts/testing/secrets/README.md

@@ -27,6 +27,17 @@ h_init challenges
 BANK="$HC_ROOT/tests/banks/helixcode-challenges.yaml"
 [ -f "$BANK" ] && h_log "bank: ${BANK#$HC_ROOT/}"
 
+# §11.4.1 / §11.4.90 — SUPERSEDED. This bank (CH2 CODE_SERVER_PASSWORD login,
+# CH3/CH4 in-container exec, CH5 old up.sh/Caddyfile render) validates the RETIRED
+# containerized-password model; on the 2026-07-01 host-native SSH-key auth-pivot
+# stack it is superseded by challenges_auth (tests/banks/helixcode-auth-
+# challenges.yaml). The old model is gone, so these would FALSE-FAIL — SKIP-with-
+# reason (§11.4.6 detection). On the OLD stack it still runs unchanged.
+if hc_legacy_model_retired; then
+  ab_skip_with_reason "challenges suite: superseded by challenges_auth — legacy container+password model retired (see docs/superpowers/specs/2026-07-01-auth-pivot-ssh-key.md)" topology_unsupported
+  h_summary; exit $?
+fi
+
 if ! hc_stack_up; then
   ab_skip_with_reason "HelixCode Challenge bank (stack could not be booted)" topology_unsupported
   h_summary; exit $?

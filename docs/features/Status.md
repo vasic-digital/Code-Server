@@ -12,6 +12,7 @@ copies for this release are under `docs/qa/<run-id>/` (§11.4.83).
 ## Components
 - **Caddy edge** — TLS termination + HTTP→HTTPS redirect + reverse proxy (host 52443/52080).
 - **code-server** — browser VS Code, auth-gated, projects bind-mounted RW.
+- **helix-auth** *(new, in progress)* — host-native, non-root forward-auth gate behind Caddy; issues a signed SSH-key challenge and verifies the pasted signature against the real account's `authorized_keys` (`ssh-keygen -Y verify`), issues the session cookie, fails closed. No password stored.
 - **Operator scripts** — install / setup / start / stop / restart / status / logs / doctor / set-password / tune-host / (un)install-service.
 - **Boot-survival service** — rootless systemd user unit (linger, WantedBy=default.target).
 
@@ -34,7 +35,38 @@ copies for this release are under `docs/qa/<run-id>/` (§11.4.83).
 | Stack | performance / memory bounds | benchmark, memory | PASS | `tests/{benchmark,memory}` (p50/p95/p99, RSS<60%) |
 | Stack | no secret leak / rootless | security | PASS | `tests/security` (git-ignored `.env`/tls, rootless podman) |
 
+## Real-account authentication (new — in progress, §11.4.6)
+
+These capabilities are **under construction** per the auth-pivot spec
+([`docs/superpowers/specs/2026-07-01-auth-pivot-ssh-key.md`](../superpowers/specs/2026-07-01-auth-pivot-ssh-key.md),
+which supersedes the PAM-login part of the original design; user guide
+[`docs/guides/AUTH.md`](../guides/AUTH.md)). They are **not yet validated** —
+tests and evidence are being built by other work streams, so Implementation is
+**In progress**, Validation is **PENDING**, and Video-confirmation is
+**PENDING**. Do **not** read these rows as passing.
+
+| Component | Feature | Test types (§11.4.169) | Validation | Evidence |
+|---|---|---|---|---|
+| helix-auth | Real-account SSH-key login (challenge-response, verified vs `authorized_keys`, no password stored) | unit, integration, e2e, security, challenges, helixqa | PENDING | Impl: In progress · Video: PENDING · being built (no evidence yet) |
+| code-server | SSH-key git access from editor terminal (host `~/.ssh`) | e2e, challenges, helixqa | PENDING | Impl: In progress · Video: PENDING · being built (no evidence yet) |
+| code-server | `.bashrc` / profile sourced in login-shell terminal | e2e, challenges | PENDING | Impl: In progress · Video: PENDING · being built (no evidence yet) |
+| code-server | Editor Explorer defaults to `$PROJECTS_ROOT` (convenience view, NOT a jail — terminal/Open Folder/extensions retain full host access by design) | e2e, challenges, helixqa | PENDING | Impl: In progress · Video: PENDING · being built (no evidence yet) |
+| helix-auth | Auth fails CLOSED (gate down/errored → access denied, never bypassed) | stress_chaos, security | PENDING | Impl: In progress · Video: PENDING · being built (no evidence yet) |
+
 ## Honest boundaries (§11.4.6)
+- Real-account + SSH-key authentication (the five rows above) is **in progress
+  and unvalidated** — the `helix-auth` gate, the challenge/verify flow, and the
+  auth / fail-closed / cookie / rate-limit tests are still being built. No PASS
+  is claimed until captured evidence lands. (This supersedes the earlier PAM
+  login: non-root PAM verify is impossible on this ALT/tcb host — see the pivot
+  spec.)
+- The editor Explorer defaulting to `$PROJECTS_ROOT` is a **convenience view,
+  NOT a security boundary**: the integrated terminal, File > Open Folder, and
+  extensions retain full real-user (`milosvasic`) host-filesystem access by
+  design (no code-server flag confines the process). This is the operator's
+  chosen posture; real isolation would need a container / VM / chroot (out of
+  scope). Defense-in-depth (deploy stream, in progress): `--disable-workspace-trust`
+  + `/proxy/` blocked at the Caddy edge.
 - Real, publicly-trusted Let's Encrypt cannot be autonomously proven on a LAN box
   (no public domain); the ACME issue/serve/rotate code path is proven against a
   local Pebble CA, and the operator enables the public CA per `docs/guides/TLS.md`.

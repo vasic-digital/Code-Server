@@ -48,6 +48,17 @@ _here="$(cd "$(dirname "${BASH_SOURCE[0]:-$0}")" && pwd)"
 
 h_init security
 
+# §11.4.1 / §11.4.90 — SUPERSEDED. Assertions (1) AUTH-redirect-to-/login, (4) the
+# code-server CONTAINER rootless check, and (5) CODE_SERVER_PASSWORD hygiene all
+# validate the RETIRED containerized-password model; on the 2026-07-01 host-native
+# SSH-key auth-pivot stack it is superseded by security_auth (which covers TLS
+# enforcement + secret hygiene + rootless + the ssh-key auth posture). SKIP-with-
+# reason here (§11.4.6 detection) rather than FALSE-FAIL. Old stack still runs it.
+if hc_legacy_model_retired; then
+  ab_skip_with_reason "security suite: superseded by security_auth — legacy container+password model retired (see docs/superpowers/specs/2026-07-01-auth-pivot-ssh-key.md)" topology_unsupported
+  h_summary; exit $?
+fi
+
 # On-demand infra (§11.4.76): bring the stack up if not already running.
 if ! hc_stack_up; then
   ev="$(h_ev stack_unreachable)"; { echo "hc_stack_up failed — stack not reachable at $HC_BASE"; } > "$ev"

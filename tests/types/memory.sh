@@ -30,6 +30,16 @@
 . "$(dirname "$0")/../lib/stack_fixture.sh"
 h_init memory
 
+# §11.4.1 / §11.4.90 — SUPERSEDED. Samples RSS of the RETIRED two-container model
+# (deploy_code-server_1 + caddy); on the 2026-07-01 host-native SSH-key auth-pivot
+# stack code-server runs host-native (no container to `podman stats`), so it is
+# superseded by memory_auth. The old container is gone, so M1 would FALSE-FAIL —
+# SKIP-with-reason (§11.4.6 detection). On the OLD stack it still runs unchanged.
+if hc_legacy_model_retired; then
+  ab_skip_with_reason "memory suite: superseded by memory_auth — legacy container+password model retired (see docs/superpowers/specs/2026-07-01-auth-pivot-ssh-key.md)" topology_unsupported
+  h_summary; exit $?
+fi
+
 SAMPLES="${HC_MEM_SAMPLES:-12}"
 INTERVAL="${HC_MEM_INTERVAL:-5}"
 GROWTH_FACTOR="15"     # tenths: 15 => max must be <= min * 1.5 (no unbounded growth)

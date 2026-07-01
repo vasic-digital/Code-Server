@@ -1,24 +1,43 @@
-# HelixCode stack — Caddy edge (52443/52080 on 0.0.0.0) -> code-server.
-# Project bind-mounts are injected by up.sh into compose.projects.yml ($PROJECTS).
+# HelixCode stack — Caddy edge (52443/52080 on 0.0.0.0) is the ONLY containerized
+# component (§11.4.76). code-server AND helix-auth run host-native as the real
+# user (systemd --user; see deploy/systemd/*.service + scripts/install-auth.sh).
+# Caddy reaches them over the rootless-podman host gateway via
+# host.containers.internal (code-server 127.0.0.1:8080, helix-auth :8081) —
+# wired by the Caddyfile that up.sh renders (forward_auth gate + reverse_proxy).
+#
+# REACHABILITY (FINDINGS Angle 2/D; honest choice per §11.4.6): the STRONGEST way
+# to close the `--auth none` loopback hole is a unix socket — code-server
+# `--socket %t/helixcode/cs.sock --socket-mode 0600` bind-mounted here as the
+# reverse_proxy upstream (only the owner, incl. rootless-Caddy-mapped-to-owner,
+# can connect). It was ASSESSED and DEFERRED as fragile on this two-lifecycle
+# topology: code-server (systemd --user, started by scripts/install-auth.sh) and
+# this Caddy edge (podman compose, started by deploy/up.sh) have INDEPENDENT
+# lifecycles with NO ordering guarantee — if `podman compose up` runs before the
+# socket exists, podman (5.7.1) auto-creates the bind-mount source as a DIRECTORY,
+# which then breaks BOTH code-server's socket bind AND Caddy's proxy. Chosen
+# fallback: loopback 127.0.0.1:8080 + the UID-scoped OUTPUT firewall recommendation
+# documented in deploy/systemd/helix-code-server.service. Revisit the socket path
+# with socket-ready ordering (code-server as a compose dependency, or a systemd
+# .socket unit) at the next hardening pass.
 services:
-  code-server:
-    image: docker.io/codercom/code-server:latest
-    # Rootless podman: run as container-root, which maps to the host user, so the
-    # bind-mounted host Projects (host-user-owned, 0750) are readable AND writable
-    # in the browser — "permissive perms, immediate work". (keep-id conflicts with
-    # podman-compose's shared pod; running as root maps to the host user cleanly.)
-    # HOME pinned to /home/coder so code-server config persists to the cs-config volume.
-    user: "0:0"
-    environment:
-      - PASSWORD=${CODE_SERVER_PASSWORD}
-      - HOME=/home/coder
-    expose:
-      - "8080"
-    volumes:
-      - cs-config:/home/coder/.config
-    restart: unless-stopped
   caddy:
-    image: docker.io/library/caddy:2
+    # Custom edge image = stock caddy:2 + the Brotli `br` encoder (see caddy/Dockerfile);
+    # up.sh's `... up -d --build` builds it. Tagged under a PROJECT-LOCAL name (NOT the
+    # shared docker.io/library/caddy:2) so this build never clobbers the upstream caddy:2
+    # tag other host projects on this machine may use (§11.4.174). A DNS-01 provider plugin
+    # (TLS_MODE=letsencrypt* + ACME_DNS_PROVIDER) is added to that SAME Dockerfile.
+    build:
+      context: ./caddy
+      dockerfile: Dockerfile
+    image: localhost/helixcode-caddy-brotli:2
+    # Reach the HOST-NATIVE backends (code-server 127.0.0.1:8080, helix-auth :8081)
+    # which bind LOOPBACK only (kept off the LAN for security). A podman-compose
+    # BRIDGE cannot reach host loopback (host.containers.internal / gateway both
+    # refuse). pasta with --map-host-loopback maps host.containers.internal
+    # (169.254.1.2) THROUGH to the host's 127.0.0.1 — verified reachable — so the
+    # Caddyfile's host.containers.internal:8080/8081 upstreams resolve to the host
+    # backends WITHOUT exposing them beyond loopback. Published ports still forward.
+    network_mode: "pasta:--map-host-loopback,169.254.1.2"
     # DNS-01 secret passthrough (TLS_MODE=letsencrypt* with ACME_DNS_PROVIDER).
     # The token lives ONLY in the git-ignored .env and is read by Caddy via
     # {env.ACME_DNS_API_TOKEN} — it is NEVER written into the tracked Caddyfile
@@ -29,17 +48,17 @@ services:
       - ACME_DNS_API_TOKEN=${ACME_DNS_API_TOKEN:-}
     ports:
       - "0.0.0.0:52443:443"
+      # HTTP/3 (QUIC) rides UDP/443 — published alongside the TCP mapping so the
+      # rendered Caddyfile's `servers { protocols h1 h2 h3 }` actually reaches
+      # clients. Without this UDP publish, HTTP/3 silently falls back to TCP h1/h2.
+      - "0.0.0.0:52443:443/udp"
       - "0.0.0.0:52080:80"
     volumes:
       - ./Caddyfile:/etc/caddy/Caddyfile:Z
       - ./tls:/etc/caddy/tls:Z
       - caddy-data:/data
       - caddy-config:/config
-    depends_on:
-      - code-server
     restart: unless-stopped
 volumes:
-  cs-config:
-  cs-data:
   caddy-data:
   caddy-config:

@@ -22,6 +22,16 @@
 . "$(dirname "$0")/../lib/stack_fixture.sh"
 h_init integration
 
+# §11.4.1 / §11.4.90 — SUPERSEDED. This suite validates the RETIRED containerized
+# code-server + CODE_SERVER_PASSWORD model; on the 2026-07-01 host-native SSH-key
+# auth-pivot stack it is superseded by e2e_auth + security_auth. The old model is
+# absent, so its assertions would FALSE-FAIL — SKIP-with-reason (evidence-based
+# detection §11.4.6), never a false FAIL. On the OLD stack it still runs unchanged.
+if hc_legacy_model_retired; then
+  ab_skip_with_reason "integration suite: superseded by e2e_auth + security_auth — legacy container+password model retired (see docs/superpowers/specs/2026-07-01-auth-pivot-ssh-key.md)" topology_unsupported
+  h_summary; exit $?
+fi
+
 # ---- on-demand infra (§11.4.76) ------------------------------------------
 if ! h_require podman && ! h_require docker; then
   ab_skip_with_reason "integration suite (no container runtime on PATH)" topology_unsupported

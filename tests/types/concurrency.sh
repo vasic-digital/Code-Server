@@ -43,6 +43,17 @@
 . "$(dirname "$0")/../lib/stack_fixture.sh"
 h_init concurrency
 
+# §11.4.1 / §11.4.90 — SUPERSEDED. C1 mints RETIRED CODE_SERVER_PASSWORD logins and
+# C3 inspects the old code-server container / compose; on the 2026-07-01 host-native
+# SSH-key auth-pivot stack it is superseded by concurrency_auth (which proves the
+# ssh-key gate's session/atomicity/replay semantics under concurrency). The old
+# model is gone, so these would FALSE-FAIL — SKIP-with-reason (§11.4.6 detection),
+# never a false FAIL. On the OLD stack it still runs unchanged.
+if hc_legacy_model_retired; then
+  ab_skip_with_reason "concurrency suite: superseded by concurrency_auth — legacy container+password model retired (see docs/superpowers/specs/2026-07-01-auth-pivot-ssh-key.md)" topology_unsupported
+  h_summary; exit $?
+fi
+
 # ---- runtime guard -------------------------------------------------------
 if ! h_require podman && ! h_require docker; then
   ab_skip_with_reason "concurrency suite (no container runtime on PATH)" topology_unsupported

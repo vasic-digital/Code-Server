@@ -28,6 +28,16 @@
 . "$(dirname "$0")/../lib/stack_fixture.sh"
 h_init e2e
 
+# §11.4.1 / §11.4.90 — SUPERSEDED. Drives the RETIRED CODE_SERVER_PASSWORD login
+# journey (code-server-session cookie); on the 2026-07-01 host-native SSH-key
+# auth-pivot stack it is superseded by e2e_auth. The password model is gone, so
+# these assertions would FALSE-FAIL — SKIP-with-reason (§11.4.6 detection), never
+# a false FAIL. On the OLD stack (container present + password set) it still runs.
+if hc_legacy_model_retired; then
+  ab_skip_with_reason "e2e suite: superseded by e2e_auth — legacy container+password model retired (see docs/superpowers/specs/2026-07-01-auth-pivot-ssh-key.md)" topology_unsupported
+  h_summary; exit $?
+fi
+
 JAR="$(mktemp "${TMPDIR:-/tmp}/hc_e2e_jar.XXXXXX")"
 cleanup() { rm -f "$JAR" 2>/dev/null || true; }
 trap cleanup EXIT

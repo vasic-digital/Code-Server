@@ -40,6 +40,16 @@
 . "$(dirname "$0")/../lib/stack_fixture.sh"
 h_init benchmark
 
+# §11.4.1 / §11.4.90 — SUPERSEDED. B2 benchmarks the RETIRED CODE_SERVER_PASSWORD
+# POST /login -> 302 credential-verify+mint; on the 2026-07-01 host-native SSH-key
+# auth-pivot stack it is superseded by benchmark_auth. The password model is gone,
+# so B2 would yield 0 valid 302 samples and FALSE-FAIL — SKIP-with-reason (§11.4.6
+# detection), never a false FAIL. On the OLD stack it still runs unchanged.
+if hc_legacy_model_retired; then
+  ab_skip_with_reason "benchmark suite: superseded by benchmark_auth — legacy container+password model retired (see docs/superpowers/specs/2026-07-01-auth-pivot-ssh-key.md)" topology_unsupported
+  h_summary; exit $?
+fi
+
 N="${HC_BENCH_N:-30}"
 TOL_PCT="${HC_BENCH_TOL_PCT:-50}"     # allowed p95 regression vs baseline, percent
 # Absolute noise floor (ms): sub-10ms ops are jitter-dominated (observed login-page

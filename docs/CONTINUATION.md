@@ -1,81 +1,106 @@
 # CONTINUATION — HelixCode web-IDE platform
 
-**Revision:** 2 · **Updated:** 2026-06-30 · **Status:** Phase 1 COMPLETE; Phase 2 CORE working+verified; P2-remaining + P3–7 PLANNED
+**Revision:** 3 · **Updated:** 2026-07-01 · **Status:** Releasing **`codeserver-1.0.0-dev-0.0.3`** (real-account SSH-key auth) — LIVE VALIDATION + RELEASE in progress
 
-**Phase 2 core (DONE, verified — `deploy/`):** Caddy edge + code-server stack boots
-on Podman; `0.0.0.0:52443` (TLS1.3, openssl Verify=0) + `0.0.0.0:52080` (→301
-HTTPS); code-server login HTML served (2621 B); `$PROJECTS` bind-mounted at
-`/home/coder/projects/<name>`. Run via `deploy/up.sh` (parses `$PROJECTS`, podman
-compose up). Client note: GnuTLS-curl can't handshake Caddy TLS1.3 (use browser/
-openssl). P2-remaining: Open VSX mirror service, BuildKit warm image, generalize
-into the `code_workspace` renderer.
+Read FIRST on any fresh session: this file, then `git fetch --all`, then the
+auth-pivot spec + AUTH guide + feature ledger below. This is the §12.10 /
+§11.4.131 standing resumption anchor.
 
-Read FIRST on any fresh session: this file, then `git fetch --all`, then the spec
-and plan below. This is the §12.10 / §11.4.131 standing resumption anchor.
+## Current phase — live-validation + release of `codeserver-1.0.0-dev-0.0.3`
 
-## Where we are (live state — all pushed)
+This round pivots authentication to a **real-account, SSH-key challenge-response**
+model and ties each HelixCode session to the real host user (`milosvasic`),
+host-native. Release documentation is prepared; the remaining work is the **live
+validation run** (fill the changelog's `LIVE VALIDATION AGGREGATE` placeholder
+with real PASS/FAIL/SKIP counts) and then cutting + publishing the tag.
 
-- **Main repo** `code_server` (= HelixCode): HEAD **`1284581`**, pushed to all 4
-  upstreams (github vasic-digital/Code-Server, gitlab, gitflic, gitverse).
-- **Constitution** pinned `674f830` (decoupled: project-derived workable-items
-  key + release-prefix resolver + `.env`); pushed to all 6 constitution upstreams.
-- **Owned submodules (8) at root**, all carry the Helix Constitution inheritance
-  pointer (comprehensive test 16/0): `challenges, code_workspace, containers,
-  docs_chain, helix_qa, helix_translate, port_prefix, vscode_profile_sync`
-  (+ `constitution`). helix_translate pointer commit `6a6d909`.
-- **3 NEW public reusable repos** created under vasic-digital on GitHub **and**
-  GitLab, added as submodules:
-  - `port_prefix` `b501b2b` — full lib (`Exposed(prefix,internalPort,taken)`),
-    tests GREEN, §1.1 mutation (`scripts/mutation_check.sh`) PASS, CLI
-    (`cmd/port_prefix`) verified (52xxx mapping).
-  - `code_workspace` `5bd5146` — skeleton (pkg/workspace, go test ok).
-  - `vscode_profile_sync` `6935a27` — skeleton (pkg/profile, go test ok).
-- **Gates** in main: `tests/pre_build_verification.sh` (PASS), paired §1.1
-  `scripts/testing/meta_test_false_positive_proof.sh` (PASS),
-  `tests/test_constitution_inheritance.sh` (16/0).
+- Changelog (this release): `docs/changelogs/codeserver-1.0.0-dev-0.0.3.md`
+- Auth pivot spec (authoritative): `docs/superpowers/specs/2026-07-01-auth-pivot-ssh-key.md`
+  (supersedes the live-PAM-login part of `docs/superpowers/specs/2026-07-01-real-account-code-server-design.md`)
+- User guide: `docs/guides/AUTH.md`
+- Feature ledger + validation verdicts: `docs/features/Status.md`
+- Prior release: `docs/changelogs/codeserver-1.0.0-dev-0.0.2.md` (TLS / Let's Encrypt + §11.4.169 matrix)
 
-## Source of truth
+### Why the pivot (captured facts, §11.4.6)
 
-- Spec: `docs/superpowers/specs/2026-06-30-helixcode-platform-design.md`
-- Plan: `docs/superpowers/plans/2026-06-30-helixcode-platform.md`
-- Research evidence: scratchpad `…/research/0{1..4}_*.md` (web perf/UX, containers
-  integration, QA integration, VSCode replication).
+This host is ALT Linux with the **tcb** shadow scheme, so a **non-root** service
+cannot verify passwords via PAM (`/etc/tcb/<user>/shadow` unreadable by the user;
+`tcb_chkpwd` setuid helper permission-denied to non-root ⇒ `pam_authenticate`
+returns `PAM_AUTH_ERR` for every password). A password gate would need root; the
+operator directive is **no sudo/root** and **all access via SSH keys**.
+`~/.ssh/authorized_keys` is readable and `ssh-keygen -Y sign`/`-Y verify` are
+supported, so SSH-key challenge-response runs fully **as non-root milosvasic**,
+with **no password and nothing stored**.
 
-## Immediate NEXT — Phase 2 (`code_workspace` engine + compose stack)
+## Architecture (this release)
 
-Build in the `code_workspace` submodule (then have `code_server` consume it):
-1. `pkg/compose`: render `compose.codeserver.yml` (services: caddy, code-server,
-   openvsx-mirror) — ports from `port_prefix` (52443/52080/52808/52083),
-   `$PROJECTS` bind mounts (`:Z`, `--userns=keep-id`, permissive). Golden-file test.
-2. `entrypoint.sh`: parse `$PROJECTS` (colon-separated) → mounts + generated
-   multi-root `.code-workspace`; tmux default shell; inotify/watcherExclude.
-3. `Containerfile.codeserver` (FROM codercom/code-server) + BuildKit cache;
-   `Caddyfile` (TLS mkcert/LE, HTTP/3, brotli, ws, rate-limit); openvsx-mirror
-   (coder/code-marketplace).
-4. Bring up LOCALLY via `containers` `pkg/compose` (`Up` build+wait) + health-gate
-   via `pkg/endpoint`/`pkg/health`; verify 52443/52080 listen on `0.0.0.0`.
-5. Remote deploy via `containers/cmd/deploy-stack`.
-6. Paired mutation: break a health endpoint → health gate FAILS.
-Acceptance: `curl -k https://0.0.0.0:52443` → code-server login; podman ps healthy.
+```
+Browser ──HTTPS──▶ Caddy (TLS edge, CONTAINERIZED rootless Podman; HTTP/3 + brotli via custom xcaddy)
+                    ├─ forward_auth ─▶ helix-auth (host-native Gin, systemd --user, loopback:8081, NON-root)
+                    └─ reverse_proxy ─▶ code-server (host-native AS milosvasic, systemd --user,
+                                          --auth none, loopback:8080; inherits ~/.ssh, ~/.bashrc, host binaries)
+```
 
-Then P3 (profile sync), P4 (QA banks + autonomous), P5 (docs+SQL+DocsChain),
-P6 (full validation with captured evidence), P7 (ship: push all + tag
-`codeserver-1.0.0`).
+- **code-server** — host-native `systemd --user`, `--auth none`, loopback:8080.
+- **helix-auth** — host-native **Gin** gate, `systemd --user`, loopback:8081,
+  non-root: SSH-key challenge (`GET /login`) → verify pasted signature vs
+  `authorized_keys` (`ssh-keygen -Y verify`) → `__Host-` session cookie; `GET /auth`
+  for forward_auth; **fails closed**.
+- **Caddy** — sole containerized component: TLS edge, `forward_auth` (fail-closed),
+  HTTP/3, `encode zstd br gzip`, `/proxy` 403, `X-Helix-User` strip.
+- **Stack directive adopted:** Go + Gin + HTTP/3 (QUIC) + Brotli.
+
+## Feature status (§11.4.6 — honest)
+
+The real-account + SSH-key rows in `docs/features/Status.md` are **In progress /
+PENDING validation** — no PASS is claimed until captured evidence lands. Testing:
+Go unit/integration/race (**70 tests, `-race`, 81.8% cover**) + shell suites
+`tests/types/{e2e,security,stress_chaos,concurrency,load,memory,benchmark,challenges,helixqa}_auth.sh`
++ banks `tests/banks/helixcode-auth-{challenges,helixqa}.yaml`. The live aggregate
+is the conductor-filled placeholder in the changelog.
+
+### Honest boundaries carried into the release
+
+- Editor "jail" is **cosmetic** (Explorer default only; terminal/Open-Folder/
+  extensions keep full host access by design).
+- `--auth none` on loopback:8080 is a **residual** — host firewall rule for
+  loopback:8080 recommended (all real auth is at the gate/edge).
+- code-server pinned **4.117.0** (newest on npm at release time).
+- Real public Let's Encrypt remains **operator-gated** (see `docs/guides/TLS.md`).
+
+## Migration
+
+`scripts/install-auth.sh` (host-native, **no sudo**) provisions the `systemd --user`
+code-server + helix-auth units; `deploy/up.sh` brings up the Caddy edge.
+**`CODE_SERVER_PASSWORD` is retired** → `HELIX_AUTH_MODE=sshkey`,
+`HELIX_AUTH_ACCOUNT`, `HELIX_AUTH_AUTHORIZED_KEYS`, `HELIX_AUTH_PRINCIPAL`,
+`PROJECTS_ROOT` (no password parameter).
+
+## Immediate NEXT (to close the release)
+
+1. Run the live §11.4.169 auth matrix against the freshly-installed host stack;
+   capture evidence under `docs/qa/codeserver-1.0.0-dev-0.0.3/`.
+2. Fill `LIVE VALIDATION AGGREGATE` in
+   `docs/changelogs/codeserver-1.0.0-dev-0.0.3.md` with the real PASS/FAIL/SKIP
+   counts (§11.4.6 — never invented).
+3. Flip the `docs/features/Status.md` real-account rows to their verdicts once
+   evidence lands.
+4. Full-suite retest (§11.4.40) → tag `codeserver-1.0.0-dev-0.0.3` → publish to
+   all upstreams via merge-onto-latest-main (no force-push, §11.4.113).
 
 ## Binding constraints (every phase)
 
-Port band **52000–52999** (≤65535); publish only edge/main ports on `0.0.0.0`;
-no secrets (only git-ignored `.env`); **every gate paired with a §1.1 mutation**;
-**no `--force`/`--no-verify`/bypass**; hardlinked `.git` backup before destructive
-ops; **anti-bluff** (PASS needs captured runtime evidence); stop + root-cause +
-full retest on any defect; release prefix `codeserver`; submodule commits
-propagate first; docs kept in sync via Docs Chain.
+Port band **52000–52999**; publish only edge ports on `0.0.0.0`; **no secrets**
+(only git-ignored `.env`); **every gate paired with a §1.1 mutation**; **no
+`--force`/`--no-verify`/bypass**; hardlinked `.git` backup before destructive ops;
+**anti-bluff** (PASS needs captured runtime evidence, no invented numbers); stop +
+root-cause + full retest on any defect; release prefix `codeserver`; submodule
+commits propagate first; docs kept in sync.
 
-## Known notes
+## Prior state (Phases 1–2, retained)
 
-- Agent fan-out has been hitting transient server rate-limits; mechanical build
-  work is reliable done directly in the main stream.
-- `helix_translate` deep-recursion is bounded by a stray `.claude/worktrees`
-  gitlink in its OLD pinned constitution (`212b883`) — pre-existing, not ours.
-- helix_qa already ships `banks/helixcode-*.yaml` targeting this IDE → P4 drives
-  them via `helixqa http --banks helix_qa/banks --base-url https://localhost:52443`.
+Phase 1 COMPLETE; Phase 2 core working+verified (Caddy edge + code-server stack on
+Podman; TLS1.3 edge on 52443, →301 on 52080; `$PROJECTS` bind-mounted). Owned
+submodules (8) at root carry the Constitution inheritance pointer; constitution
+pinned (see history). Prior release `codeserver-1.0.0-dev-0.0.2` shipped Let's
+Encrypt HTTPS (auto-renew + rotation) + the 14-suite §11.4.169 matrix.

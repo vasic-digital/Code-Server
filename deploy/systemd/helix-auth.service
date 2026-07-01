@@ -1,0 +1,125 @@
+# deploy/systemd/helix-auth.service — systemd --user unit TEMPLATE.
+#
+# Purpose      : Run the helix-auth forward-auth gate, bound to loopback :8081.
+#                Caddy's `forward_auth` calls GET /auth on every request to the
+#                protected app; /login + /logout + the auth static assets are
+#                served by this service directly. Login is SSH-KEY
+#                challenge-response (HELIX_AUTH_MODE=sshkey): the gate issues a
+#                server-signed challenge, the user signs it locally with their own
+#                SSH key (`ssh-keygen -Y sign`), and the gate verifies the
+#                signature against HELIX_AUTH_ACCOUNT's authorized_keys
+#                (`ssh-keygen -Y verify`) for HELIX_AUTH_PRINCIPAL — NO password,
+#                nothing stored (§11.4.10). On success it issues a signed
+#                HttpOnly+Secure cookie. Auth FAILS CLOSED: if this service is
+#                down/errors, Caddy denies (never proxies to the editor).
+#
+#                Runs as a PLAIN `systemd --user` service AS the target account —
+#                NO sudo, NO root, NO /etc/pam.d file. ssh-key verification needs
+#                only read access to the user's own authorized_keys, which the
+#                --user process already has.
+#
+#                SANDBOXED AGGRESSIVELY (unlike helix-code-server.service): the gate
+#                spawns NO user login shell — it only READS authorized_keys and
+#                execs `ssh-keygen -Y verify` — so a tight systemd sandbox costs
+#                nothing here (FINDINGS Angle 3). NOTE: in a --user unit the
+#                filesystem-namespacing directives (ProtectSystem / ProtectHome /
+#                ReadOnlyPaths / ReadWritePaths / PrivateTmp / Protect*) are NO-OPS
+#                unless PrivateUsers=true is ALSO set — so it is. Verify each took
+#                effect: systemd-analyze --user security helix-auth
+#
+# Placeholders : %h                     — systemd specifier -> invoking user's home.
+#                %t                     — systemd specifier -> runtime dir (/run/user/UID).
+#                ${HELIX_AUTH_ACCOUNT}   — the account sessions tie to.
+#                ${HELIX_AUTH_PRINCIPAL} — the ssh-key principal the signature is
+#                                         verified for (defaults to the account
+#                                         name). BOTH filled at install time by
+#                                         scripts/install-auth.sh from deploy/.env.
+
+[Unit]
+Description=HelixCode ssh-key forward-auth gate (loopback:8081, fail-closed)
+Documentation=file://%h/.config/systemd/user/helix-auth.service
+After=default.target
+# Generous restart window so the fail-closed gate SELF-HEALS rather than staying
+# dead (a dead gate => editor denied). StartLimit* are [Unit]-section directives.
+StartLimitIntervalSec=60s
+StartLimitBurst=10
+
+[Service]
+Type=exec
+# --- login model / params ---------------------------------------------------
+# SSH-key challenge-response login — no password, nothing stored (§11.4.10).
+Environment=HELIX_AUTH_MODE=sshkey
+# The system account sessions tie to. install-auth.sh substitutes it from .env.
+Environment=HELIX_AUTH_ACCOUNT=${HELIX_AUTH_ACCOUNT}
+# Allowed signers derived from this account's SSH authorized_keys. %h expands at
+# runtime — no substitution needed.
+Environment=HELIX_AUTH_AUTHORIZED_KEYS=%h/.ssh/authorized_keys
+# ssh-key principal the signature is verified for (defaults to the account name).
+Environment=HELIX_AUTH_PRINCIPAL=${HELIX_AUTH_PRINCIPAL}
+# Loopback-only bind; Caddy reaches it via host.containers.internal:8081.
+Environment=HELIX_AUTH_BIND=127.0.0.1:8081
+# HMAC cookie/challenge secret MUST live on a WRITABLE path: ProtectHome=read-only
+# below blocks the gate's default ~/.config path, so pin it to the RuntimeDirectory
+# (%t/helix-auth, created 0700 + ReadWritePaths below). Ephemeral by design — a gate
+# restart regenerates it (existing sessions re-login; fail-closed self-heal intact).
+Environment=HELIX_AUTH_COOKIE_SECRET=%t/helix-auth/cookie_secret
+# TMPDIR MUST point at a path that exists inside this unit's namespace. With
+# PrivateTmp=true the service gets a fresh private /tmp, so any inherited ambient
+# TMPDIR (e.g. a sandboxed dev-shell's /tmp/.private/<user>) would NOT exist here
+# and the gate's os.MkdirTemp("") for the allowed_signers dir would fail → every
+# verify 401s before ssh-keygen. Pin it to the writable RuntimeDirectory.
+Environment=TMPDIR=%t/helix-auth
+# Per-client rate-limit keying. The gate always sits BEHIND the Caddy edge, so its
+# TCP peer is the Caddy hop (host gateway) for EVERY request — useless as a
+# per-client key. With this true the gate keys its rate-limit on the RIGHTMOST
+# X-Forwarded-For entry instead. Caddy is the SOLE trusted hop (no trusted_proxies
+# configured) and sets XFF to the real client IP, so the rightmost entry is the
+# genuine client; a client-spoofed XFF is discarded by Caddy and never trusted.
+Environment=HELIX_AUTH_TRUST_FORWARDED_FOR=true
+# Rate-limit window (per-client failed-login budget = HELIX_AUTH_RATE_MAX/this).
+# SSH signatures cannot be brute-forced (unlike passwords), so this limiter is
+# really exec-flood defense (the global spawn ceiling backs it up) — a short window
+# is appropriate + keeps a legitimate user from being locked out long by a burst.
+# Tunable; raise for a stricter posture. Env: HELIX_AUTH_RATE_WINDOW (default 60s).
+Environment=HELIX_AUTH_RATE_WINDOW=15s
+Environment=PATH=%h/.local/bin:%h/bin:/usr/local/bin:/usr/bin:/bin
+# The helix-auth binary is produced by the services/auth_gate/ Go build and
+# installed to ~/.local/bin (see scripts/install-auth.sh). It execs `ssh-keygen`
+# (on PATH above) to verify signatures — no cgo, no PAM.
+ExecStart=%h/.local/bin/helix-auth
+Restart=on-failure
+RestartSec=2
+
+# --- sandbox (safe: this unit spawns NO user shell) -------------------------
+# prctl/seccomp-based — effective directly even in a --user unit:
+NoNewPrivileges=true
+RestrictSUIDSGID=true
+LockPersonality=true
+RestrictNamespaces=true
+RestrictAddressFamilies=AF_INET AF_INET6 AF_UNIX
+# Filesystem namespacing REQUIRES PrivateUsers=true in a --user unit (FINDINGS
+# Angle 3); without it every Protect*/ReadOnlyPaths/PrivateTmp line below would be
+# silently ignored (a §11.4 bluff). With it, they take effect.
+PrivateUsers=true
+ProtectSystem=strict
+# read-only (NOT true/tmpfs): the gate MUST still READ ~/.ssh/authorized_keys.
+ProtectHome=read-only
+ReadOnlyPaths=%h/.ssh
+# Writable runtime dir for the gate's 0600 HMAC cookie secret + any socket.
+# RuntimeDirectory= makes systemd create %t/helix-auth (0700) and clean it up.
+RuntimeDirectory=helix-auth
+ReadWritePaths=%t/helix-auth
+PrivateTmp=true
+ProtectKernelTunables=true
+ProtectKernelModules=true
+ProtectControlGroups=true
+
+# --- resource ceilings (§12.6-style) ----------------------------------------
+# Honored on cgroup-v2 with the `memory`+`pids` controllers DELEGATED to
+# user@.service (verified present on this host) — confirm honored:
+#   systemctl --user show helix-auth -p MemoryMax -p TasksMax
+MemoryMax=256M
+TasksMax=256
+
+[Install]
+WantedBy=default.target

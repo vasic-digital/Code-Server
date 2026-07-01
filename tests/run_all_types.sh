@@ -32,8 +32,10 @@ OUT="qa-results/run_all/$RUNID"; mkdir -p "$OUT"
 # Risk-descending order (§11.4.132). Newest/most-fragile first; foundational
 # unit last. Any suite present on disk but absent here is appended (still run).
 ORDER=(
-  tls_letsencrypt   # newest surface (Let's Encrypt) — highest change-risk
-  security          # auth/TLS/secret-leak — highest blast radius
+  security_auth     # NEWEST surface: ssh-key auth gate (auth pivot) — highest change-risk + auth blast radius
+  e2e_auth          # NEWEST surface: ssh-key login journey (challenge-response)
+  tls_letsencrypt   # Let's Encrypt TLS edge — high change-risk
+  security          # legacy auth/TLS/secret-leak — highest blast radius
   stress_chaos      # failure-injection / recovery
   integration       # real wiring
   e2e               # user journey
