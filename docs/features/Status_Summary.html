@@ -1,0 +1,322 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>HelixCode Feature Status</title>
+  <style>
+    /* Default styles provided by pandoc.
+    ** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
+    */
+    html {
+      color: #1a1a1a;
+      background-color: #fdfdfd;
+    }
+    body {
+      margin: 0 auto;
+      max-width: 36em;
+      padding-left: 50px;
+      padding-right: 50px;
+      padding-top: 50px;
+      padding-bottom: 50px;
+      hyphens: auto;
+      overflow-wrap: break-word;
+      text-rendering: optimizeLegibility;
+      font-kerning: normal;
+    }
+    @media (max-width: 600px) {
+      body {
+        font-size: 0.9em;
+        padding: 12px;
+      }
+      h1 {
+        font-size: 1.8em;
+      }
+    }
+    @media print {
+      html {
+        background-color: white;
+      }
+      body {
+        background-color: transparent;
+        color: black;
+        font-size: 12pt;
+      }
+      p, h2, h3 {
+        orphans: 3;
+        widows: 3;
+      }
+      h2, h3, h4 {
+        page-break-after: avoid;
+      }
+    }
+    p {
+      margin: 1em 0;
+    }
+    a {
+      color: #1a1a1a;
+    }
+    a:visited {
+      color: #1a1a1a;
+    }
+    img {
+      max-width: 100%;
+    }
+    svg {
+      height: auto;
+      max-width: 100%;
+    }
+    h1, h2, h3, h4, h5, h6 {
+      margin-top: 1.4em;
+    }
+    h5, h6 {
+      font-size: 1em;
+      font-style: italic;
+    }
+    h6 {
+      font-weight: normal;
+    }
+    ol, ul {
+      padding-left: 1.7em;
+      margin-top: 1em;
+    }
+    li > ol, li > ul {
+      margin-top: 0;
+    }
+    blockquote {
+      margin: 1em 0 1em 1.7em;
+      padding-left: 1em;
+      border-left: 2px solid #e6e6e6;
+      color: #606060;
+    }
+    code {
+      font-family: Menlo, Monaco, Consolas, 'Lucida Console', monospace;
+      font-size: 85%;
+      margin: 0;
+      hyphens: manual;
+    }
+    pre {
+      margin: 1em 0;
+      overflow: auto;
+    }
+    pre code {
+      padding: 0;
+      overflow: visible;
+      overflow-wrap: normal;
+    }
+    .sourceCode {
+     background-color: transparent;
+     overflow: visible;
+    }
+    hr {
+      border: none;
+      border-top: 1px solid #1a1a1a;
+      height: 1px;
+      margin: 1em 0;
+    }
+    table {
+      margin: 1em 0;
+      border-collapse: collapse;
+      width: 100%;
+      overflow-x: auto;
+      display: block;
+      font-variant-numeric: lining-nums tabular-nums;
+    }
+    table caption {
+      margin-bottom: 0.75em;
+    }
+    tbody {
+      margin-top: 0.5em;
+      border-top: 1px solid #1a1a1a;
+      border-bottom: 1px solid #1a1a1a;
+    }
+    th {
+      border-top: 1px solid #1a1a1a;
+      padding: 0.25em 0.5em 0.25em 0.5em;
+    }
+    td {
+      padding: 0.125em 0.5em 0.25em 0.5em;
+    }
+    header {
+      margin-bottom: 4em;
+      text-align: center;
+    }
+    #TOC li {
+      list-style: none;
+    }
+    #TOC ul {
+      padding-left: 1.3em;
+    }
+    #TOC > ul {
+      padding-left: 0;
+    }
+    #TOC a:not(:hover) {
+      text-decoration: none;
+    }
+    code{white-space: pre-wrap;}
+    span.smallcaps{font-variant: small-caps;}
+    div.columns{display: flex; gap: min(4vw, 1.5em);}
+    div.column{flex: auto; overflow-x: auto;}
+    div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+    /* The extra [class] is a hack that increases specificity enough to
+       override a similar rule in reveal.js */
+    ul.task-list[class]{list-style: none;}
+    ul.task-list li input[type="checkbox"] {
+      font-size: inherit;
+      width: 0.8em;
+      margin: 0 0.8em 0.2em -1.6em;
+      vertical-align: middle;
+    }
+    .display.math{display: block; text-align: center; margin: 0.5rem auto;}
+  </style>
+</head>
+<body>
+<header id="title-block-header">
+<h1 class="title">HelixCode Feature Status</h1>
+</header>
+<h1 id="helixcode--feature-status-summary">HelixCode — Feature Status
+Summary</h1>
+<p><strong>Revision:</strong> 1 · <strong>Last modified:</strong>
+2026-07-01T19:45:00Z</p>
+<p>Two-audience companion (§11.4.56) to <a
+href="Status.md"><code>Status.md</code></a> for release
+<code>codeserver-1.0.0-dev-0.0.3</code>. Page 1 is for the project /
+product team; Page 2 is for software engineers. Always in sync with
+<code>Status.md</code> (§11.4.60).</p>
+<hr />
+<h2 id="page-1--for-the-project--product-team">Page 1 — For the project
+&amp; product team</h2>
+<p><strong>What HelixCode is.</strong> Browser-based VS Code that opens
+your real projects, behind a secure HTTPS front door, running without
+root — and now tied to your <strong>real host account with your SSH
+key</strong> (no password anywhere).</p>
+<p><strong>What works now (proven this release):</strong></p>
+<ul>
+<li><strong>Log in with your SSH key, no password.</strong> The login
+page shows a one-time challenge; you sign it locally with your key and
+paste it back. Wrong or missing signatures are refused. Proven
+end-to-end on the live system.</li>
+<li><strong>The editor is really you.</strong> Once in, the editor runs
+as your host account, so your SSH keys, your <code>.bashrc</code>
+settings, and all your tools work in the terminal — including
+<code>git</code> over SSH. Proven live (a real <code>git</code> remote
+check returned results).</li>
+<li><strong>It stays locked if the guard goes down.</strong> If the
+login guard stops, access is <strong>denied</strong>, never accidentally
+opened. Proven by killing the guard live and confirming access was
+blocked, then recovered.</li>
+<li><strong>Install and reboot survival.</strong> One script installs
+everything without root; the services are set to come back after a
+reboot.</li>
+<li><strong>Plugins install from the marketplace.</strong> A real editor
+extension was installed from the Open VSX marketplace and loaded —
+proven live, not just claimed.</li>
+<li><strong>Secure, fast front door.</strong> HTTPS with a modern fast
+protocol (HTTP/3) and response compression; the plain-HTTP port
+redirects to HTTPS.</li>
+</ul>
+<p><strong>What is still in progress / needs the operator:</strong></p>
+<ul>
+<li><strong>Login-page copy/paste buttons</strong> and a
+<strong>click-through marketplace test</strong> — being built now,
+<strong>not finished</strong>.</li>
+<li><strong>Watching yourself edit in the browser</strong> (typing,
+clicking files) is confirmed <strong>by a person</strong> for now — the
+automated click-through is still being wired.</li>
+<li><strong>Real public HTTPS certificate</strong> needs a public domain
+and is <strong>enabled by the operator</strong>; the machinery is
+ready.</li>
+<li><strong>A host firewall tweak</strong> (a one-line rule) needs the
+operator to apply it as root — the project itself never uses root.</li>
+<li><strong>Feature videos.</strong> We do not yet have recorded "watch
+it work" videos; every claim above is backed by a saved test-evidence
+file instead. Recording the videos is a tracked to-do.</li>
+</ul>
+<p><strong>Bottom line:</strong> the new real-account SSH-key login and
+the editor experience are <strong>working and proven</strong> on the
+live system (23 of 23 test suites passed). A few polish items
+(copy/paste buttons, click-through UI test, feature videos) are still in
+progress and honestly marked as such.</p>
+<hr />
+<h2 id="page-2--for-software-engineers">Page 2 — For software
+engineers</h2>
+<p><strong>Release:</strong> <code>codeserver-1.0.0-dev-0.0.3</code>.
+<strong>Release-gate aggregate:</strong> 23/23 suites PASS, 0 FAIL —
+<code>qa-results/run_all/20260701T151300Z-3182121/summary.txt</code>.
+<strong>Go gate:</strong> 70 tests, <code>-race</code>, 81.8%
+coverage.</p>
+<p><strong>Architecture:</strong>
+<code>Browser → Caddy (containerized rootless TLS edge, HTTP/3+Brotli, forward_auth) → helix-auth (Gin gate, host-native systemd --user, loopback :8081, non-root) + code-server (host-native as milosvasic, --auth none, loopback :8080)</code>.</p>
+<p><strong>Live-validated (PASS + captured evidence):</strong></p>
+<ul>
+<li><strong>SSH-key challenge-response auth</strong> —
+<code>services/auth_gate/{challenge,verifier,cookie,server}.go</code>;
+e2e_auth 5/5, challenges_auth CH1, helixqa_auth QA-002/004; Go 70 tests
+<code>-race</code>.</li>
+<li><strong>Login redirect</strong> — <code>server.go handleAuth</code>
+(303→/login for HTML GET, 401 otherwise), commit <code>75e2d9b</code>;
+<code>TestAuthBrowserNavigationRedirectsToLogin</code> + e2e_auth
+(B).</li>
+<li><strong>Fail-closed</strong> — stress_chaos_auth 5/0/1 (live gate +
+code-server kill+recover), challenges_auth CH2, e2e_auth (E),
+helixqa_auth QA-003.</li>
+<li><strong>Cookie hardening</strong>
+(<code>__Host-</code>+HMAC+HttpOnly+Secure+SameSite=Strict, regen on
+login) — <code>cookie.go</code>; security_auth 5/5.</li>
+<li><strong>DoS hardening</strong> (rate-limit rightmost-XFF + CSRF
+double-submit + spawn ceiling) — <code>ratelimit.go</code>,
+<code>server.go</code>; load_auth 3/0/1, concurrency_auth 5/5, race
+2/2.</li>
+<li><strong>CVE-2026-35414</strong> server-pinned principal + key-type
+allow-list + OpenSSH floor — <code>verifier.go</code>,
+<code>sshversion.go</code>, <code>config.go</code>.</li>
+<li><strong>Host-native editor</strong> —
+<code>deploy/systemd/helix-code-server.service</code>; editor loads (9
+markers) authed 200 + <code>X-Helix-User</code>. Tarball install
+<code>scripts/install-auth.sh</code> (<code>~/.local/lib</code>, npm
+fallback, pinned 4.117.0).</li>
+<li><strong>Real-user env</strong> — ssh-key git from terminal (CH3,
+<code>git ls-remote</code> 5 refs), <code>.bashrc</code> exports (CH4),
+Explorer defaults to <code>$PROJECTS_ROOT</code> (CH5, convenience, not
+a jail).</li>
+<li><strong>Extension install+use</strong> —
+<code>tests/types/extensions_auth.sh</code> + bank
+<code>tests/banks/helixcode-extensions.yaml</code>; 5/5 checks captured
+<code>qa-results/tests/extensions_auth/20260701T162817Z-4080597</code>
+(Open VSX 200 → load → cleanup).</li>
+<li><strong>Caddy edge</strong> — <code>deploy/Caddyfile</code>,
+<code>deploy/caddy/Dockerfile</code> (xcaddy-brotli); HTTP/3+Brotli,
+forward_auth, <code>/proxy</code> 403, <code>X-Helix-User</code> strip;
+security_auth 5/5, benchmark_auth 4/4.</li>
+</ul>
+<p><strong>Non-PASS states (honest §11.4.45):</strong></p>
+<ul>
+<li><strong>PENDING</strong> — login-form clipboard buttons
+(<code>assets/login_enhance.js</code>, source landed, unvalidated);
+UI-driven marketplace test; edge reboot-persistence Quadlet
+(<code>deploy/quadlet/helixcode-caddy.container</code> +
+<code>scripts/install-edge-boot.sh</code> landed, arm/full-reboot
+survival not captured); <strong>all Video-confirmation</strong> (no
+real-use video corpus yet).</li>
+<li><strong>OPERATOR-ATTENDED</strong> — in-browser editing
+(HCA-QA-UI-001 SKIP <code>operator_attended</code>).</li>
+<li><strong>OPERATOR-BLOCKED</strong> — loopback firewall apply
+(<code>harden-loopback.sh --apply</code>, root); real public Let's
+Encrypt (public domain / DNS-01).</li>
+<li><strong>SKIP</strong> — legacy container+password suites
+(<code>integration</code>, <code>e2e</code>, <code>security</code>,
+<code>tls_letsencrypt</code>, <code>full_automation</code>,
+<code>concurrency</code>, <code>memory</code>, <code>benchmark</code>,
+<code>helixqa</code>, <code>challenges</code>) →
+<code>topology_unsupported</code>, superseded by
+<code>&lt;name&gt;_auth</code> (no false-FAIL, §11.4.1).</li>
+</ul>
+<p><strong>Notes:</strong> code-server <code>--auth none</code> on
+loopback:8080 is a documented residual (auth enforced at gate/edge;
+<code>harden-loopback.sh</code> mitigates). DOCX exported via pandoc
+this release; no standing DOCX pipeline in
+<code>tests/run_all_types.sh</code> yet (tracked §11.4.60/§11.4.65
+follow-up).</p>
+</body>
+</html>
