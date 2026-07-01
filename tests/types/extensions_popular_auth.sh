@@ -107,9 +107,16 @@ for ext in $POPULAR; do
 import json,os,sys
 d=sys.argv[1]; m=json.load(open(os.path.join(d,"package.json")))
 entry=m.get("main") or m.get("browser")
-ok = (entry is None) or os.path.exists(os.path.join(d, entry))
+def resolves(base, e):
+    # VS Code/Node module resolution: `main` usually OMITS the extension
+    # (e.g. "./out/client/extension" -> extension.js). Try the Node candidates.
+    if e is None: return True
+    p=os.path.join(base, e)
+    return any(os.path.exists(c) for c in (p, p+".js", p+".cjs", p+".mjs", p+".node", os.path.join(p,"index.js")))
+ok = resolves(d, entry)
 has_contrib = bool(m.get("contributes"))
-print(f"  LOADABLE {os.path.basename(d)} entry={entry!r} entry_exists={(entry is None) or os.path.exists(os.path.join(d,entry))} contributes={has_contrib}")
+verdict = "LOADABLE" if (ok and (entry is not None or has_contrib)) else "NOT-LOADABLE"
+print(f"  {verdict} {os.path.basename(d)} entry={entry!r} entry_resolves={ok} contributes={has_contrib}")
 sys.exit(0 if (ok and (entry is not None or has_contrib)) else 1)
 PY
   then loadable=$((loadable+1)); else echo "  NOT-LOADABLE $ext" >> "$ev"; fi
