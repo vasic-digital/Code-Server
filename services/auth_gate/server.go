@@ -3,6 +3,7 @@ package main
 import (
 	"crypto/hmac"
 	"crypto/rand"
+	_ "embed"
 	"encoding/base64"
 	"fmt"
 	"html/template"
@@ -14,6 +15,17 @@ import (
 
 	"github.com/gin-gonic/gin"
 )
+
+// loginEnhanceJS is the client-side progressive-enhancement module
+// (assets/login_enhance.js), embedded verbatim into the binary and inlined into
+// the served /login page as trusted, developer-authored script. It adds the
+// copy/paste icon buttons and the armored-SSH-signature recognizer; the SAME
+// file is the unit-under-test for tests/types/login_recognition.test.js (single
+// source of truth). It reads only the DOM the page already renders — it needs no
+// server-injected data — so with JavaScript off the page still works.
+//
+//go:embed assets/login_enhance.js
+var loginEnhanceJS string
 
 // Cookie names. Both use the __Host- prefix (§A5-1), which browsers only accept
 // on a Secure, Path=/, Domain-less cookie — hardening against network-based
@@ -413,6 +425,7 @@ func (s *Server) renderLogin(w http.ResponseWriter, status int, showError bool) 
 		Principal: s.cfg.Principal,
 		Namespace: sshSigNamespace,
 		ShowError: showError,
+		EnhanceJS: template.JS(loginEnhanceJS),
 	}
 
 	// Fresh CSRF state cookie + matching hidden field (double submit).
@@ -494,6 +507,11 @@ type loginPageData struct {
 	SignCommand    string // exact `ssh-keygen -Y sign` command to run
 	Namespace      string // ssh signature namespace
 	ShowError      bool
+	// EnhanceJS is the trusted, developer-authored client-side enhancement
+	// module inlined into the page. It is template.JS (not a string) so
+	// html/template emits it verbatim inside the <script> element rather than
+	// HTML-escaping it. It carries NO request-derived data (§11.4.10).
+	EnhanceJS template.JS
 }
 
 // loginPageTemplate is a minimal, clean, self-contained SSH-key challenge login
@@ -546,6 +564,37 @@ const loginPageTemplate = `<!DOCTYPE html>
     margin: 0 0 1rem; padding: .55rem .7rem; border-radius: 8px;
     background: #3a1d22; color: #ffb4b4; font-size: .85rem;
   }
+  /* Progressive-enhancement clipboard controls (§11.4.162: laid out in their own
+     rows so nothing overlaps or overlays a label). All start hidden and are
+     revealed by login_enhance.js only when the capability is present. */
+  .cmd-actions { display: flex; gap: .4rem; margin: .4rem 0 0; }
+  .label-row {
+    display: flex; align-items: center; justify-content: space-between;
+    gap: .5rem; margin: .9rem 0 .3rem;
+  }
+  .label-row label { margin: 0; }
+  .field-with-action { display: flex; align-items: stretch; gap: .4rem; }
+  .field-with-action input { flex: 1 1 auto; width: auto; }
+  .icon-btn {
+    width: auto; margin: 0; display: inline-flex; align-items: center; gap: .35rem;
+    padding: .4rem .55rem; font-size: .8rem; font-weight: 500; line-height: 1;
+    background: #232833; color: #cdd6e4; border: 1px solid #2a2f3a;
+    border-radius: 8px; cursor: pointer; white-space: nowrap;
+  }
+  .icon-btn:hover { background: #2a2f3a; }
+  .icon-btn:focus-visible { outline: 2px solid #4c8bf5; outline-offset: 2px; }
+  .icon-btn svg { width: 1rem; height: 1rem; flex: 0 0 auto; }
+  .sig-picker { display: flex; flex-direction: column; gap: .35rem; margin: .5rem 0 0; }
+  .sig-picker button.sig-choice {
+    width: 100%; margin: 0; text-align: left; padding: .5rem .6rem;
+    font-size: .82rem; font-weight: 500; background: #232833; color: #cdd6e4;
+    border: 1px solid #2a2f3a; border-radius: 8px; cursor: pointer;
+  }
+  .sig-picker button.sig-choice:hover { background: #2a2f3a; }
+  .enhance-status { margin: .5rem 0 0; min-height: 1.1em; font-size: .8rem; opacity: .9; }
+  .enhance-status.ok { color: #7fdca4; }
+  .enhance-status.warn { color: #ffcf8b; }
+  [hidden] { display: none !important; }
 </style>
 </head>
 <body>
@@ -555,7 +604,14 @@ const loginPageTemplate = `<!DOCTYPE html>
     {{if .ShowError}}<p class="err" role="alert">Sign-in failed. A fresh challenge has been issued below — please sign it and try again.</p>{{end}}
     <ol>
       <li>Copy the challenge and run this command locally (namespace <code>{{.Namespace}}</code>):
-        <pre><code>{{.SignCommand}}</code></pre>
+        <pre><code id="sign-command">{{.SignCommand}}</code></pre>
+        <div class="cmd-actions" id="cmd-actions" hidden>
+          <button type="button" class="icon-btn" id="copy-cmd-btn"
+                  aria-label="Copy the ssh-keygen sign command to the clipboard">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="9" width="13" height="13" rx="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+            <span class="icon-btn-label">Copy command</span>
+          </button>
+        </div>
       </li>
       <li>Paste the full <code>-----BEGIN SSH SIGNATURE-----</code> block it prints into the box below.</li>
     </ol>
@@ -566,13 +622,29 @@ const loginPageTemplate = `<!DOCTYPE html>
       <input id="principal" name="principal" type="text" value="{{.Principal}}"
              autocapitalize="none" autocorrect="off" spellcheck="false">
       <label for="challenge">Challenge (sign exactly this)</label>
-      <input id="challenge" name="challenge_display" type="text" value="{{.Challenge}}" readonly>
-      <label for="signature">Signature</label>
+      <div class="field-with-action">
+        <input id="challenge" name="challenge_display" type="text" value="{{.Challenge}}" readonly>
+        <button type="button" class="icon-btn" id="copy-challenge-btn" hidden
+                title="Copy the challenge" aria-label="Copy the challenge value to the clipboard">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="9" width="13" height="13" rx="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+        </button>
+      </div>
+      <div class="label-row">
+        <label for="signature">Signature</label>
+        <button type="button" class="icon-btn" id="paste-sig-btn" hidden
+                aria-label="Paste an SSH signature from the clipboard">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"></path><rect x="8" y="2" width="8" height="4" rx="1" ry="1"></rect></svg>
+          <span class="icon-btn-label">Paste</span>
+        </button>
+      </div>
       <textarea id="signature" name="signature" required spellcheck="false"
                 placeholder="-----BEGIN SSH SIGNATURE-----&#10;...&#10;-----END SSH SIGNATURE-----"></textarea>
+      <div id="sig-picker" class="sig-picker" hidden></div>
+      <p id="enhance-status" class="enhance-status" role="status" aria-live="polite"></p>
       <button type="submit">Sign in</button>
     </form>
   </main>
+  <script>{{.EnhanceJS}}</script>
 </body>
 </html>
 `

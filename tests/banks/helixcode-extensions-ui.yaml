@@ -1,0 +1,94 @@
+# SPDX-License-Identifier: Apache-2.0
+#
+# HelixCode EXTENSION (plugin) marketplace UI-JOURNEY Challenge bank
+# (§11.4.48 UI-driven / §11.4.143 real-user-journey / §11.4.117 CV+OCR pixel oracle /
+#  §11.4.170 host-rendered-pixel proof / §11.4.169 Challenges / §11.4.27(B)).
+#
+# The sibling bank helixcode-extensions.yaml exercises the CLI install+use path.
+# THIS bank exercises the REAL HUMAN PATH: a headless browser (Playwright/Chromium)
+# opens the code-server editor, opens the Extensions view, searches the Open VSX
+# marketplace, finds a known extension, and clicks its Install button — "install +
+# use a plugin from the marketplace THROUGH THE EDITOR UI" — scored PASS ONLY on
+# captured positive evidence (PNG screenshots + true OCR of the rendered pixels +
+# rendered-DOM reads, §11.4.69/§11.4.107/§11.4.170), never a metadata-only pass.
+# Executed faithfully by tests/types/extensions_ui_auth.sh (each step maps to a
+# U-check). All work happens in throwaway mktemp dirs; the operator's live
+# extensions-dir is never mutated (§11.4.14). Kept in the PROJECT tree
+# (tests/banks/), NOT inside the challenges submodule, to keep that submodule
+# project-agnostic (§11.4.28).
+#
+# Marketplace honesty (§11.4.6): code-server's default marketplace is Open VSX
+# (open-vsx.org); the Microsoft VS Code Marketplace is licence-restricted and NOT
+# used. The throwaway instance runs with the documented EXTENSIONS_GALLERY env
+# pointing at Open VSX so the in-editor marketplace is fully live.
+#
+# feature_class values are drawn from the §11.4.69 taxonomy (an OPEN set): the
+# enumerated `boot_service`, `network_connectivity`, `gpu_render` (rendered-pixel
+# surface), `package_install`, `storage_read` are used as-is; `extension_load`
+# (editor extension-host activation) is a documented §11.4.69 addition for the
+# plugin surface.
+
+name: helixcode-extension-ui-journey
+version: 1.0.0
+description: |
+  End-to-end anti-bluff Challenges for the code-server plugin (extension)
+  marketplace USER JOURNEY THROUGH THE EDITOR UI: the editor is served over HTTP,
+  a real headless browser opens the Extensions view, the Open VSX marketplace
+  search returns a known extension (read from the rendered pixels via OCR + DOM),
+  its real Install button is clicked and the editor enters the Installing state,
+  the install is verified on disk + loaded by the extension host, and the
+  operator's live extensions-dir is left untouched — each exercised live and
+  scored PASS only on captured screenshot/OCR/DOM evidence.
+platforms: [linux]
+timeout: 8m
+
+steps:
+  - name: extensions-view-served
+    type: shell
+    feature_class: boot_service
+    params:
+      command: "the throwaway code-server serves the VS Code web editor workbench over HTTP (200 + workbench/vscode-remote markers) — the Extensions view lives inside it"
+    on_failure: "The editor is not served — a user cannot even open the Extensions view (SKIP-with-reason only if the code-server binary is genuinely absent)"
+
+  - name: open-extensions-view-ui
+    type: shell
+    feature_class: gpu_render
+    params:
+      command: "a real headless browser loads the .monaco-workbench and clicks the activity-bar Extensions item to open the marketplace viewlet; a rendered PNG screenshot is captured"
+    on_failure: "The Extensions view cannot be opened in the browser — the plugin marketplace UI is unreachable to users (SKIP-with-reason only if Playwright/Chromium is genuinely unavailable)"
+
+  - name: marketplace-search-ui
+    type: shell
+    feature_class: network_connectivity
+    params:
+      command: "typing the extension id into the in-editor Open VSX marketplace search returns the genuine extension result; its display name is confirmed BOTH in the rendered DOM AND by true OCR of the screenshot pixels"
+    on_failure: "Marketplace search through the UI returns no/incorrect results — users cannot find plugins to install"
+
+  - name: click-install-ui
+    type: shell
+    feature_class: package_install
+    params:
+      command: "clicking the extension's real Install button through the UI dispatches the install and the editor transitions into the Installing/Installed state; a rendered PNG screenshot is captured"
+    on_failure: "The Install button does not work through the UI — users cannot initiate a plugin install from the marketplace"
+
+  - name: install-completion-on-disk-and-host-load
+    type: shell
+    feature_class: extension_load
+    params:
+      command: "the UI-driven install lands the extension in the throwaway --extensions-dir with a valid package.json AND the live extension host loads it (registry names it + host up)"
+    on_failure: "The UI-driven install does not complete on disk / is not loaded by the extension host. In a headless browser the server-mediated cross-origin Open VSX install can hang (net::ERR_ABORTED) — that is an HONEST operator_attended SKIP, with the autonomous on-disk+host-load proof delivered by the CLI sibling helixcode-extensions.yaml, never a fake pass"
+
+  - name: throwaway-cleanup
+    type: shell
+    feature_class: storage_read
+    params:
+      command: "the throwaway instance is stopped and the throwaway dirs are trap-removed, and the operator's LIVE extensions-dir fingerprint is unchanged"
+    on_failure: "The test mutated live state or left orphan processes/dirs (§11.4.14 cleanup violation)"
+
+success_criteria:
+  all_steps_passed: true
+  no_crashes: true
+
+report:
+  format: markdown
+  sections: [summary, step_results]
