@@ -1,0 +1,386 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>README</title>
+  <style>
+    /* Default styles provided by pandoc.
+    ** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
+    */
+    html {
+      color: #1a1a1a;
+      background-color: #fdfdfd;
+    }
+    body {
+      margin: 0 auto;
+      max-width: 36em;
+      padding-left: 50px;
+      padding-right: 50px;
+      padding-top: 50px;
+      padding-bottom: 50px;
+      hyphens: auto;
+      overflow-wrap: break-word;
+      text-rendering: optimizeLegibility;
+      font-kerning: normal;
+    }
+    @media (max-width: 600px) {
+      body {
+        font-size: 0.9em;
+        padding: 12px;
+      }
+      h1 {
+        font-size: 1.8em;
+      }
+    }
+    @media print {
+      html {
+        background-color: white;
+      }
+      body {
+        background-color: transparent;
+        color: black;
+        font-size: 12pt;
+      }
+      p, h2, h3 {
+        orphans: 3;
+        widows: 3;
+      }
+      h2, h3, h4 {
+        page-break-after: avoid;
+      }
+    }
+    p {
+      margin: 1em 0;
+    }
+    a {
+      color: #1a1a1a;
+    }
+    a:visited {
+      color: #1a1a1a;
+    }
+    img {
+      max-width: 100%;
+    }
+    svg {
+      height: auto;
+      max-width: 100%;
+    }
+    h1, h2, h3, h4, h5, h6 {
+      margin-top: 1.4em;
+    }
+    h5, h6 {
+      font-size: 1em;
+      font-style: italic;
+    }
+    h6 {
+      font-weight: normal;
+    }
+    ol, ul {
+      padding-left: 1.7em;
+      margin-top: 1em;
+    }
+    li > ol, li > ul {
+      margin-top: 0;
+    }
+    blockquote {
+      margin: 1em 0 1em 1.7em;
+      padding-left: 1em;
+      border-left: 2px solid #e6e6e6;
+      color: #606060;
+    }
+    code {
+      font-family: Menlo, Monaco, Consolas, 'Lucida Console', monospace;
+      font-size: 85%;
+      margin: 0;
+      hyphens: manual;
+    }
+    pre {
+      margin: 1em 0;
+      overflow: auto;
+    }
+    pre code {
+      padding: 0;
+      overflow: visible;
+      overflow-wrap: normal;
+    }
+    .sourceCode {
+     background-color: transparent;
+     overflow: visible;
+    }
+    hr {
+      border: none;
+      border-top: 1px solid #1a1a1a;
+      height: 1px;
+      margin: 1em 0;
+    }
+    table {
+      margin: 1em 0;
+      border-collapse: collapse;
+      width: 100%;
+      overflow-x: auto;
+      display: block;
+      font-variant-numeric: lining-nums tabular-nums;
+    }
+    table caption {
+      margin-bottom: 0.75em;
+    }
+    tbody {
+      margin-top: 0.5em;
+      border-top: 1px solid #1a1a1a;
+      border-bottom: 1px solid #1a1a1a;
+    }
+    th {
+      border-top: 1px solid #1a1a1a;
+      padding: 0.25em 0.5em 0.25em 0.5em;
+    }
+    td {
+      padding: 0.125em 0.5em 0.25em 0.5em;
+    }
+    header {
+      margin-bottom: 4em;
+      text-align: center;
+    }
+    #TOC li {
+      list-style: none;
+    }
+    #TOC ul {
+      padding-left: 1.3em;
+    }
+    #TOC > ul {
+      padding-left: 0;
+    }
+    #TOC a:not(:hover) {
+      text-decoration: none;
+    }
+    code{white-space: pre-wrap;}
+    span.smallcaps{font-variant: small-caps;}
+    div.columns{display: flex; gap: min(4vw, 1.5em);}
+    div.column{flex: auto; overflow-x: auto;}
+    div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+    /* The extra [class] is a hack that increases specificity enough to
+       override a similar rule in reveal.js */
+    ul.task-list[class]{list-style: none;}
+    ul.task-list li input[type="checkbox"] {
+      font-size: inherit;
+      width: 0.8em;
+      margin: 0 0.8em 0.2em -1.6em;
+      vertical-align: middle;
+    }
+    .display.math{display: block; text-align: center; margin: 0.5rem auto;}
+    /* CSS for syntax highlighting */
+    html { -webkit-text-size-adjust: 100%; }
+    pre > code.sourceCode { white-space: pre; position: relative; }
+    pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+    pre > code.sourceCode > span:empty { height: 1.2em; }
+    .sourceCode { overflow: visible; }
+    code.sourceCode > span { color: inherit; text-decoration: inherit; }
+    div.sourceCode { margin: 1em 0; }
+    pre.sourceCode { margin: 0; }
+    @media screen {
+    div.sourceCode { overflow: auto; }
+    }
+    @media print {
+    pre > code.sourceCode { white-space: pre-wrap; }
+    pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+    }
+    pre.numberSource code
+      { counter-reset: source-line 0; }
+    pre.numberSource code > span
+      { position: relative; left: -4em; counter-increment: source-line; }
+    pre.numberSource code > span > a:first-child::before
+      { content: counter(source-line);
+        position: relative; left: -1em; text-align: right; vertical-align: baseline;
+        border: none; display: inline-block;
+        -webkit-touch-callout: none; -webkit-user-select: none;
+        -khtml-user-select: none; -moz-user-select: none;
+        -ms-user-select: none; user-select: none;
+        padding: 0 4px; width: 4em;
+        color: #aaaaaa;
+      }
+    pre.numberSource { margin-left: 3em; border-left: 1px solid #aaaaaa;  padding-left: 4px; }
+    div.sourceCode
+      {   }
+    @media screen {
+    pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+    }
+    code span.al { color: #ff0000; font-weight: bold; } /* Alert */
+    code span.an { color: #60a0b0; font-weight: bold; font-style: italic; } /* Annotation */
+    code span.at { color: #7d9029; } /* Attribute */
+    code span.bn { color: #40a070; } /* BaseN */
+    code span.bu { color: #008000; } /* BuiltIn */
+    code span.cf { color: #007020; font-weight: bold; } /* ControlFlow */
+    code span.ch { color: #4070a0; } /* Char */
+    code span.cn { color: #880000; } /* Constant */
+    code span.co { color: #60a0b0; font-style: italic; } /* Comment */
+    code span.cv { color: #60a0b0; font-weight: bold; font-style: italic; } /* CommentVar */
+    code span.do { color: #ba2121; font-style: italic; } /* Documentation */
+    code span.dt { color: #902000; } /* DataType */
+    code span.dv { color: #40a070; } /* DecVal */
+    code span.er { color: #ff0000; font-weight: bold; } /* Error */
+    code span.ex { } /* Extension */
+    code span.fl { color: #40a070; } /* Float */
+    code span.fu { color: #06287e; } /* Function */
+    code span.im { color: #008000; font-weight: bold; } /* Import */
+    code span.in { color: #60a0b0; font-weight: bold; font-style: italic; } /* Information */
+    code span.kw { color: #007020; font-weight: bold; } /* Keyword */
+    code span.op { color: #666666; } /* Operator */
+    code span.ot { color: #007020; } /* Other */
+    code span.pp { color: #bc7a00; } /* Preprocessor */
+    code span.sc { color: #4070a0; } /* SpecialChar */
+    code span.ss { color: #bb6688; } /* SpecialString */
+    code span.st { color: #4070a0; } /* String */
+    code span.va { color: #19177c; } /* Variable */
+    code span.vs { color: #4070a0; } /* VerbatimString */
+    code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warning */
+  </style>
+</head>
+<body>
+<header id="title-block-header">
+<h1 class="title">README</h1>
+</header>
+<h1 id="helixcode">HelixCode</h1>
+<p><strong>Revision:</strong> 2 · <strong>Last modified:</strong>
+2026-07-01T00:00:00Z</p>
+<p>Containerized, network-exposed, browser-based <strong>VS
+Code</strong> (code-server) that mounts your host projects for immediate
+work — behind a <strong>Caddy</strong> TLS edge, running
+<strong>rootless</strong> (Podman), surviving reboot via a systemd
+service.</p>
+<blockquote>
+<p><strong>Release <code>codeserver-1.0.0-dev-0.0.3</code>
+(2026-07-01).</strong> Authentication pivots to the
+<strong>real-account, SSH-key challenge-response</strong> model — a
+session runs host-native as the real host user (<code>milosvasic</code>)
+with that user’s <code>~/.ssh</code>, <code>.bashrc</code>, and host
+binaries, and login signs a fresh server-issued challenge against the
+account’s <code>authorized_keys</code> (<strong>no password, nothing
+stored</strong>). The single <code>CODE_SERVER_PASSWORD</code> login is
+<strong>retired</strong>. New model + prerequisites + troubleshooting:
+<a href="docs/guides/AUTH.md"><code>docs/guides/AUTH.md</code></a>; full
+change list: <a
+href="docs/changelogs/codeserver-1.0.0-dev-0.0.3.md"><code>docs/changelogs/codeserver-1.0.0-dev-0.0.3.md</code></a>.
+<strong>In progress — not yet validated</strong> (§11.4.6); see <a
+href="docs/features/Status.md"><code>docs/features/Status.md</code></a>.</p>
+</blockquote>
+<h2 id="quick-start-reproducible-reboot-persistent">Quick start
+(reproducible, reboot-persistent)</h2>
+<div class="sourceCode" id="cb1"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="ex">scripts/install.sh</span>        <span class="co"># preflight → wizard (if needed) → start → boot service</span></span></code></pre></div>
+<p>Then open <strong><code>https://&lt;host-ip&gt;:52443</code></strong>
+and log in with your <strong>host account</strong>
+(<code>milosvasic</code>) SSH key — you sign a fresh challenge shown on
+the login page, no password, nothing stored (see <a
+href="#authentication-real-account--ssh-key">Authentication</a> below).
+<code>http://&lt;host-ip&gt;:52080</code> redirects to HTTPS.</p>
+<p>Manual flow: <code>scripts/doctor.sh</code> →
+<code>scripts/setup.sh</code> → <code>scripts/start.sh</code> →
+<code>scripts/status.sh</code>. Full script reference: <a
+href="docs/scripts/README.md"><code>docs/scripts/README.md</code></a>.</p>
+<h2 id="what-you-get">What you get</h2>
+<ul>
+<li><strong>Caddy edge</strong> on <code>0.0.0.0:52443</code> (HTTPS) /
+<code>:52080</code> (HTTP→HTTPS), reverse proxy to code-server. Ports
+derive from <code>PORT_PREFIX</code> in <code>deploy/.env</code>.</li>
+<li><strong>code-server</strong> serving your host projects
+<strong>read-write</strong> (bind-mounted).</li>
+<li><strong>Real-account sessions</strong> <em>(new, in progress)</em> —
+the editor runs host-native <strong>as the real user</strong>, so it
+natively has that user’s SSH keys, <code>.bashrc</code>, and all host
+binaries; login is an <strong>SSH-key challenge-response</strong>
+verified against the account’s <code>authorized_keys</code> — no
+password, nothing stored. See <a
+href="#authentication-real-account--ssh-key">Authentication</a>.</li>
+<li><strong>Rootless</strong> containers (Podman, §11.4.161) — no root,
+no privilege escalation (Caddy TLS edge; the editor + auth run
+host-native).</li>
+<li><strong>Boot-survival</strong> rootless systemd user service (linger
+enabled).</li>
+<li><strong>File-watcher fix</strong> —
+<code>files.watcherExclude</code> seeded into a persistent volume so
+large trees don’t hit the inotify limit.</li>
+</ul>
+<h2 id="authentication-real-account-ssh-key">Authentication (real
+account + SSH-key)</h2>
+<blockquote>
+<p><strong>New model, in progress — not yet validated.</strong> This
+replaces the old single <code>CODE_SERVER_PASSWORD</code> login (and
+supersedes the earlier PAM-login draft — non-root PAM verify is
+impossible on this ALT/tcb host, so auth pivoted to SSH keys). The
+components are being built and their tests/evidence are still being
+produced; treat the behavior below as <em>intended</em>, not yet proven.
+Full guide: <a
+href="docs/guides/AUTH.md"><code>docs/guides/AUTH.md</code></a>.</p>
+</blockquote>
+<p>Each session is tied to a <strong>real host user account</strong>
+(default <code>milosvasic</code>). The editor runs <strong>host-native
+as that user</strong>, so it natively inherits the user’s <strong>SSH
+keys</strong> (<code>~/.ssh</code> — git over SSH works from the
+integrated terminal), full
+<strong><code>.bashrc</code>/profile</strong>, and <strong>all installed
+host binaries</strong>. The login screen shows a <strong>fresh signed
+challenge</strong>; you sign it locally with your SSH key —</p>
+<div class="sourceCode" id="cb2"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="bu">printf</span> %s <span class="st">&#39;&lt;challenge&gt;&#39;</span> <span class="kw">|</span> <span class="fu">ssh-keygen</span> <span class="at">-Y</span> sign <span class="at">-n</span> helixcode-login <span class="at">-f</span> ~/.ssh/id_ed25519</span></code></pre></div>
+<p>— and paste the signature back. A non-root <code>helix-auth</code>
+forward-auth gate behind Caddy <strong>verifies it against the account’s
+<code>authorized_keys</code></strong>
+(<code>ssh-keygen -Y verify</code>) and issues a signed session cookie.
+It <strong>stores nothing</strong> — no password anywhere (repo, config,
+env, logs, evidence); your private key never leaves your machine.</p>
+<p>The editor’s file <strong>Explorer defaults to
+<code>$PROJECTS_ROOT</code></strong> for convenience — it is <strong>NOT
+a security boundary</strong>: the integrated terminal, <strong>File &gt;
+Open Folder</strong>, and extensions retain <strong>full real-user
+(<code>milosvasic</code>) access to the host filesystem BY
+DESIGN</strong>. Isolation, if ever required, would need a container /
+VM / chroot (out of scope per operator decision). Defense-in-depth
+(deploy stream, in progress): code-server runs with
+<code>--disable-workspace-trust</code> and the <code>/proxy/</code> path
+is blocked at the Caddy edge.</p>
+<p>New parameters (replacing <code>CODE_SERVER_PASSWORD</code>, which is
+retired):</p>
+<div class="sourceCode" id="cb3"><pre
+class="sourceCode ini"><code class="sourceCode ini"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="dt">HELIX_AUTH_MODE</span><span class="ot">=</span><span class="st">sshkey                        # only mode this release</span></span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a><span class="dt">HELIX_AUTH_ACCOUNT</span><span class="ot">=</span><span class="st">milosvasic                 # the host account sessions tie to</span></span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a><span class="dt">HELIX_AUTH_AUTHORIZED_KEYS</span><span class="ot">=</span><span class="st">~/.ssh/authorized_keys  # verifier&#39;s trust source</span></span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a><span class="dt">HELIX_AUTH_PRINCIPAL</span><span class="ot">=</span><span class="st">milosvasic               # expected signer principal</span></span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a><span class="dt">PROJECTS_ROOT</span><span class="ot">=</span><span class="st">                                # workspace + default Explorer folder (not a jail)</span></span>
+<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a><span class="co"># No password parameter — login signs a server-issued challenge, verified against authorized_keys.</span></span></code></pre></div>
+<p>Security posture: auth <strong>fails closed</strong> (if the
+<code>helix-auth</code> gate is down, access is denied — never
+bypassed), the challenge is <strong>server-issued +
+short-lived</strong>, the session cookie is <strong>HMAC-signed +
+HttpOnly + Secure + SameSite</strong>, and login is
+<strong>rate-limited</strong>. Details, prerequisites, and
+troubleshooting: <a
+href="docs/guides/AUTH.md"><code>docs/guides/AUTH.md</code></a>.</p>
+<h2 id="https-tls">HTTPS / TLS</h2>
+<p>Default is a per-boot <strong>self-signed</strong> cert
+(LAN-friendly). For real <strong>Let’s Encrypt</strong> with automatic
+renewal + rotation, set <code>TLS_MODE=letsencrypt</code> (+
+<code>CS_DOMAIN</code>, <code>ACME_EMAIL</code>) in
+<code>deploy/.env</code> — you need a public domain resolving to the
+host with reachable <code>:80</code>/<code>:443</code>,
+<strong>or</strong> a DNS-01 token. Modes, prerequisites,
+renewal/rotation behavior, and the local-CA proof: <a
+href="docs/guides/TLS.md"><code>docs/guides/TLS.md</code></a>.</p>
+<h2 id="testing-anti-bluff-11.4.169">Testing (anti-bluff,
+§11.4.169)</h2>
+<div class="sourceCode" id="cb4"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="fu">bash</span> tests/run_all_types.sh          <span class="co"># full test-type matrix (needs the stack)</span></span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a><span class="fu">bash</span> tests/run_all_types.sh <span class="at">--list</span>   <span class="co"># suites in risk-descending order</span></span></code></pre></div>
+<p>14 suites under <code>tests/types/</code> — unit, integration, e2e,
+full-automation, security, load (DDoS), stress+chaos, concurrency, race,
+memory, benchmark, Let’s-Encrypt (local ACME CA), Challenges, HelixQA.
+Every PASS cites a captured evidence file (<code>qa-results/</code>).
+Feature ledger: <a
+href="docs/features/Status.md"><code>docs/features/Status.md</code></a>.</p>
+<h2 id="governance">Governance</h2>
+<p>Governed by the <strong>Helix Constitution</strong>
+(<code>constitution/</code>) — anti-bluff covenant, rootless containers,
+no force-push, project-prefixed release tags. See <a
+href="CLAUDE.md"><code>CLAUDE.md</code></a>.</p>
+</body>
+</html>

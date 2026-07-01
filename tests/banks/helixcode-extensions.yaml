@@ -1,0 +1,74 @@
+# SPDX-License-Identifier: Apache-2.0
+#
+# HelixCode EXTENSION (plugin) Challenge bank (§11.4.169 Challenges / §11.4.27(B)).
+#
+# code-server ships a VS Code-compatible extension system whose default marketplace
+# is Open VSX (open-vsx.org) — the Microsoft VS Code Marketplace is licence-restricted
+# to Microsoft's own products and is deliberately NOT used. This bank exercises the
+# user-facing capability "install a plugin from the marketplace and use it" LIVE and
+# scores PASS ONLY on captured positive evidence (§11.4.69/§11.4.107) — real install,
+# real on-disk manifest, real extension-host load — never a metadata-only pass.
+# Executed faithfully by tests/types/extensions_auth.sh (each step maps to an X-check).
+# All work happens in throwaway mktemp dirs; the operator's live extensions-dir is
+# never mutated (§11.4.14). Kept in the PROJECT tree (tests/banks/), NOT inside the
+# challenges submodule, to keep that submodule project-agnostic (§11.4.28).
+#
+# feature_class values are drawn from the §11.4.69 taxonomy (an OPEN set): the
+# enumerated `network_connectivity`, `package_install`, `storage_read` are used
+# as-is; `extension_load` (editor extension-host activation) is a documented
+# §11.4.69 addition for the plugin surface.
+
+name: helixcode-extension-capabilities
+version: 1.0.0
+description: |
+  End-to-end anti-bluff Challenges for code-server plugin (extension) support: the
+  Open VSX marketplace is reachable, a real extension installs from it into a
+  throwaway workspace, its on-disk manifest + entry file are valid, and a live
+  code-server extension host actually loads it — each exercised live and scored PASS
+  only on captured evidence, with the operator's live extensions-dir left untouched.
+platforms: [linux]
+timeout: 5m
+
+steps:
+  - name: marketplace-reachable
+    type: shell
+    feature_class: network_connectivity
+    params:
+      command: "Open VSX API (open-vsx.org/api/<pub>/<name>) returns HTTP 200 + a parseable extension version for the target extension"
+    on_failure: "The extension marketplace is unreachable — users cannot browse/install plugins (SKIP-with-reason if genuinely offline, never a fake pass)"
+
+  - name: install-from-marketplace
+    type: shell
+    feature_class: package_install
+    params:
+      command: "code-server --install-extension <ext> into a throwaway --extensions-dir exits 0 AND --list-extensions --show-versions reports <ext>@<ver> AND a valid package.json lands on disk"
+    on_failure: "Extension installation from the marketplace is broken — the user cannot add plugins"
+
+  - name: manifest-usable
+    type: shell
+    feature_class: storage_read
+    params:
+      command: "the installed extension's package.json parses, declares real contributes, and its declared main/browser entry file exists on disk"
+    on_failure: "The installed extension's manifest/entry is missing or invalid — the plugin would not load"
+
+  - name: extension-host-loads-it
+    type: shell
+    feature_class: extension_load
+    params:
+      command: "a live code-server instance (throwaway dirs, loopback random port) brings its extension host up and recognises/loads the installed extension"
+    on_failure: "The editor's extension host does not load the installed plugin — installation succeeds but the plugin is unusable"
+
+  - name: throwaway-cleanup
+    type: shell
+    feature_class: storage_read
+    params:
+      command: "the throwaway instance is stopped and the throwaway dirs are trap-removed, and the operator's LIVE extensions-dir fingerprint is unchanged"
+    on_failure: "The test mutated live state or left orphan processes/dirs (§11.4.14 cleanup violation)"
+
+success_criteria:
+  all_steps_passed: true
+  no_crashes: true
+
+report:
+  format: markdown
+  sections: [summary, step_results]

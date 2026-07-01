@@ -34,6 +34,7 @@ OUT="qa-results/run_all/$RUNID"; mkdir -p "$OUT"
 ORDER=(
   security_auth     # NEWEST surface: ssh-key auth gate (auth pivot) — highest change-risk + auth blast radius
   e2e_auth          # NEWEST surface: ssh-key login journey (challenge-response)
+  extensions_auth   # NEW surface: code-server extension (plugin) install + use from the Open VSX marketplace
   tls_letsencrypt   # Let's Encrypt TLS edge — high change-risk
   security          # legacy auth/TLS/secret-leak — highest blast radius
   stress_chaos      # failure-injection / recovery
