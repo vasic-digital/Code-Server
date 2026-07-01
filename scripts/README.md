@@ -10,6 +10,7 @@ Dependencies / Cross-references).
 | `install.sh` | **One-shot install** → preflight → configure → start → boot service |
 | `setup.sh` | Setup wizard (CLI + `--tui`) → writes `deploy/.env` |
 | `set-password.sh` | Change the login password + restart to apply |
+| `tune-host.sh` | Raise host inotify limits (large trees; needs sudo) |
 | `start.sh` | Start (build + up) the stack |
 | `stop.sh` | Stop the stack (`--volumes` to drop volumes) |
 | `restart.sh` | Stop then start |

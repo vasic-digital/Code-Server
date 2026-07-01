@@ -42,10 +42,22 @@ else
 	hc_info "using existing deploy/.env"
 fi
 
-# 3. Bring the stack up.
+# 3. Host tuning: raise inotify limits so large trees don't trip the file-watcher
+#    warning. Needs root — apply if we already are root or have passwordless sudo,
+#    otherwise print the one command for the operator to run.
+if [ "$(id -u)" -eq 0 ]; then
+	"$HC_ROOT/scripts/tune-host.sh" || hc_warn "host tuning skipped"
+elif sudo -n true 2>/dev/null; then
+	sudo "$HC_ROOT/scripts/tune-host.sh" || hc_warn "host tuning skipped"
+else
+	hc_warn "inotify host-tuning needs root — run:  sudo scripts/tune-host.sh"
+	hc_warn "(code-server ships watcherExclude defaults, so this is optional headroom)"
+fi
+
+# 4. Bring the stack up.
 "$HC_ROOT/scripts/start.sh"
 
-# 4. Boot-survival service (default on — makes the install reboot-persistent).
+# 5. Boot-survival service (default on — makes the install reboot-persistent).
 if [ "$WITH_SERVICE" -eq 1 ]; then
 	hc_info "installing boot-survival service…"
 	# shellcheck disable=SC2086

@@ -120,5 +120,15 @@ if [ -d "docs" ]; then
     done < <(find docs -type f -iname '*constitution*' -print0 2>/dev/null)
 fi
 
+# --------------------------------------------------------------------------
+# Standing regression guards (§11.4.135) — run project fix-guards pre-build.
+# Kept after the inheritance invariants so the constitution meta-test (which
+# mutates the §11.4 anchor and expects an early FAIL) is unaffected.
+# --------------------------------------------------------------------------
+if [ -x "tests/test_inotify_watchers.sh" ]; then
+    RED_MODE=0 bash tests/test_inotify_watchers.sh >/dev/null \
+        || fail "regression guard: tests/test_inotify_watchers.sh (inotify watcher fix)"
+fi
+
 printf 'PASS: constitution inheritance verified\n'
 exit 0

@@ -31,13 +31,29 @@ fi
   echo "  code-server:"
   echo "    volumes:"
   echo "      - cs-config:/home/coder/.config"
+  echo "      - cs-data:/home/coder/.local/share/code-server"
   IFS=':' read -ra _ps <<< "$PROJECTS"
   for p in "${_ps[@]}"; do
     [ -n "$p" ] || continue
     echo "      - ${p}:/home/coder/projects/$(basename "$p"):Z"
   done
 } > compose.projects.yml
-RT="podman compose"; command -v podman >/dev/null || RT="docker compose"
+RT="podman compose"; ENG="podman"; command -v podman >/dev/null || { RT="docker compose"; ENG="docker"; }
 echo "runtime: $RT"
+
+# Pre-seed default code-server settings (files.watcherExclude — prevents the
+# inotify "unable to watch for file changes" warning on large project trees)
+# into the cs-data volume BEFORE code-server starts, so the fix applies on the
+# very first boot (not only after a restart). Seeds only if absent so operator
+# edits made in the UI are never clobbered. The compose project is "deploy"
+# (this dir), so the volume is "deploy_cs-data".
+$ENG volume create deploy_cs-data >/dev/null 2>&1 || true
+VMP="$($ENG volume inspect deploy_cs-data --format '{{.Mountpoint}}' 2>/dev/null || true)"
+if [ -n "$VMP" ] && [ ! -f "$VMP/User/settings.json" ]; then
+  mkdir -p "$VMP/User" 2>/dev/null \
+    && cp code-server/settings.default.json "$VMP/User/settings.json" 2>/dev/null \
+    && echo "seeded code-server watcherExclude settings"
+fi
+
 $RT -f compose.codeserver.yml -f compose.projects.yml up -d --build
 $RT -f compose.codeserver.yml -f compose.projects.yml ps

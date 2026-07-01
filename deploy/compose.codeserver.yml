@@ -32,5 +32,6 @@ services:
     restart: unless-stopped
 volumes:
   cs-config:
+  cs-data:
   caddy-data:
   caddy-config:

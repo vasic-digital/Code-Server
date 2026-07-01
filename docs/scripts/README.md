@@ -1,6 +1,6 @@
 # HelixCode operator scripts
 
-**Revision:** 2 · **Last modified:** 2026-07-01 · **Last verified:** 2026-07-01
+**Revision:** 3 · **Last modified:** 2026-07-01 · **Last verified:** 2026-07-01
 
 Companion documentation (constitution §11.4.18) for every script under
 `scripts/`. Each script also carries an in-source documentation block. Run any
@@ -52,6 +52,32 @@ scripts/stop.sh          # bring it down
   interactive prompt or `NEW_PASSWORD` env. If the stack is stopped, the new
   password applies on the next `start.sh`.
 - **Related:** `setup.sh`, `restart.sh`, `install.sh`.
+
+## `tune-host.sh`
+- **Overview:** Raises host inotify limits so code-server can watch large
+  workspaces without the "unable to watch for file changes" (ENOSPC) warning.
+  Installs `deploy/sysctl/99-helixcode-inotify.conf` into `/etc/sysctl.d/` and
+  applies it. inotify limits are a host-kernel, per-UID resource (not
+  per-container), so this must run on the host as root.
+- **Prerequisites:** root (sudo) to install/apply; runs read-only with `--show`.
+- **Usage:** `sudo scripts/tune-host.sh` · `scripts/tune-host.sh --show`
+- **Edge cases:** without root it prints the exact `cp` + `sysctl --system`
+  commands and exits non-zero. `install.sh` runs it automatically when it has
+  root/sudo. code-server also ships `files.watcherExclude` defaults (seeded into
+  the `cs-data` volume by `deploy/up.sh`), so raising the sysctl is **optional
+  headroom** — the excludes already keep a typical large tree under the limit.
+- **Related:** `install.sh`, `deploy/sysctl/`, `deploy/code-server/settings.default.json`.
+
+### The file-watcher fix (background)
+Large project trees can exceed the kernel's `fs.inotify.max_user_watches`
+(watches are counted per **directory**). HelixCode addresses this two ways:
+1. **Reduce demand** — `deploy/code-server/settings.default.json` sets
+   `files.watcherExclude` for VCS/build/dependency/backup dirs. It is seeded
+   into the persistent `cs-data` volume on first boot and survives restarts +
+   reboots. Edit it in the code-server UI (Settings) to tune further.
+2. **Increase supply** — `scripts/tune-host.sh` raises the host inotify limits
+   (needs root; optional but recommended for very large trees).
+Regression guard: `tests/test_inotify_watchers.sh`.
 
 ---
 
