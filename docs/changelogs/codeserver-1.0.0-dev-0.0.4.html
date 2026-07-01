@@ -1,0 +1,478 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>codeserver-1.0.0-dev-0.0.4</title>
+  <style>
+    /* Default styles provided by pandoc.
+    ** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
+    */
+    html {
+      color: #1a1a1a;
+      background-color: #fdfdfd;
+    }
+    body {
+      margin: 0 auto;
+      max-width: 36em;
+      padding-left: 50px;
+      padding-right: 50px;
+      padding-top: 50px;
+      padding-bottom: 50px;
+      hyphens: auto;
+      overflow-wrap: break-word;
+      text-rendering: optimizeLegibility;
+      font-kerning: normal;
+    }
+    @media (max-width: 600px) {
+      body {
+        font-size: 0.9em;
+        padding: 12px;
+      }
+      h1 {
+        font-size: 1.8em;
+      }
+    }
+    @media print {
+      html {
+        background-color: white;
+      }
+      body {
+        background-color: transparent;
+        color: black;
+        font-size: 12pt;
+      }
+      p, h2, h3 {
+        orphans: 3;
+        widows: 3;
+      }
+      h2, h3, h4 {
+        page-break-after: avoid;
+      }
+    }
+    p {
+      margin: 1em 0;
+    }
+    a {
+      color: #1a1a1a;
+    }
+    a:visited {
+      color: #1a1a1a;
+    }
+    img {
+      max-width: 100%;
+    }
+    svg {
+      height: auto;
+      max-width: 100%;
+    }
+    h1, h2, h3, h4, h5, h6 {
+      margin-top: 1.4em;
+    }
+    h5, h6 {
+      font-size: 1em;
+      font-style: italic;
+    }
+    h6 {
+      font-weight: normal;
+    }
+    ol, ul {
+      padding-left: 1.7em;
+      margin-top: 1em;
+    }
+    li > ol, li > ul {
+      margin-top: 0;
+    }
+    blockquote {
+      margin: 1em 0 1em 1.7em;
+      padding-left: 1em;
+      border-left: 2px solid #e6e6e6;
+      color: #606060;
+    }
+    code {
+      font-family: Menlo, Monaco, Consolas, 'Lucida Console', monospace;
+      font-size: 85%;
+      margin: 0;
+      hyphens: manual;
+    }
+    pre {
+      margin: 1em 0;
+      overflow: auto;
+    }
+    pre code {
+      padding: 0;
+      overflow: visible;
+      overflow-wrap: normal;
+    }
+    .sourceCode {
+     background-color: transparent;
+     overflow: visible;
+    }
+    hr {
+      border: none;
+      border-top: 1px solid #1a1a1a;
+      height: 1px;
+      margin: 1em 0;
+    }
+    table {
+      margin: 1em 0;
+      border-collapse: collapse;
+      width: 100%;
+      overflow-x: auto;
+      display: block;
+      font-variant-numeric: lining-nums tabular-nums;
+    }
+    table caption {
+      margin-bottom: 0.75em;
+    }
+    tbody {
+      margin-top: 0.5em;
+      border-top: 1px solid #1a1a1a;
+      border-bottom: 1px solid #1a1a1a;
+    }
+    th {
+      border-top: 1px solid #1a1a1a;
+      padding: 0.25em 0.5em 0.25em 0.5em;
+    }
+    td {
+      padding: 0.125em 0.5em 0.25em 0.5em;
+    }
+    header {
+      margin-bottom: 4em;
+      text-align: center;
+    }
+    #TOC li {
+      list-style: none;
+    }
+    #TOC ul {
+      padding-left: 1.3em;
+    }
+    #TOC > ul {
+      padding-left: 0;
+    }
+    #TOC a:not(:hover) {
+      text-decoration: none;
+    }
+    code{white-space: pre-wrap;}
+    span.smallcaps{font-variant: small-caps;}
+    div.columns{display: flex; gap: min(4vw, 1.5em);}
+    div.column{flex: auto; overflow-x: auto;}
+    div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+    /* The extra [class] is a hack that increases specificity enough to
+       override a similar rule in reveal.js */
+    ul.task-list[class]{list-style: none;}
+    ul.task-list li input[type="checkbox"] {
+      font-size: inherit;
+      width: 0.8em;
+      margin: 0 0.8em 0.2em -1.6em;
+      vertical-align: middle;
+    }
+    .display.math{display: block; text-align: center; margin: 0.5rem auto;}
+  </style>
+</head>
+<body>
+<header id="title-block-header">
+<h1 class="title">codeserver-1.0.0-dev-0.0.4</h1>
+</header>
+<h1 id="codeserver-1.0.0-dev-0.0.4">codeserver-1.0.0-dev-0.0.4</h1>
+<p><strong>Revision:</strong> 1 · <strong>Last modified:</strong>
+2026-07-01T00:00:00Z</p>
+<p>Fourth dev pre-release of <strong>HelixCode</strong>. This round
+hardens the <strong>real-account SSH-key auth stack</strong> shipped in
+<code>codeserver-1.0.0-dev-0.0.3</code> into something an operator can
+actually reach and keep running, and it makes the <strong>editor’s
+extension (plugin) marketplace</strong> a first-class, anti-bluff-tested
+capability. Three themes: (1) a <strong>login reachability + usability
+fix</strong> — an unauthenticated browser now lands on the login form
+instead of a bodyless “This page isn’t working”; (2) <strong>durability
++ host-safety hardening</strong> — the whole stack (gate + editor + TLS
+edge) now survives session and full-host restarts, installs without the
+fragile npm path, and closes the <code>--auth none</code> loopback
+residual; (3) <strong>marketplace coverage</strong> — install / use /
+persist / configure real Open VSX extensions, proven LIVE, plus a VS
+Code Dark default theme.</p>
+<p>Authoritative sources: user guide <a
+href="../guides/AUTH.md"><code>docs/guides/AUTH.md</code></a>,
+extensions guide <a
+href="../guides/EXTENSIONS.md"><code>docs/guides/EXTENSIONS.md</code></a>,
+edge-boot guide <a
+href="../guides/EDGE_BOOT.md"><code>docs/guides/EDGE_BOOT.md</code></a>,
+feature ledger <a
+href="../features/Status.md"><code>docs/features/Status.md</code></a>,
+prior release <a
+href="codeserver-1.0.0-dev-0.0.3.md"><code>codeserver-1.0.0-dev-0.0.3.md</code></a>.</p>
+<h2 id="fix-unauthenticated-browsers-reach-the-login-form-75e2d9b">Fix —
+unauthenticated browsers reach the login form
+(<code>75e2d9b</code>)</h2>
+<ul>
+<li><strong>Symptom.</strong> Browsing the site root unauthenticated
+returned a <strong>bodyless 401</strong> (<code>forward_auth</code>
+denied with no login redirect) → Chrome rendered <strong>“This page
+isn’t working”</strong> and the user never reached the login form.</li>
+<li><strong>Fix.</strong> The gate’s <code>GET /auth</code> now returns
+<strong><code>303 → /login</code></strong> for browser navigations
+(<code>GET</code> + <code>Accept: text/html</code>), which Caddy’s
+<code>forward_auth</code> copies to the client so the browser lands on
+the login page. XHR / fetch / asset / API requests (<code>Accept</code>
+<strong>without</strong> <code>text/html</code>) still receive a
+<strong>bare 401</strong>, so a programmatic caller is never served an
+HTML login page.</li>
+<li><strong>Root-caused via systematic-debugging (§11.4.102).</strong>
+The log’s transient 502s were separately proven to be
+<strong>matrix-time chaos, not steady-state</strong> (150 parallel
+authed requests → 150× <code>200</code>, 0 failures).</li>
+<li><strong>Regression guards (§11.4.135).</strong>
+<code>TestAuthBrowserNavigationRedirectsToLogin</code>
+<ul>
+<li><code>TestAuthNonBrowserRequestsStay401</code> (Go, deterministic
+3/3) + <code>e2e_auth (B)</code> hardened to assert <strong>browser →
+303 → /login AND api → 401</strong> (live 5/5).</li>
+</ul></li>
+</ul>
+<h2
+id="hardening-durability-install-robustness-host-safety-e0519bf">Hardening
+— durability, install robustness, host-safety
+(<code>e0519bf</code>)</h2>
+<p>Post-<code>dev-0.0.3</code> hardening, subagent-driven, each landed
+with captured or sandbox-proven evidence:</p>
+<ul>
+<li><strong>Reboot-persistent TLS edge
+(<code>deploy/quadlet/helixcode-caddy.container</code> +
+<code>scripts/install-edge-boot.sh</code> +
+<code>docs/guides/EDGE_BOOT.md</code>).</strong> A rootless-podman
+<strong>Quadlet</strong> so the Caddy edge survives a <strong>full host
+reboot</strong> — closing a real recurring outage where the compose
+edge’s port-forwarder died with the launching session. The host-native
+gate + editor already persist via <code>systemd --user</code> linger;
+the Quadlet completes the trio. Dry-run-validated; the work caught +
+fixed a Quadlet <code>EnvironmentFile</code> boot bug. It does
+<strong>not</strong> auto-start (that would clash on <code>52443</code>
+with the live compose edge — operator opt-in).</li>
+<li><strong>Standalone-tarball code-server install
+(<code>scripts/install-auth.sh</code>).</strong> The install switched to
+the <strong>standalone GitHub-release tarball as PRIMARY</strong> (npm
+was fragile — registry lag / <code>ENOENT</code>), with npm as fallback;
+§11.4.6 version-verified, idempotent, sandbox-proven (fetch + extract
+into a temp dir, the live install untouched).</li>
+<li><strong>UID-scoped loopback firewall
+(<code>scripts/harden-loopback.sh</code> +
+<code>docs/scripts/harden-loopback.md</code> +
+<code>AUTH.md §5.1</code>).</strong> A UID-scoped loopback
+<strong>OUTPUT</strong> firewall (nft / iptables) closing the
+<code>--auth none</code> residual; <code>--check</code> /
+<code>--apply</code> / <code>--remove</code>, <strong>refuses to guess
+the account, refuses to escalate</strong>; shellcheck-clean;
+<code>--check</code> proven with no root.</li>
+<li><strong>§11.4.65 exports.</strong> Synchronized <code>.html</code> +
+<code>.pdf</code> siblings for all release docs (real-text
+verified).</li>
+</ul>
+<h2
+id="feature-extension-marketplace-install-use-persist-configure">Feature
+— extension marketplace: install, use, persist, configure</h2>
+<p>Across <code>43e37a5</code>, <code>849dc9a</code>,
+<code>8351e4c</code>, and the pending theme/popular-extensions landing,
+HelixCode’s editor <strong>extension (plugin)</strong> capability
+becomes a first-class, LIVE-tested feature. The marketplace is
+<strong>Open VSX</strong> (code-server’s default); the Microsoft VS Code
+Marketplace is licence-restricted to Microsoft products and is
+<strong>not</strong> used (stated as fact, no bypass — §11.4.6 /
+§11.4.112).</p>
+<ul>
+<li><strong>Anti-bluff install + use suite (<code>43e37a5</code>,
+<code>tests/types/extensions_auth.sh</code>, §11.4.169).</strong> Proves
+the extension capability LIVE, all in throwaway <code>mktemp</code> dirs
+so the operator’s live extensions-dir is <strong>never mutated</strong>
+(§11.4.14): <strong>X1</strong> marketplace reachable (Open VSX API
+<code>200</code> + real version, SKIP-with-reason if offline);
+<strong>X2</strong> install from marketplace
+(<code>--install-extension redhat.vscode-yaml</code> → exit 0, listed
+<span class="citation" data-cites="version">@version</span>, valid
+on-disk <code>package.json</code>); <strong>X3</strong> usable +
+<strong>LOADED</strong> (a live throwaway code-server extension host
+actually loads it); <strong>X4</strong> cleanup (throwaway instance
+down, dirs trap-removed, LIVE extensions-dir fingerprint unchanged).
+<strong>Live run PASS = 5/0.</strong> Registered in
+<code>run_all_types.sh</code> risk-order (§11.4.132)
+<ul>
+<li>Challenge bank
+<code>tests/banks/helixcode-extensions.yaml</code>.</li>
+</ul></li>
+<li><strong>Operator extensions guide (<code>849dc9a</code>,
+<code>docs/guides/EXTENSIONS.md</code>, §11.4.99-sourced).</strong>
+Honest guide to the extension system: default marketplace is Open VSX;
+MS Marketplace licence-restriction stated factually; install via UI +
+CLI (<code>--install-extension</code> / <code>--list-extensions</code> /
+<code>--uninstall-extension</code>) with the HelixCode
+<code>--extensions-dir</code> caveat; gallery config via
+<code>product.json</code> / <code>EXTENSIONS_GALLERY</code> (<strong>the
+<code>--extensions-gallery</code> CLI flag does NOT exist in
+4.117.0</strong> — §11.4.6 verified); local <code>.vsix</code>;
+troubleshooting. Sources verified 2026-07-01. Plus
+<code>scripts/show-extension-gallery.sh</code> — a
+<strong>read-only</strong> probe printing the configured gallery (no
+mutation, never switches to MS Marketplace).</li>
+<li><strong>Login-form copy/paste clipboard buttons
+(<code>8351e4c</code>, §11.4.169/§11.4.170).</strong> Accessible
+<strong>copy</strong> (sign-command + bare challenge) and
+<strong>paste</strong> (recognize armored SSH signature block(s);
+multi-match picker) icon buttons on the login form. Client module
+<code>assets/login_enhance.js</code> is a UMD recognizer (regex for
+<code>BEGIN/END SSH SIGNATURE</code>), clipboard capability-probed with
+graceful fallback, inserts as textarea <code>.value</code> ONLY
+(<strong>XSS-safe</strong>), never auto-submits, progressive-enhancement
+(the page works JS-off). Proven by <code>server_login_ui_test.go</code>
+(Go PASS), <code>tests/types/login_recognition.test.js</code> (node unit
+8/8), and <code>tests/types/login_ui_auth.sh</code> — L1 live
+served-page + L2 node unit + <strong>L3 host-rendered Chromium/CDP pixel
+proof</strong> (buttons render / labelled / non-overlapping +
+copy→clipboard + paste→fill + 2-sig→picker
+<ul>
+<li>XSS-safe + no-auto-submit) — <strong>LIVE PASS = 3/3</strong>
+(§11.4.170 device-independent rendered-pixel proof).</li>
+</ul></li>
+<li><strong>UI-driven marketplace journey (<code>8351e4c</code>,
+<code>tests/types/extensions_ui_auth.sh</code> + bank).</strong>
+Headless Chromium opens the Extensions view → searches Open VSX → clicks
+the real <strong>Install</strong> button, with pixel + OCR evidence —
+the real user-journey path (§11.4.48). <strong>GREEN 5/1</strong> with
+an honest <strong><code>operator_attended</code> SKIP</strong> on
+install-completion (headless cross-origin Open VSX install hangs; the
+on-disk + host-load proof is the CLI sibling
+<code>extensions_auth</code> X2/X3 — §11.4.52, no faked PASS).</li>
+<li><strong>VS Code Dark default theme + popular-extensions coverage
+(pending commit — conductor to land;
+<code>deploy/code-server/settings.default.json</code>,
+<code>tests/types/theme_default_auth.sh</code>,
+<code>tests/types/extensions_popular_auth.sh</code>,
+<code>tests/run_all_types.sh</code>).</strong> The seeded default
+settings set <code>workbench.colorTheme</code> to <strong>Visual Studio
+Dark</strong> (§11.4.162), which <code>install-auth.sh</code> copies to
+a fresh install’s <code>User/settings.json</code> so every HelixCode
+deployment defaults to a VS Code dark theme;
+<code>theme_default_auth.sh</code> is the §11.4.135 regression guard
+(<strong>3/3</strong>). <code>extensions_popular_auth.sh</code> proves a
+curated set of <strong>major popular</strong> Open VSX extensions
+(Python / ESLint / Prettier / GitLens class) genuinely <strong>install
+(P1) + use/load (P2) + persist across a fresh process (P3) + configure
+round-trip (P4)</strong>, with the MS-proprietary set (Pylance / Live
+Share / Remote) confirmed <strong>honestly ABSENT</strong> from Open VSX
+(P5, licensing — §11.4.112), and the live extensions-dir left unmutated
+(P6).</li>
+</ul>
+<h2 id="feature-ledger-reconciliation-eee6169-11.4.153">Feature ledger
+reconciliation (<code>eee6169</code>, §11.4.153)</h2>
+<p><code>docs/features/Status.md</code> + a new
+<code>Status_Summary.md</code> (§11.4.56) + HTML / PDF / DOCX exports
+(§11.4.153/§11.4.65), every row reconciled to a real file / evidence
+(§11.4.6/§11.4.123): auth surface <strong>PASS</strong> (23/23 matrix,
+Go 70 tests <code>-race</code>); login-redirect (<code>75e2d9b</code>)
+<strong>PASS</strong>; extension install+use <strong>PASS</strong>
+(<code>extensions_auth</code> 5/5); reboot-persistence
+<strong>PENDING</strong> (landed; full-reboot survival not yet
+captured); loopback firewall <strong>OPERATOR-BLOCKED</strong>
+(<code>--apply</code> needs root). <strong>Video-confirmation is
+honestly PENDING on every row</strong> — no real-use video corpus exists
+yet (NOT fabricated; PASS verdicts are backed by cited
+<code>qa-results/**</code> artefacts). Legacy container+password suites
+report an honest <strong>SKIP</strong>.</p>
+<h2 id="durability">Durability</h2>
+<p>The whole stack is now <code>systemd --user</code>-managed and
+reboot-persistent:</p>
+<pre><code>Browser ──HTTPS──▶ Caddy TLS edge  — rootless Podman compose (live) + Quadlet (reboot-boot, opt-in)
+                    ├─ forward_auth ─▶ helix-auth   (host-native, systemd --user, loopback:8081)
+                    └─ reverse_proxy ─▶ code-server (host-native AS milosvasic, systemd --user,
+                                          --auth none, loopback:8080, seeded VS Code Dark default)</code></pre>
+<ul>
+<li><strong>Gate + editor</strong> persist across logout via
+<code>systemd --user</code> <strong>linger</strong>.</li>
+<li><strong>TLS edge</strong> persists across a <strong>full host
+reboot</strong> via the rootless-podman <strong>Quadlet</strong>
+(<code>scripts/install-edge-boot.sh</code>, opt-in so it does not clash
+with the live compose edge on <code>52443</code>).</li>
+<li><strong>Loopback <code>--auth none</code> residual</strong> closable
+by the UID-scoped firewall (<code>scripts/harden-loopback.sh</code>,
+root-gated <code>--apply</code>).</li>
+</ul>
+<h2 id="honest-boundaries-11.4.6">Honest boundaries (§11.4.6)</h2>
+<ul>
+<li><strong>Marketplace = Open VSX, not the MS VS Code
+Marketplace.</strong> The Microsoft Marketplace is
+<strong>licence-restricted to Microsoft products</strong> —
+<strong>Pylance / Live Share / Remote-* are unavailable</strong> and
+confirmed ABSENT from Open VSX (documented, not a defect — §11.4.112).
+This is stated as fact; there is no bypass.</li>
+<li><strong>Public Let’s Encrypt is operator-gated.</strong>
+Publicly-trusted TLS needs a public domain + reachable
+<code>:80</code>/<code>:443</code> or a DNS-01 token (LAN box); the ACME
+machinery is proven against a local CA
+(<code>docs/guides/TLS.md</code>).</li>
+<li><strong><code>--auth none</code> on loopback:8080 residual</strong>
+is <strong>mitigated, not eliminated in the default deployment.</strong>
+The gate/edge enforce all auth; a local host process reaching
+<code>127.0.0.1:8080</code> bypasses it. The <strong>root-gated</strong>
+<code>scripts/harden-loopback.sh --apply</code> closes it (a UID-scoped
+OUTPUT firewall); it stays <strong>OPERATOR-BLOCKED</strong> in the
+ledger until an operator runs it with root.</li>
+<li><strong>Reboot-persistent edge is opt-in.</strong> The Quadlet does
+<strong>not</strong> auto-start (it would clash on <code>52443</code>
+with the live compose edge); full-host-reboot survival is
+<strong>PENDING</strong> in the ledger until captured on a real
+reboot.</li>
+<li><strong>UI-driven marketplace install-completion is
+<code>operator_attended</code>.</strong> Headless cross-origin Open VSX
+install hangs; the autonomous proof of install+load is the CLI path
+(<code>extensions_auth</code> X2/X3) — no faked GUI PASS
+(§11.4.52).</li>
+<li><strong>No real-use video corpus yet.</strong> §11.4.153
+video-confirmation is honestly PENDING on every ledger row; PASS
+verdicts rest on cited <code>qa-results/**</code> captured evidence,
+never a fabricated video.</li>
+<li><strong>code-server pinned to 4.117.0</strong> (newest on npm at
+release time; install now prefers the standalone tarball).</li>
+</ul>
+<h2 id="testing-11.4.169">Testing (§11.4.169)</h2>
+<ul>
+<li><strong>New / hardened suites</strong> (<code>tests/types/</code>):
+<code>extensions_auth</code>, <code>extensions_ui_auth</code>,
+<code>login_ui_auth</code>, <code>login_recognition.test.js</code>,
+<code>theme_default_auth</code>, <code>extensions_popular_auth</code> —
+plus the hardened <code>e2e_auth (B)</code> browser-redirect regression
+assertion and the Go guards
+<code>TestAuthBrowserNavigationRedirectsToLogin</code> /
+<code>TestAuthNonBrowserRequestsStay401</code>.</li>
+<li><strong>Marketplace evidence path is anti-bluff
+(§11.4.69/§11.4.107):</strong> every PASS cites captured evidence — real
+install output, real on-disk manifests + entry files, real fresh-process
+listings, a real config round-trip, a real host-rendered pixel proof —
+never a metadata-only pass; all in throwaway dirs so the live
+extensions-dir is provably unmutated (§11.4.14 / §11.4.122).</li>
+<li>All new suites registered in <code>run_all_types.sh</code>
+risk-order (§11.4.132) with their Challenge banks.</li>
+</ul>
+<p><strong>LIVE VALIDATION AGGREGATE (release-gate run):</strong>
+<conductor fills post-run></p>
+<h2 id="migration">Migration</h2>
+<ul>
+<li><strong>No breaking parameter changes from
+<code>dev-0.0.3</code>.</strong> The SSH-key auth model,
+<code>HELIX_AUTH_*</code> parameters, and <code>PROJECTS_ROOT</code> are
+unchanged.</li>
+<li><strong>Reboot-persistent edge (optional):</strong>
+<code>scripts/install-edge-boot.sh</code> installs the rootless-podman
+Quadlet (opt-in; stop the live compose edge first to avoid a
+<code>52443</code> clash).</li>
+<li><strong>Loopback hardening (optional, root):</strong>
+<code>scripts/harden-loopback.sh --apply</code> closes the
+<code>--auth none</code> residual for the account.</li>
+<li><strong>Extensions:</strong> install from Open VSX via the
+Extensions view or
+<code>code-server --install-extension &lt;id&gt;</code>; see
+<code>docs/guides/EXTENSIONS.md</code>.</li>
+<li><strong>Default theme:</strong> fresh installs seed <strong>Visual
+Studio Dark</strong>; existing deployments keep their
+<code>User/settings.json</code>.</li>
+</ul>
+</body>
+</html>

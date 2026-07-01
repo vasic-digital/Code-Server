@@ -1,0 +1,77 @@
+# SPDX-License-Identifier: Apache-2.0
+#
+# HelixCode DEFAULT-DARK-THEME host-rendered-pixel-proof Challenge bank
+# (§11.4.170 device-independent host-side rendered-UI visual-proof /
+#  §11.4.162 OpenDesign light+dark theming / §11.4.107 anti-bluff AV/test
+#  validation / §11.4.169 Challenges / §11.4.27(B)).
+#
+# Backs the operator mandate "VS Code Dark theme MUST BE the default ALWAYS"
+# with REAL rendered pixels. The sibling suite tests/types/theme_default_auth.sh
+# (bank: exercised inline) proves the CONFIG enforcement — that
+# deploy/code-server/settings.default.json seeds a VS Code dark colorTheme and
+# scripts/install-auth.sh copies it into User/settings.json on a fresh install.
+# THIS bank proves the RENDERED result: a THROWAWAY code-server started with
+# those default settings, opened in a real headless Chromium, RENDERS the
+# workbench DARK — scored PASS ONLY on captured positive evidence (a PNG of the
+# rendered workbench + the Rec.709 mean luminance measured from the real pixels +
+# the applied theme kind read from the rendered DOM), never a metadata-only pass.
+# Executed faithfully by tests/types/theme_visual_auth.sh (each step maps to a
+# T-check). All work happens in throwaway mktemp dirs; the operator's LIVE
+# code-server + user-data-dir are never touched (§11.4.14). Kept in the PROJECT
+# tree (tests/banks/), NOT inside the challenges submodule, to keep that
+# submodule project-agnostic (§11.4.28).
+#
+# feature_class values are drawn from the §11.4.69 taxonomy (an OPEN set): the
+# enumerated `boot_service`, `gpu_render` (rendered-pixel surface), `storage_read`
+# are used as-is.
+
+name: helixcode-theme-visual-proof
+version: 1.0.0
+description: |
+  Device-independent host-rendered-pixel Challenges proving code-server, with
+  HelixCode's default settings seeded, RENDERS the workbench DARK. A throwaway
+  code-server is served over HTTP, a real headless Chromium (CDP, no npm) opens
+  the workbench, waits for the SPA to genuinely render, screenshots it, and the
+  captured PNG is proven DARK from its real pixels (mean luminance below the
+  calibrated dark ceiling + a high dark-pixel fraction) dual-validated by the
+  theme kind read from the rendered .monaco-workbench DOM — each exercised live
+  and scored PASS only on captured screenshot + measured-luminance evidence.
+platforms: [linux]
+timeout: 6m
+
+steps:
+  - name: workbench-served-with-default-settings
+    type: shell
+    feature_class: boot_service
+    params:
+      command: "the throwaway code-server, started with HelixCode's default settings seeded into User/settings.json, serves the VS Code web workbench over HTTP (200 + workbench/vscode-remote markers)"
+    on_failure: "The editor is not served — the rendered-theme proof cannot run (SKIP-with-reason only if the code-server binary is genuinely absent)"
+
+  - name: workbench-renders-dark-pixels
+    type: shell
+    feature_class: gpu_render
+    params:
+      command: "a real headless Chromium loads the .monaco-workbench, the captured PNG's Rec.709 mean luminance is below the calibrated dark ceiling AND a high fraction of pixels are dark — the rendered workbench is genuinely DARK, not merely configured dark"
+    on_failure: "The workbench did NOT render dark. If Chromium is genuinely unavailable or the SPA does not render within the bound, that is an HONEST §11.4.3 topology_unsupported SKIP (never a faked pass); a rendered-but-light workbench is a real defect against the default-dark mandate"
+
+  - name: theme-kind-read-from-rendered-dom
+    type: shell
+    feature_class: gpu_render
+    params:
+      command: "the applied theme KIND read from the rendered workbench DOM (.monaco-workbench classList => vs-dark) confirms a dark theme is active — the §11.4.170(ii) vision/DOM oracle cross-checking the pixel measurement"
+    on_failure: "The rendered DOM does not report a dark theme kind, contradicting the default-dark mandate (or the workbench never rendered — honest SKIP only in that case)"
+
+  - name: throwaway-cleanup
+    type: shell
+    feature_class: storage_read
+    params:
+      command: "the throwaway code-server + headless Chromium are stopped and the throwaway dirs are trap-removed, and the operator's LIVE code-server user-data-dir is never targeted"
+    on_failure: "The test mutated live state or left orphan processes/dirs (§11.4.14 cleanup violation)"
+
+success_criteria:
+  all_steps_passed: true
+  no_crashes: true
+
+report:
+  format: markdown
+  sections: [summary, step_results]

@@ -35,8 +35,11 @@ ORDER=(
   security_auth     # NEWEST surface: ssh-key auth gate (auth pivot) — highest change-risk + auth blast radius
   e2e_auth          # NEWEST surface: ssh-key login journey (challenge-response)
   login_ui_auth     # NEW surface: login-form copy/paste clipboard buttons (UI, §11.4.170 host-rendered proof)
+  theme_default_auth # NEW surface: VS Code Dark theme is the enforced default (operator mandate)
+  theme_visual_auth  # NEW surface: §11.4.170 rendered-pixel proof the editor actually renders DARK
   extensions_auth   # NEW surface: code-server extension (plugin) install + use from the Open VSX marketplace
   extensions_ui_auth # NEW surface: UI-driven marketplace install journey (headless browser, pixel/OCR)
+  extensions_popular_auth # NEW surface: major popular extensions install + use + persist + config
   tls_letsencrypt   # Let's Encrypt TLS edge — high change-risk
   security          # legacy auth/TLS/secret-leak — highest blast radius
   stress_chaos      # failure-injection / recovery

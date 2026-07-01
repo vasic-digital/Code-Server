@@ -1,4 +1,5 @@
 {
+  "workbench.colorTheme": "Visual Studio Dark",
   "files.watcherExclude": {
     "**/.git/**": true,
     "**/.hg/**": true,

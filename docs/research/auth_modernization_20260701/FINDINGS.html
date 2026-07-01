@@ -1,0 +1,719 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>FINDINGS</title>
+  <style>
+    /* Default styles provided by pandoc.
+    ** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
+    */
+    html {
+      color: #1a1a1a;
+      background-color: #fdfdfd;
+    }
+    body {
+      margin: 0 auto;
+      max-width: 36em;
+      padding-left: 50px;
+      padding-right: 50px;
+      padding-top: 50px;
+      padding-bottom: 50px;
+      hyphens: auto;
+      overflow-wrap: break-word;
+      text-rendering: optimizeLegibility;
+      font-kerning: normal;
+    }
+    @media (max-width: 600px) {
+      body {
+        font-size: 0.9em;
+        padding: 12px;
+      }
+      h1 {
+        font-size: 1.8em;
+      }
+    }
+    @media print {
+      html {
+        background-color: white;
+      }
+      body {
+        background-color: transparent;
+        color: black;
+        font-size: 12pt;
+      }
+      p, h2, h3 {
+        orphans: 3;
+        widows: 3;
+      }
+      h2, h3, h4 {
+        page-break-after: avoid;
+      }
+    }
+    p {
+      margin: 1em 0;
+    }
+    a {
+      color: #1a1a1a;
+    }
+    a:visited {
+      color: #1a1a1a;
+    }
+    img {
+      max-width: 100%;
+    }
+    svg {
+      height: auto;
+      max-width: 100%;
+    }
+    h1, h2, h3, h4, h5, h6 {
+      margin-top: 1.4em;
+    }
+    h5, h6 {
+      font-size: 1em;
+      font-style: italic;
+    }
+    h6 {
+      font-weight: normal;
+    }
+    ol, ul {
+      padding-left: 1.7em;
+      margin-top: 1em;
+    }
+    li > ol, li > ul {
+      margin-top: 0;
+    }
+    blockquote {
+      margin: 1em 0 1em 1.7em;
+      padding-left: 1em;
+      border-left: 2px solid #e6e6e6;
+      color: #606060;
+    }
+    code {
+      font-family: Menlo, Monaco, Consolas, 'Lucida Console', monospace;
+      font-size: 85%;
+      margin: 0;
+      hyphens: manual;
+    }
+    pre {
+      margin: 1em 0;
+      overflow: auto;
+    }
+    pre code {
+      padding: 0;
+      overflow: visible;
+      overflow-wrap: normal;
+    }
+    .sourceCode {
+     background-color: transparent;
+     overflow: visible;
+    }
+    hr {
+      border: none;
+      border-top: 1px solid #1a1a1a;
+      height: 1px;
+      margin: 1em 0;
+    }
+    table {
+      margin: 1em 0;
+      border-collapse: collapse;
+      width: 100%;
+      overflow-x: auto;
+      display: block;
+      font-variant-numeric: lining-nums tabular-nums;
+    }
+    table caption {
+      margin-bottom: 0.75em;
+    }
+    tbody {
+      margin-top: 0.5em;
+      border-top: 1px solid #1a1a1a;
+      border-bottom: 1px solid #1a1a1a;
+    }
+    th {
+      border-top: 1px solid #1a1a1a;
+      padding: 0.25em 0.5em 0.25em 0.5em;
+    }
+    td {
+      padding: 0.125em 0.5em 0.25em 0.5em;
+    }
+    header {
+      margin-bottom: 4em;
+      text-align: center;
+    }
+    #TOC li {
+      list-style: none;
+    }
+    #TOC ul {
+      padding-left: 1.3em;
+    }
+    #TOC > ul {
+      padding-left: 0;
+    }
+    #TOC a:not(:hover) {
+      text-decoration: none;
+    }
+    code{white-space: pre-wrap;}
+    span.smallcaps{font-variant: small-caps;}
+    div.columns{display: flex; gap: min(4vw, 1.5em);}
+    div.column{flex: auto; overflow-x: auto;}
+    div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+    /* The extra [class] is a hack that increases specificity enough to
+       override a similar rule in reveal.js */
+    ul.task-list[class]{list-style: none;}
+    ul.task-list li input[type="checkbox"] {
+      font-size: inherit;
+      width: 0.8em;
+      margin: 0 0.8em 0.2em -1.6em;
+      vertical-align: middle;
+    }
+    .display.math{display: block; text-align: center; margin: 0.5rem auto;}
+  </style>
+</head>
+<body>
+<h1
+id="authentication-modernization-deep-research-findings-helixcode">Authentication
+Modernization — Deep Research Findings (HelixCode)</h1>
+<p><strong>Revision:</strong> 1 <strong>Last modified:</strong>
+2026-07-01T18:26:19Z <strong>Authority:</strong> Operator standing
+“frequent deep research” directive (§11.4.8 / §11.4.99 / §11.4.150)
+<strong>Scope:</strong> Modernizing auth for a self-hosted,
+single-real-user web IDE — code-server behind a Caddy
+<code>forward_auth</code> gate, current auth = manual SSH-key
+challenge-response (<code>ssh-keygen -Y sign</code> → paste armored
+signature; no passwords stored). <strong>Stack under
+consideration:</strong> Caddy (reverse proxy + forward-auth) → Gin (Go)
+auth service → code-server (<code>--auth none</code> on
+<code>127.0.0.1:8080</code>) under systemd-user + rootless-podman.
+<strong>Honesty note (§11.4.6):</strong> Every
+maturity/licence/behaviour claim below is cited in the “Sources
+verified” footer with an access date. Where a fact was NOT fully pinned
+down this pass, it is marked <code>VERIFY:</code> rather than asserted.
+This report is a research artefact — it recommends, it does not
+implement, and none of it substitutes runtime validation of a chosen
+path (§11.4.108 / §11.4.40).</p>
+<hr />
+<h2 id="tldr">0. TL;DR</h2>
+<p>Three things move the needle for THIS model (one real human,
+host-native, no multi-tenant IdP needed):</p>
+<ol type="1">
+<li><strong>Add WebAuthn/passkeys (FIDO2) to the existing Gin
+gate</strong> via the <code>go-webauthn/webauthn</code> library — same
+hardware key the user already trusts for SSH, phishing-resistant,
+one-tap instead of paste-a-signature. Biggest UX+security win for the
+least architectural change.</li>
+<li><strong>Close the <code>127.0.0.1:8080 --auth none</code>
+local-bypass</strong> by moving code-server onto a <strong>unix domain
+socket inside a <code>0700</code> dir</strong> (Caddy reverse-proxies to
+it), optionally belt-and-suspenders with a dedicated UID +
+<code>iptables</code> OUTPUT owner-match or a network namespace / gVisor
+loopback. This removes the “any local user/process can reach the IDE
+unauthenticated” hole entirely.</li>
+<li><strong>(Bigger lever, different model)</strong> Consider a
+<strong>WireGuard / Headscale</strong> network layer so the IDE is never
+publicly exposed at all — auth becomes device-key based at the tunnel.
+Strong for a single user; trade-off is you lose “open it in a browser on
+any random machine”.</li>
+</ol>
+<p>Everything else
+(Authelia/Authentik/oauth2-proxy/Pomerium/Teleport/Cloudflare Access,
+short-lived SSH certs, OAuth device flow) is analyzed below with fit,
+licence, maturity, and concrete integration notes — most are heavier
+than a single-real-user host-native model warrants, and two carry
+licence/ban-risk caveats worth flagging.</p>
+<hr />
+<h2 id="passwordless-ux-improving-auth-mechanisms">1. Passwordless /
+UX-improving auth mechanisms</h2>
+<h3 id="webauthn-passkeys-fido2-the-recommended-primitive">1.1 WebAuthn
+/ passkeys / FIDO2 (the recommended primitive)</h3>
+<p><strong>How it works.</strong> FIDO2 = W3C <strong>WebAuthn</strong>
+(browser ⇄ relying-party API) + FIDO <strong>CTAP2</strong> (browser ⇄
+authenticator). The server stores only a <strong>public key</strong>;
+the private key never leaves the authenticator (platform
+TPM/Secure-Enclave, or a roaming hardware key like a YubiKey). Login
+proves <em>possession of a private key</em> bound to the origin (RP ID),
+which makes it <strong>phishing-resistant by construction</strong> — a
+credential registered for <code>helixcode.example.com</code> cannot be
+replayed against a look-alike origin. WebAuthn is at <strong>Level
+3</strong> (W3C candidate recommendation, March 2025). A “passkey” is
+just a discoverable FIDO2 credential (may be device-bound on a hardware
+key, or synced by an OS credential provider). Hardware keys have carried
+device-bound passkeys since 2019. NIST SP 800-63-4 (2025) explicitly
+pushes phishing-resistant authenticators like passkeys. [FIDO Alliance;
+W3C WebAuthn; Yubico; NIST]</p>
+<p><strong>Security trade-offs.</strong> - Strong: no server-stored
+shared secret to exfiltrate; phishing-resistant; MFA-in-one-gesture
+(possession + biometric/PIN user-verification). - Watch:
+<strong>account-recovery / lost-authenticator</strong> is the hard part
+— you MUST keep a second factor path. For a single real user that’s
+naturally the <strong>existing SSH-key challenge</strong>, which becomes
+the recovery/bootstrap path rather than the daily path. - Watch:
+WebAuthn requires <strong>HTTPS</strong> and a stable <strong>RP
+ID</strong> (your domain). Already satisfied by the Caddy TLS front.</p>
+<p><strong>Fit for single-real-user host-native.</strong> Excellent. You
+need exactly <strong>one</strong> stored credential for one user; no
+user directory, no IdP, no session broker. It slots directly into the
+Gin gate you already own.</p>
+<p><strong>Licence / maturity — the incorporable library.</strong>
+<code>go-webauthn/webauthn</code> (github.com/go-webauthn/webauthn) is
+<strong>FIDO2-conformance-tested</strong>, actively maintained, supports
+<strong>passwordless / usernameless</strong> and <strong>single relying
+party</strong> partitioning by RP ID, and is the maintained successor to
+the older, now-superseded <code>duo-labs/webauthn</code>. It is a
+backend library (BSD-3-style OSS licence — <code>VERIFY:</code> exact
+SPDX in the repo <code>LICENSE</code> before shipping, §11.4.99),
+storage-agnostic and framework-agnostic — a natural fit for Gin.
+Corbado’s SDK survey lists it as the canonical Go WebAuthn backend.
+[go-webauthn README/pkg.go.dev; Corbado survey]</p>
+<p><strong>Concrete integration path (Caddy + Gin + systemd-user +
+rootless-podman).</strong> - Add <code>go-webauthn/webauthn</code> to
+the Gin service. Configure <code>RPID = &lt;your FQDN&gt;</code>,
+<code>RPOrigins = ["https://&lt;your FQDN&gt;"]</code>. - Persist a
+<strong>single</strong> credential record (the user’s public key +
+credential ID + sign-count) in whatever store the Gin gate already uses;
+registration is a one-time <code>sudo</code>/CLI-gated bootstrap (so
+nobody can self-enroll a new key over the wire). - Gin exposes
+<code>/auth/webauthn/begin</code> + <code>/auth/webauthn/finish</code>;
+on success it sets the same session cookie / returns the same 2xx that
+Caddy <code>forward_auth</code> already keys on (see §1.6) — so
+<strong>the Caddy side does not change</strong>. - Keep the SSH-key
+<code>ssh-keygen -Y sign</code> path as the <strong>recovery</strong>
+path (lost/broken key). - Because the authenticator can be the
+<strong>same YubiKey</strong> the user already uses for SSH, this is
+additive, not a second gadget to carry.</p>
+<h3
+id="fido2-hardware-security-keys-as-the-authenticator-behind-1.1">1.2
+FIDO2 hardware security keys (as the authenticator behind §1.1)</h3>
+<p>Not a separate stack — it’s the roaming-authenticator instance of
+§1.1. YubiKey-class keys give device-bound, non-exportable credentials
+with user-verification (PIN/touch). For a threat model where the
+operator wants “my laptop could be compromised but my login still can’t
+be phished or replayed”, a hardware key is the strongest single choice
+and composes with everything below. [Yubico FIDO2]</p>
+<h3 id="short-lived-ca-signed-ssh-certificates">1.3 Short-lived
+CA-signed SSH certificates</h3>
+<p><strong>How it works.</strong> An SSH <strong>CA</strong> signs a
+user’s public key into a <strong>short-TTL certificate</strong> (e.g.
+minutes–hours) carrying principals/validity/extensions; the host trusts
+the CA (<code>TrustedUserCAKeys</code>) instead of a static
+<code>authorized_keys</code>. Rotation is automatic — expiry replaces
+revocation for most cases.</p>
+<p><strong>Options / licence / maturity.</strong> - <strong>step-ca
+(Smallstep)</strong> — <strong>Apache-2.0</strong>, single binary, has a
+<strong>built-in SSH CA</strong> (relatively unique), lightweight, “your
+own Let’s Encrypt” model, can gate issuance behind an OIDC provider.
+Positioned as the cheapest/simplest to run, designed for <em>thousands
+not millions</em>. Best fit if you want SSH certs without Teleport/Vault
+weight. [Smallstep; Axelspire CA comparison] - <strong>HashiCorp Vault
+SSH secrets engine</strong> — signs SSH public keys via a CA,
+policy-enforced. Best if you <em>already</em> run Vault; otherwise it’s
+a large dependency for one user. [HashiCorp]</p>
+<p><strong>Fit.</strong> Orthogonal improvement to the <strong>SSH
+side</strong> (server login), not the <strong>browser IDE gate</strong>.
+It makes your SSH story cert-based and auto-rotating, but it does not by
+itself improve the web-IDE login UX. Reasonable as a <em>later,
+SSH-hardening</em> item; not the primary lever here.</p>
+<h3 id="oauth-2.0-oidc-device-authorization-grant-rfc-8628">1.4 OAuth
+2.0 / OIDC device authorization grant (RFC 8628)</h3>
+<p><strong>How it works.</strong> Device shows a <code>user_code</code>
++ <code>verification_uri</code>; user approves in a browser on any
+device; the device polls the token endpoint until approved. Designed for
+input-constrained / headless clients. [RFC 8628 / oauth.net]</p>
+<p><strong>Fit for THIS model — weak.</strong> Device flow presupposes
+an <strong>OAuth/OIDC authorization server</strong> (an IdP) to approve
+against. For a single real user with no existing IdP, adding one (or
+depending on an external one) is a large, ban-risk-adjacent dependency
+for little gain — it re-introduces exactly the “external identity
+provider” the current host-native design avoids. Keep it in the back
+pocket ONLY if an IdP is adopted for other reasons.</p>
+<h3
+id="identity-aware-proxies-the-replaceaugment-the-gin-gate-class">1.5
+Identity-aware proxies (the “replace/augment the Gin gate” class)</h3>
+<table style="width:100%;">
+<colgroup>
+<col style="width: 14%" />
+<col style="width: 14%" />
+<col style="width: 14%" />
+<col style="width: 14%" />
+<col style="width: 14%" />
+<col style="width: 14%" />
+<col style="width: 14%" />
+</colgroup>
+<thead>
+<tr>
+<th>Product</th>
+<th>What it is</th>
+<th>Self-host</th>
+<th>Licence (VERIFY current)</th>
+<th>RAM/weight</th>
+<th>Passkey/WebAuthn</th>
+<th>Fit for single-real-user host-native</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Authelia</strong></td>
+<td>Forward-auth SSO/MFA <strong>portal</strong> (not a token
+issuer)</td>
+<td>Yes</td>
+<td><strong>Apache-2.0</strong></td>
+<td><strong>~20–25 MB</strong></td>
+<td><strong>Yes — passwordless passkeys, OIDC-certified</strong></td>
+<td><strong>Best of this class</strong> — first-class Caddy
+<code>forward_auth</code>, tiny, batteries-included
+(TOTP+WebAuthn+sessions+rate-limit). Partly duplicates your bespoke Gin
+gate.</td>
+</tr>
+<tr>
+<td><strong>Authentik</strong></td>
+<td>Full <strong>IdP</strong> (OIDC/OAuth2/SAML/LDAP, self-service)</td>
+<td>Yes</td>
+<td>Open-core (<code>VERIFY:</code> MIT core + gated enterprise)</td>
+<td>2 cores + <strong>2 GB</strong> min</td>
+<td>Yes (incl. passkey-only flows)</td>
+<td>Overkill — a full IdP for one user.</td>
+</tr>
+<tr>
+<td><strong>oauth2-proxy</strong></td>
+<td>Thin forward-auth that <strong>delegates</strong> to an external
+OIDC/OAuth2 IdP</td>
+<td>Yes</td>
+<td><strong>MIT</strong></td>
+<td>Small</td>
+<td>Only via the upstream IdP</td>
+<td>Needs an external IdP → re-adds the dependency the host-native model
+avoids.</td>
+</tr>
+<tr>
+<td><strong>Pomerium</strong></td>
+<td>Identity- &amp; context-aware access proxy, fine-grained authz</td>
+<td>Yes (core)</td>
+<td><strong>Apache-2.0</strong> core (<code>VERIFY:</code>)</td>
+<td>Medium</td>
+<td>Via IdP / context</td>
+<td>Heavier; shines for many-app fine-grained authz, not one-user
+one-app.</td>
+</tr>
+<tr>
+<td><strong>Teleport</strong></td>
+<td>Access proxy for SSH/K8s/DB/web, certs, session recording</td>
+<td>Yes</td>
+<td><strong>AGPLv3</strong> OSS repo; <strong>Community Edition binaries
+commercial-licensed since v16</strong></td>
+<td>Heavy</td>
+<td>Yes</td>
+<td><strong>Licence caveat</strong> (below); very heavy for one
+user.</td>
+</tr>
+<tr>
+<td><strong>Cloudflare Access</strong></td>
+<td>SaaS zero-trust gateway</td>
+<td><strong>No (SaaS)</strong></td>
+<td>Proprietary hosted</td>
+<td>n/a</td>
+<td>Via IdP</td>
+<td><strong>Not self-hosted / third-party dependency</strong> —
+conflicts with the self-hosted host-native goal (see caveat).</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Caveats to flag honestly (§11.4.99 / §11.4.112):</strong> -
+<strong>Teleport licence</strong> — the OSS core repo relicensed
+<strong>Apache-2.0 → AGPLv3</strong> on 2023-12-01, and
+<strong>Community Edition binaries switched to a commercial licence
+starting v16 (June 2024)</strong>: free for personal/hobby use, but
+companies are restricted (≤100 employees / &lt;$10M revenue; no
+resale/embed). Building from source stays AGPLv3. For a personal
+single-user IDE this is <em>usable</em> but the licence trajectory is a
+caveat; AGPL obligations attach if you distribute a modified service.
+[Teleport blog ×2; GitHub discussion #39158] - <strong>Cloudflare
+Access</strong> is a <strong>hosted SaaS</strong> — not open-source, not
+self-hostable, and puts a third party in your auth path. That directly
+contradicts the “self-hosted, no external dependency” premise;
+<strong>do not adopt</strong> unless the model changes. (Free tier
+exists but that is irrelevant to the architectural mismatch.) -
+<strong>oauth2-proxy / Pomerium</strong> both fundamentally expect an
+<strong>external IdP</strong> as the identity source. Pomerium is the
+stronger <em>authorization</em> engine (best-known oauth2-proxy
+alternative), but for a single user with one app, its fine-grained authz
+is unused weight.</p>
+<p><strong>If you ever want to retire the bespoke gate:</strong>
+<strong>Authelia</strong> is the one to pick — Apache-2.0, ~20–25 MB,
+native Caddy <code>forward_auth</code> at
+<code>/api/authz/forward-auth</code>, and native
+<strong>passkey/WebAuthn passwordless</strong> — so it delivers §1.1’s
+UX without you writing/maintaining the crypto. The trade-off is it
+introduces a session/user store that overlaps your current Gin logic.
+Choosing between “add go-webauthn to Gin” (§1.1) and “adopt Authelia” is
+really “own the ~200 lines of WebAuthn glue” vs “operate one more
+service”. For one user, §1.1 keeps the surface smaller; Authelia wins if
+you also want TOTP + rate-limiting + a maintained login portal for free.
+[Authelia site + Caddy integration doc; Authelia-vs-Authentik
+comparisons]</p>
+<h3
+id="how-the-caddy-forward_auth-seam-behaves-so-any-of-the-above-drops-in">1.6
+How the Caddy <code>forward_auth</code> seam behaves (so any of the
+above drops in)</h3>
+<p><code>forward_auth</code> proxies a <strong>clone</strong> of each
+request (GET, body not consumed) to your auth upstream; <strong>2xx ⇒
+allow</strong> and <code>copy_headers</code> are copied onto the real
+request; <strong>any other status ⇒ the upstream response is returned to
+the client</strong> (typically a redirect to the login page). Caddy by
+default <strong>strips fabricated identity headers</strong> and trusts
+no proxy unless you set <code>trusted_proxies</code> — keep that tight.
+This means: whatever you put behind the gate (your Gin service, or
+Authelia) just has to answer <strong>2xx/!2xx</strong> on the verify
+endpoint, so §1.1 requires <strong>zero</strong> Caddy changes.
+Authelia’s canonical form is
+<code>forward_auth authelia:9091 { uri /api/authz/forward-auth; copy_headers Remote-User Remote-Groups Remote-Email Remote-Name }</code>.
+[Caddy <code>forward_auth</code> docs; Authelia Caddy integration]</p>
+<hr />
+<h2 id="keeping-ssh-key-centric-login-but-smoothersafer">2. Keeping
+SSH-key-centric login, but smoother/safer</h2>
+<p>The current flow (<code>ssh-keygen -Y sign</code> → paste armored
+signature) is <strong>cryptographically sound</strong> and already
+passwordless with no stored secret — the pain is purely UX (manual
+copy/paste). Ways to keep the SSH-key center of gravity while smoothing
+it:</p>
+<ul>
+<li><strong>WebAuthn on the same hardware key (recommended, =
+§1.1).</strong> A FIDO2 YubiKey can hold <em>both</em> an SSH key
+(<code>sk-ssh-ed25519</code>) <em>and</em> a WebAuthn credential. So
+“SSH-key-centric” and “passkey” need not be different hardware — the
+user taps the same key, but the browser handles the challenge instead of
+a terminal + clipboard. This is the smoothest safe upgrade and why §1.1
+is ranked #1.</li>
+<li><strong><code>ssh-keygen -Y</code> hygiene (harden what you already
+do).</strong> OpenSSH signatures (8.0+) verify against an
+<strong>allowed_signers</strong> file (principals + keytype + key,
+AUTHORIZED_KEYS-like format); the verifier must match the
+<code>-I</code> identity to a principals pattern and a
+<strong>namespace</strong> (<code>-n</code>). Best practice: use a
+<strong>custom namespace</strong>
+<code>helixcode-login@&lt;your.domain&gt;</code> (prevents cross-domain
+signature confusion / replay of a signature made for another purpose), a
+<strong>dedicated signing key</strong> separate from the daily auth key,
+and a passphrase/hardware-backed key. Confirm your gate pins BOTH the
+namespace and a server-issued, single-use, short-TTL challenge nonce (so
+a captured signature can’t be replayed). [OpenBSD
+<code>ssh-keygen(1)</code>; agwa “sign arbitrary data”; Sigstore “SSH is
+the new GPG”]</li>
+<li><strong>ssh-agent / browser bridge (smoother, no new
+crypto).</strong> Instead of shell-and-paste, a small helper (browser
+extension or localhost helper) can call the local <code>ssh-agent</code>
+to sign the server’s challenge and POST it back — same trust model, no
+clipboard. This is a UX wrapper over the existing scheme; lower ceiling
+than §1.1 but zero change to the security primitive.</li>
+<li><strong>Short-lived SSH certs (= §1.3)</strong> harden the
+SSH-server side but don’t smooth the <em>browser</em> login; treat as a
+separate SSH-hardening track.</li>
+</ul>
+<hr />
+<h2
+id="closing-the-code-server---auth-none-on-127.0.0.18080-local-bypass-residual">3.
+Closing the <code>code-server --auth none</code> on
+<code>127.0.0.1:8080</code> local-bypass residual</h2>
+<p><strong>The hole.</strong> A localhost TCP port with
+<code>--auth none</code> is reachable by <strong>any local user or
+process</strong> on the host (and any container sharing the host net
+namespace), completely bypassing the Caddy gate. On a single-user box
+the blast radius is small but real (a compromised unrelated process, a
+second UID, a mis-scoped container). The code-server maintainers
+themselves call a localhost TCP port “less secure on shared hosts” and
+recommend a unix socket. [code-server discussion #4524]</p>
+<p>Ranked, composable mitigations:</p>
+<ol type="1">
+<li><strong>Unix domain socket + <code>0700</code> parent dir (primary,
+recommended).</strong> Launch code-server with
+<code>--socket &lt;path&gt;</code> so it listens on a <strong>unix
+socket</strong> instead of TCP; Caddy reverse-proxies to
+<code>unix/&lt;path&gt;</code>. Access control becomes
+<strong>filesystem permissions</strong>. Note: code-server’s socket has
+historically defaulted to <strong>0755 (world-readable,
+owner-writable)</strong>, and a request to set the socket mode/group
+(<code>--socket-mode</code>) was raised as issue #1466 — so <strong>do
+not rely on the socket file mode alone</strong>; place the socket inside
+a directory that is <code>0700</code> owned by the code-server UID
+(e.g. <code>/run/user/&lt;uid&gt;/helixcode/cs.sock</code>), which
+denies traversal to every other UID regardless of the socket’s own mode.
+<code>VERIFY:</code> whether current code-server exposes
+<code>--socket-mode</code> via <code>code-server --help</code> before
+depending on it (§11.4.99). [code-server guide/discussion; issue #1466;
+unix-socket-permissions references]</li>
+<li><strong>Dedicated UID + <code>iptables</code> OUTPUT owner-match
+(defense-in-depth if a TCP port must remain).</strong> A connect to
+<code>127.0.0.1:8080</code> from another local user emits
+<strong>OUTPUT</strong> packets <em>owned by that user’s UID</em>;
+<code>iptables -A OUTPUT -d 127.0.0.1 --dport 8080 -m owner ! --uid-owner &lt;caddy_uid&gt; -j REJECT</code>
+blocks cross-UID loopback connects (owner match only applies to
+locally-generated packets, i.e. the OUTPUT chain — that’s exactly this
+case). Run Caddy and code-server as distinct UIDs so the rule is
+meaningful. [Linux Journal “iptables for Local Security”]</li>
+<li><strong>Network namespace isolation.</strong> Put code-server in its
+own net namespace so its loopback is private; bridge only Caddy in.
+Rootless-podman already gives each pod a separate netns — so
+<strong>running code-server inside a rootless-podman pod that does NOT
+publish <code>8080</code> to the host, and having Caddy reach it over
+the pod’s socket/veth, closes the hole natively</strong> (compose with
+#1: publish a unix socket into a shared <code>0700</code> volume rather
+than a host TCP port).</li>
+<li><strong>gVisor (<code>runsc</code>) for strong sandboxing of
+untrusted workloads.</strong> gVisor’s <strong>netstack runs the
+loopback entirely inside the sandbox, isolated from the host</strong> —
+so a code-server (or the code it executes) under gVisor cannot reach or
+be reached on the host loopback. Cost: ~10–30% overhead on I/O-heavy
+work (an IDE building/compiling will feel some). Best reserved for “I
+run untrusted code in this IDE” threat models rather than just closing
+the localhost port (#1+#3 already do that cheaply). [gVisor networking
+docs]</li>
+</ol>
+<p><strong>Recommended combination:</strong> <strong>#1 (unix socket in
+a <code>0700</code> dir) + #3 (don’t publish the port from the
+rootless-podman pod)</strong> removes the residual with essentially no
+overhead. Add <strong>#2</strong> as a cheap belt-and-suspenders if a
+TCP listener has to exist. Reserve <strong>#4</strong> for the separate
+“sandbox untrusted code execution” goal.</p>
+<hr />
+<h2 id="top-recommendations-for-helixcode">Top recommendations for
+HelixCode</h2>
+<p>Ranked by (game-changing value × incorporability × low risk) for the
+single-real-user, host-native, Caddy+Gin+systemd-user+rootless-podman
+model:</p>
+<p><strong>#1 — Add WebAuthn/passkeys to the existing Gin gate
+(go-webauthn).</strong> <em>Biggest UX+security win, smallest
+architectural change, keeps the host-native no-IdP model, reuses the
+same hardware key as SSH, phishing-resistant.</em> <strong>Next
+step:</strong> vendor <code>go-webauthn/webauthn</code> into the Gin
+service; set <code>RPID</code>/<code>RPOrigins</code> to your FQDN;
+store ONE credential via a <code>sudo</code>/CLI-gated bootstrap
+registration; add
+<code>/auth/webauthn/begin</code>+<code>/finish</code>; on success emit
+the same 2xx/session the Caddy <code>forward_auth</code> already keys on
+(no Caddy change); keep <code>ssh-keygen -Y sign</code> as the recovery
+path. <code>VERIFY:</code> the library’s exact SPDX licence in its
+<code>LICENSE</code> before shipping (§11.4.99).</p>
+<p><strong>#2 — Close the <code>--auth none</code> localhost residual
+with a unix socket + <code>0700</code> dir + unpublished pod
+port.</strong> <em>Eliminates the “any local process bypasses the gate”
+hole with ~zero overhead.</em> <strong>Next step:</strong> launch
+code-server with
+<code>--socket /run/user/&lt;uid&gt;/helixcode/cs.sock</code> in a
+<code>0700</code> owner-only dir; point Caddy at
+<code>unix//run/user/&lt;uid&gt;/helixcode/cs.sock</code>; ensure the
+rootless-podman pod does NOT publish <code>8080</code> to the host;
+optionally add the <code>iptables</code> OUTPUT <code>--uid-owner</code>
+belt-and-suspenders. <code>VERIFY:</code> current
+<code>--socket</code>/<code>--socket-mode</code> behaviour via
+<code>code-server --help</code>.</p>
+<p><strong>#3 — (Evaluate) network-layer access via WireGuard/Headscale,
+OR adopt Authelia if you want a batteries-included portal.</strong> -
+<em>WireGuard/Headscale (game-changer, different model):</em> stop
+exposing the IDE publicly at all — reach it over a self-hosted WireGuard
+mesh (Headscale = open-source, self-hosted Tailscale control-plane
+reimplementation; raw WireGuard = ~10-min single tunnel, ~0.5% CPU).
+Auth becomes device-key based; the public attack surface goes to zero.
+<strong>Trade-off:</strong> you lose “open it in a browser on an
+arbitrary/locked-down machine” — every client must run the tunnel.
+<strong>Next step:</strong> prototype a laptop↔︎host WireGuard tunnel and
+bind Caddy to the WG interface only; decide whether
+browser-from-anywhere is a hard requirement before committing. -
+<em>Authelia (if you’d rather not maintain WebAuthn glue):</em>
+Apache-2.0, ~20–25 MB, native Caddy <code>forward_auth</code>, native
+passkey/WebAuthn passwordless. <strong>Next step:</strong> stand up
+Authelia as the forward-auth upstream
+(<code>uri /api/authz/forward-auth</code>,
+<code>copy_headers Remote-User …</code>), enroll one passkey, and retire
+the bespoke Gin auth logic — only worth it if you also want its TOTP +
+sessions + rate-limiting for free.</p>
+<p><strong>Explicitly NOT recommended for this model:</strong>
+Cloudflare Access (SaaS, third-party in the auth path — contradicts
+self-hosting); OAuth device flow / oauth2-proxy (both require an
+external IdP you don’t have); Teleport (AGPL/commercial-CE licence
+caveat + far too heavy for one user); Authentik (a full IdP — overkill
+for a single account).</p>
+<hr />
+<h2 id="sources-verified-2026-07-01">Sources verified 2026-07-01</h2>
+<p>Standards / primitives: - W3C WebAuthn + FIDO2 overview — FIDO
+Alliance passkeys: https://fidoalliance.org/passkeys/ (accessed
+2026-07-01) - Yubico FIDO2 passwordless:
+https://www.yubico.com/authentication-standards/fido2/ (accessed
+2026-07-01) - WebAuthn/FIDO2/passkey guide (Level 3, NIST SP 800-63-4
+context):
+https://terrazone.io/webauthn-complete-guide-passwordless-fido2-passkeys/
+(accessed 2026-07-01) - OAuth 2.0 Device Authorization Grant — RFC 8628:
+https://datatracker.ietf.org/doc/html/rfc8628 (accessed 2026-07-01) -
+OAuth device flow overview: https://oauth.net/2/device-flow/ (accessed
+2026-07-01) - OpenSSH ssh-keygen(1) manual
+(<code>-Y sign</code>/<code>verify</code>, allowed_signers, namespaces):
+https://man.openbsd.org/ssh-keygen.1 (accessed 2026-07-01) - “It’s Now
+Possible To Sign Arbitrary Data With Your SSH Keys” (agwa):
+https://www.agwa.name/blog/post/ssh_signatures (accessed 2026-07-01) -
+“SSH is the new GPG” (Sigstore blog):
+https://blog.sigstore.dev/ssh-is-the-new-gpg-74b3c6cc51c0/ (accessed
+2026-07-01)</p>
+<p>Go WebAuthn library (incorporable): - go-webauthn/webauthn
+(FIDO2-conformant, passwordless, single RP):
+https://github.com/go-webauthn/webauthn (accessed 2026-07-01) -
+go-webauthn pkg.go.dev (RP ID partitioning, passwordless/usernameless):
+https://pkg.go.dev/github.com/go-webauthn/webauthn/webauthn (accessed
+2026-07-01) - Passkey SDK/library survey (Corbado):
+https://www.corbado.com/blog/best-passkey-sdks-libraries (accessed
+2026-07-01)</p>
+<p>Identity-aware proxies: - Authelia (Apache-2.0, ~20–25 MB,
+OIDC-certified, passkeys): https://www.authelia.com/ (accessed
+2026-07-01) - Authelia Caddy integration (<code>forward_auth</code> /
+<code>/api/authz/forward-auth</code> / copy_headers):
+https://www.authelia.com/integration/proxies/caddy/ (accessed
+2026-07-01) - Caddy <code>forward_auth</code> directive (request clone,
+2xx=allow, copy_headers, trusted_proxies):
+https://caddyserver.com/docs/caddyfile/directives/forward_auth (accessed
+2026-07-01) - Authelia vs Authentik 2025/2026 (weights, capabilities):
+https://blog.houseoffoss.com/post/authelia-vs-authentik-which-self-hosted-identity-provider-is-better-in-2025
+and https://www.cerbos.dev/blog/authelia-vs-authentik-2026-idp (accessed
+2026-07-01) - Pomerium (identity-aware proxy; oauth2-proxy alternative;
+delegates to IdP):
+https://www.pomerium.com/blog/best-oauth2-proxy-alternative and
+https://github.com/pomerium/pomerium (accessed 2026-07-01) - Teleport
+OSS → AGPLv3 relicense (2023-12-01):
+https://goteleport.com/blog/teleport-oss-switches-to-agpl-v3/ (accessed
+2026-07-01) - Teleport Community Edition → commercial licence from v16:
+https://goteleport.com/blog/teleport-community-license/ and
+https://github.com/gravitational/teleport/discussions/39158 (accessed
+2026-07-01)</p>
+<p>Short-lived SSH certificates: - Smallstep step-ca vs HashiCorp Vault
+SSH (Apache-2.0, built-in SSH CA, lightweight):
+https://smallstep.com/hashicorp-vault-vs-smallstep-certificate-manager/
+(accessed 2026-07-01) - Private CA comparison (step-ca / Vault PKI):
+https://axelspire.com/vault/vendors/private-ca-comparison/ (accessed
+2026-07-01) - HashiCorp Vault SSH-at-scale (SSH secrets engine as CA):
+https://www.hashicorp.com/en/blog/managing-ssh-access-at-scale-with-hashicorp-vault
+(accessed 2026-07-01)</p>
+<p>code-server local-bypass hardening: - code-server: allow access
+outside localhost / socket recommendation (#4524):
+https://github.com/coder/code-server/discussions/4524 (accessed
+2026-07-01) - code-server: set unix socket permissions
+(<code>--socket-mode</code> request, #1466):
+https://github.com/coder/code-server/issues/1466 (accessed 2026-07-01) -
+code-server securely access &amp; expose guide:
+https://coder.com/docs/code-server/guide (accessed 2026-07-01) -
+iptables owner-match for local security (OUTPUT chain,
+<code>--uid-owner</code>): https://www.linuxjournal.com/article/6091
+(accessed 2026-07-01) - gVisor networking (netstack loopback isolated in
+sandbox): https://gvisor.dev/docs/user_guide/networking/ (accessed
+2026-07-01)</p>
+<p>Network-layer alternative: - Tailscale vs WireGuard vs Headscale
+(self-hosted control plane, no exposed ports):
+https://netguardia.com/privacy/self-hosting/tailscale-vs-wireguard-vs-headscale-remote-access-without-exposing-ports/
+(accessed 2026-07-01) - Tailscale/WireGuard model + control-plane auth:
+https://tailscale.com/kb/1035/wireguard (accessed 2026-07-01)</p>
+<p><strong>Negative findings / gaps (§11.4.99(B)):</strong> exact
+current SPDX licence of <code>go-webauthn/webauthn</code>, the precise
+licence terms of Authentik’s enterprise tier, and whether current
+code-server ships a <code>--socket-mode</code> flag were NOT fully
+pinned this pass — each is tagged <code>VERIFY:</code> above and must be
+confirmed against the primary source before any implementation commit.
+This report is research only and is not a substitute for runtime
+validation of a chosen path (§11.4.108 / §11.4.40).</p>
+</body>
+</html>
