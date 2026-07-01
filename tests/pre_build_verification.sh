@@ -130,5 +130,13 @@ if [ -x "tests/test_inotify_watchers.sh" ]; then
         || fail "regression guard: tests/test_inotify_watchers.sh (inotify watcher fix)"
 fi
 
+# Fast, stack-free tooling unit tests (§11.4.169 unit layer). The full
+# stack-dependent §11.4.169 matrix (tests/run_all_types.sh) is the release gate
+# per §11.4.40 — not run on every pre-build (it needs the live stack + minutes).
+if [ -x "tests/types/unit.sh" ]; then
+    RED_MODE=0 bash tests/types/unit.sh >/dev/null 2>&1 \
+        || fail "regression guard: tests/types/unit.sh (operator-tooling unit tests)"
+fi
+
 printf 'PASS: constitution inheritance verified\n'
 exit 0

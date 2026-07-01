@@ -1,0 +1,85 @@
+# SPDX-License-Identifier: Apache-2.0
+#
+# HelixCode HelixQA test bank (§11.4.169 HelixQA). Schema-compatible with the
+# HelixDevelopment/helix_qa bank format (test_cases[]). Kept in the project tree
+# (tests/banks/), not inside the helix_qa submodule (§11.4.28 decoupling).
+#
+# tests/types/helixqa.sh runs this bank as an autonomous QA session for every
+# case that is autonomously HTTP-drivable (positive captured evidence, §11.4.69).
+# Cases that require true in-browser editor interaction (typing, palette, file
+# tree drag) are marked driver: operator_attended and honestly SKIPPED per
+# §11.4.3/§11.4.52 with tracked follow-up HC-QA-UI-001 (browser-automation
+# adapter) — never a faked UI pass.
+
+version: "1.0"
+name: "HelixCode Stack QA Bank"
+description: "Autonomous QA journeys for the containerized code-server stack (edge, auth, editor, projects, TLS)."
+metadata:
+  author: "vasic-digital"
+  app: "HelixCode"
+  version: "1.0.0"
+
+test_cases:
+  - id: HC-QA-001
+    name: "TLS edge reachable"
+    category: functional
+    priority: critical
+    driver: autonomous_http
+    platforms: [linux]
+    steps:
+      - name: "GET / over HTTPS"
+        action: "curl -k https://<host>:52443/"
+        expected: "HTTP responds (302 to /login when unauthenticated)"
+    expected_result: "Editor edge is reachable over TLS"
+
+  - id: HC-QA-002
+    name: "Login authentication journey"
+    category: functional
+    priority: critical
+    driver: autonomous_http
+    platforms: [linux]
+    steps:
+      - name: "POST /login correct password"
+        action: "submit the configured password"
+        expected: "HTTP 302 + session cookie"
+      - name: "POST /login wrong password"
+        action: "submit a wrong password"
+        expected: "HTTP 200 + no session cookie"
+    expected_result: "Only the correct password authenticates"
+
+  - id: HC-QA-003
+    name: "Authenticated editor shell served"
+    category: functional
+    priority: high
+    driver: autonomous_http
+    platforms: [linux]
+    steps:
+      - name: "Fetch editor with session"
+        action: "GET / following the authenticated session"
+        expected: "code-server workbench HTML served"
+    expected_result: "Editor loads for an authenticated user"
+
+  - id: HC-QA-004
+    name: "Project files are read-write"
+    category: functional
+    priority: critical
+    driver: autonomous_http
+    platforms: [linux]
+    steps:
+      - name: "Write+read+delete a token file in a mounted project"
+        action: "exec into code-server container"
+        expected: "token round-trips and is removed"
+    expected_result: "Users can persist work to mounted projects"
+
+  - id: HC-QA-UI-001
+    name: "In-editor typing + file-tree interaction (real browser UI)"
+    category: ui
+    priority: high
+    driver: operator_attended
+    platforms: [linux]
+    steps:
+      - name: "Open a file via the file tree, type, save with Ctrl+S"
+        action: "drive the code-server web UI in a real browser"
+        expected: "edits appear and persist to disk"
+    expected_result: "Full in-browser editing works"
+    notes: "Requires a browser-automation adapter (Playwright/CDP). Tracked HC-QA-UI-001; honest operator_attended SKIP until wired (§11.4.52)."

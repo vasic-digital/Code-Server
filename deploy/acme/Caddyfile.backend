@@ -1,0 +1,6 @@
+# deploy/acme/Caddyfile.backend — the trivial backend behind the ACME edge.
+# Serves a fixed body on :8080 so the edge's reverse_proxy over the freshly
+# ACME-issued cert can be proven end-to-end (curl body == this string).
+:8080 {
+	respond "helixcode-acme-proof backend OK"
+}

@@ -38,15 +38,23 @@ if [ "$NONINT" -eq 0 ]; then
 fi
 [ -n "$NEWPW" ] || { hc_err "password must not be empty"; exit 2; }
 
+# Atomic rewrite (§11.4.6): write a temp file then rename it over deploy/.env.
+# A plain `cat > .env` truncates-then-writes, so an interrupted run (SIGINT,
+# crash, disk-full mid-write) leaves a torn / 0-byte .env and up.sh then aborts
+# on the missing CODE_SERVER_PASSWORD. rename(2) on the same filesystem is
+# atomic — readers always see either the whole old file or the whole new one.
 umask 077
-cat > "$HC_DEPLOY/.env" <<ENV
+_env_tmp="$HC_DEPLOY/.env.tmp.$$"
+trap 'rm -f "$_env_tmp"' EXIT
+cat > "$_env_tmp" <<ENV
 # HelixCode deploy config — updated by scripts/set-password.sh. NOT committed.
 PORT_PREFIX=${PORT_PREFIX:-52}
 CODE_SERVER_PASSWORD=$NEWPW
 PROJECTS=${PROJECTS:-}
 ENV
-chmod 600 "$HC_DEPLOY/.env"
-hc_info "login password updated in deploy/.env (mode 600)"
+chmod 600 "$_env_tmp"
+mv -f "$_env_tmp" "$HC_DEPLOY/.env"
+hc_info "login password updated in deploy/.env (mode 600, atomic write)"
 
 if hc_compose ps 2>/dev/null | grep -q code-server; then
 	hc_info "restarting stack to apply the new password…"

@@ -1,0 +1,60 @@
+# SPDX-License-Identifier: Apache-2.0
+#
+# HelixCode Challenge bank (§11.4.169 Challenges / §11.4.27(B)).
+# Schema-compatible with the vasic-digital/challenges engine (pkg/bank): each
+# challenge is an anti-bluff structured scenario that scores PASS ONLY on
+# positive captured evidence (§11.4.69). Executed faithfully by
+# tests/types/challenges.sh (which cites a non-empty evidence file per PASS);
+# the same bank is loadable by the Go challenges engine when it is built.
+#
+# The bank is kept in the PROJECT tree (tests/banks/), NOT inside the
+# challenges submodule, to keep that submodule project-agnostic (§11.4.28).
+
+name: helixcode-user-facing-capabilities
+version: 1.0.0
+description: |
+  End-to-end anti-bluff Challenges for the HelixCode stack: every user-facing
+  capability is exercised live and scored PASS only on captured positive
+  evidence — no metadata-only / absence-of-error passes.
+platforms: [linux]
+timeout: 5m
+
+steps:
+  - name: tls-edge-handshake
+    type: shell
+    feature_class: network_connectivity
+    params:
+      command: "openssl s_client TLS handshake to the Caddy edge negotiates a cipher"
+    on_failure: "HTTPS edge did not negotiate TLS — users cannot reach the editor securely"
+
+  - name: auth-login-journey
+    type: shell
+    params:
+      command: "correct password -> HTTP 302 + session cookie; wrong -> 200 + no cookie"
+    on_failure: "Login journey broken — users cannot authenticate (or auth accepts anything)"
+
+  - name: project-read-write
+    type: shell
+    params:
+      command: "write+read+delete a unique token file under a mounted project inside the container"
+    on_failure: "Projects are not read-write in the editor — users cannot save work"
+
+  - name: watcher-exclude-active
+    type: shell
+    params:
+      command: "cs-data volume settings.json carries files.watcherExclude (inotify fix live)"
+    on_failure: "watcherExclude not seeded — 'unable to watch for file changes' regresses"
+
+  - name: tls-mode-machinery
+    type: shell
+    params:
+      command: "up.sh renders self-signed byte-identically AND supports letsencrypt/internal-acme modes"
+    on_failure: "TLS-mode machinery missing — Let's Encrypt path not wired"
+
+success_criteria:
+  all_steps_passed: true
+  no_crashes: true
+
+report:
+  format: markdown
+  sections: [summary, step_results]

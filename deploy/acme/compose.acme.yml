@@ -1,0 +1,52 @@
+# deploy/acme/compose.acme.yml — self-contained LOCAL ACME proof harness.
+#
+# DISTINCT compose project ("hc_acme_proof") + DISTINCT host port band (53xxx)
+# so it NEVER collides with the installed "deploy" stack (52xxx) — §11.4.119
+# single-resource-owner. Rootless podman (§11.4.161). Brought up + torn down by
+# deploy/acme/run.sh (trap ... EXIT cleanup, §11.4.14).
+#
+# Topology:  edge (Caddy, ACME client)  --ACME-->  pebble (local CA)
+#                     |
+#                  reverse_proxy --> backend (trivial :8080 responder)
+#
+# Env injected by run.sh: ACME_PROOF_PKI (host dir with the harness mini-CA +
+# pebble server cert), ACME_PROOF_HOSTPORT, CS_DOMAIN, ACME_EMAIL, ACME_CA_URL.
+services:
+  pebble:
+    image: ghcr.io/letsencrypt/pebble:latest
+    command: ["-config", "/config/pebble-config.json"]
+    environment:
+      # No public domain to validate against: accept the challenge without the
+      # HTTP-01/TLS-ALPN-01 callback. This is the honest local-proof boundary —
+      # the ACME issuance + rotation flow is real; only the domain-reachability
+      # validation is stubbed (that part is what REAL Let's Encrypt is gated on).
+      - PEBBLE_VA_ALWAYS_VALID=1
+      - PEBBLE_VA_NOSLEEP=1
+    volumes:
+      - ${ACME_PROOF_PKI}:/pki:ro,Z
+      - ./pebble-config.json:/config/pebble-config.json:ro,Z
+    restart: "no"
+
+  backend:
+    image: docker.io/library/caddy:2
+    command: ["caddy", "run", "--config", "/etc/caddy/Caddyfile", "--adapter", "caddyfile"]
+    volumes:
+      - ./Caddyfile.backend:/etc/caddy/Caddyfile:ro,Z
+    restart: "no"
+
+  edge:
+    image: docker.io/library/caddy:2
+    command: ["caddy", "run", "--config", "/etc/caddy/Caddyfile", "--adapter", "caddyfile"]
+    environment:
+      - CS_DOMAIN=${CS_DOMAIN:-code.helixcode.test}
+      - ACME_EMAIL=${ACME_EMAIL:-acme-proof@helixcode.test}
+      - ACME_CA_URL=${ACME_CA_URL:-https://pebble:14000/dir}
+    ports:
+      - "127.0.0.1:${ACME_PROOF_HOSTPORT:-53443}:443"
+    volumes:
+      - ./Caddyfile.edge:/etc/caddy/Caddyfile:ro,Z
+      - ${ACME_PROOF_PKI}:/pki:ro,Z
+    depends_on:
+      - pebble
+      - backend
+    restart: "no"

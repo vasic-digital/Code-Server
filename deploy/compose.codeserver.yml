@@ -19,6 +19,14 @@ services:
     restart: unless-stopped
   caddy:
     image: docker.io/library/caddy:2
+    # DNS-01 secret passthrough (TLS_MODE=letsencrypt* with ACME_DNS_PROVIDER).
+    # The token lives ONLY in the git-ignored .env and is read by Caddy via
+    # {env.ACME_DNS_API_TOKEN} — it is NEVER written into the tracked Caddyfile
+    # (§11.4.10). Empty/unused for self-signed and non-DNS ACME modes. NB: DNS-01
+    # also needs a Caddy image built WITH that DNS provider plugin (stock caddy:2
+    # has none) — see docs/guides/TLS.md.
+    environment:
+      - ACME_DNS_API_TOKEN=${ACME_DNS_API_TOKEN:-}
     ports:
       - "0.0.0.0:52443:443"
       - "0.0.0.0:52080:80"

@@ -42,3 +42,8 @@ go.work.sum
 
 # CodeGraph local index
 .codegraph/
+
+# Raw test evidence (§11.4.128). Regenerated on demand by re-running the
+# suites under tests/types/ (§11.4.77 regen mechanism). Curated evidence for a
+# release is copied to docs/qa/<run-id>/ (§11.4.83), which IS tracked.
+qa-results/

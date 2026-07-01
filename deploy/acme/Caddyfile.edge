@@ -1,0 +1,22 @@
+# deploy/acme/Caddyfile.edge — ACME CLIENT edge for the local-CA proof harness.
+#
+# This is the internal-acme TLS mode in miniature: Caddy obtains a real,
+# CA-signed leaf via the full ACME protocol from the ACME directory at
+# {$ACME_CA_URL} (the Pebble container), trusting Pebble's HTTPS endpoint via
+# the harness-generated mini-CA root at /pki/minica.crt (acme_ca_root), then
+# reverse-proxies to the trivial backend. All values are injected via container
+# env (compose) so NO domain/email/URL is baked into a tracked file.
+#
+# Cross-refs: §11.4.69 (positive sink-side evidence) §11.4.98 (re-runnable)
+{
+	email {$ACME_EMAIL:acme-proof@helixcode.test}
+	acme_ca {$ACME_CA_URL:https://pebble:14000/dir}
+	acme_ca_root /pki/minica.crt
+	# Local proof CA: no public OCSP/CT. Keep the admin API on localhost only.
+	admin off
+}
+
+{$CS_DOMAIN:code.helixcode.test} {
+	encode zstd gzip
+	reverse_proxy backend:8080
+}
