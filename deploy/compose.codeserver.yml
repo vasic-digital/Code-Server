@@ -3,8 +3,15 @@
 services:
   code-server:
     image: docker.io/codercom/code-server:latest
+    # Rootless podman: run as container-root, which maps to the host user, so the
+    # bind-mounted host Projects (host-user-owned, 0750) are readable AND writable
+    # in the browser — "permissive perms, immediate work". (keep-id conflicts with
+    # podman-compose's shared pod; running as root maps to the host user cleanly.)
+    # HOME pinned to /home/coder so code-server config persists to the cs-config volume.
+    user: "0:0"
     environment:
       - PASSWORD=${CODE_SERVER_PASSWORD}
+      - HOME=/home/coder
     expose:
       - "8080"
     volumes:
@@ -17,6 +24,7 @@ services:
       - "0.0.0.0:52080:80"
     volumes:
       - ./Caddyfile:/etc/caddy/Caddyfile:Z
+      - ./tls:/etc/caddy/tls:Z
       - caddy-data:/data
       - caddy-config:/config
     depends_on:

@@ -2,7 +2,11 @@
 	auto_https disable_redirects
 }
 :443 {
-	tls internal
+	# Static self-signed cert (SAN: localhost + 127.0.0.1 + detected LAN IPs),
+	# generated per boot by up.sh. Served for all SNI so LAN-by-IP access works
+	# inside the port-mapped container (a bare `tls internal` site has no
+	# hostnames to issue a leaf cert for and aborts every handshake).
+	tls /etc/caddy/tls/site.crt /etc/caddy/tls/site.key
 	encode zstd gzip
 	reverse_proxy code-server:8080
 }
