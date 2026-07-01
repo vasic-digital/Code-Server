@@ -179,30 +179,46 @@
 <header id="title-block-header">
 <h1 class="title">HelixCode — CONTINUATION</h1>
 </header>
-<h1 id="continuation--helixcode-web-ide-platform">CONTINUATION —
+<h1 id="continuation-helixcode-web-ide-platform">CONTINUATION —
 HelixCode web-IDE platform</h1>
-<p><strong>Revision:</strong> 6 · <strong>Updated:</strong> 2026-07-02 ·
+<p><strong>Revision:</strong> 7 · <strong>Updated:</strong> 2026-07-02 ·
 <strong>Status:</strong> <code>codeserver-1.0.0-dev-0.0.4</code>
 <strong>RELEASED</strong> (<code>0e2f854</code>, tag on all 4 mirrors,
 GitHub+GitLab prereleases). Release gate: full §11.4.169 matrix
 <strong>29/29 suites PASS, 0 FAIL</strong> (61 checks PASS, 24 honest
 SKIP; evidence
-<code>qa-results/run_all/20260701T222753Z-2813294</code>). Ships:
-login-redirect fix + login-form copy/paste clipboard buttons + Open VSX
-marketplace install/use/persist/config + popular extensions + VS Code
-Dark default theme (host-rendered pixel proof) + durable
+<code>qa-results/run_all/20260701T222753Z-2813294</code>).
+<strong>Post-release coverage promotion (§11.4.52/§11.4.123):</strong>
+wiring an authorized <code>HELIX_TEST_SSH_KEY</code> (gitignored
+<code>deploy/.env</code>; §11.4.10 never committed/logged) promoted the
+~10 <code>credential_absent</code> auth SKIPs into <strong>real
+authenticated-session PASSes</strong> — matrix re-run <strong>29/29
+suites PASS, 0 FAIL, 71 checks PASS / 17 SKIP</strong> (evidence
+<code>qa-results/run_all/20260701T231807Z-3364116</code>); the 17
+remaining SKIPs are all honest (11 legacy-suite
+<code>topology_unsupported</code> retirements, 2
+<code>operator_attended</code> with passing CLI siblings, 2
+Chromium-contended pixel proofs, <strong>1
+<code>credential_absent</code></strong> = C3’s destructive cookie-secret
+interlock — deliberately NOT run autonomously against the live gate per
+§11.4.101, throwaway-gate variant tracked — and 1
+<code>feature_disabled_by_config</code> = <code>load_auth</code> L3
+login-flood rate-limit inconclusive, where the limiter is nonetheless
+positively confirmed by <code>security_auth</code> #4’s real 429).
+Ships: login-redirect fix + login-form copy/paste clipboard buttons +
+Open VSX marketplace install/use/persist/config + popular extensions +
+VS Code Dark default theme (host-rendered pixel proof) + durable
 <code>systemd --user</code> edge. Three test-infra suites hardened
 against shared-host <code>ulimit -u</code> fork-pressure false-FAILs
 (§11.4.1/§11.4.3/§11.4.174) + independently reviewed to a clean GO
-(§11.4.142/§11.4.134). Stack LIVE at <a
-href="https://192.168.0.213:52443">https://192.168.0.213:52443</a> (all
+(§11.4.142/§11.4.134). Stack LIVE at https://192.168.0.213:52443 (all
 <code>systemd --user</code>).</p>
 <p>Read FIRST on any fresh session: this file, then
 <code>git fetch --all</code>, then the auth-pivot spec + AUTH guide +
 feature ledger below. This is the §12.10 / §11.4.131 standing resumption
 anchor.</p>
 <h2
-id="current-phase--codeserver-100-dev-004-released-idle-unless-new-operator-request">Current
+id="current-phase-codeserver-1.0.0-dev-0.0.4-released-idle-unless-new-operator-request">Current
 phase — <code>codeserver-1.0.0-dev-0.0.4</code>
 <strong>RELEASED</strong> (idle unless new operator request)</h2>
 <p><code>codeserver-1.0.0-dev-0.0.4</code> is <strong>RELEASED</strong>
@@ -210,7 +226,7 @@ phase — <code>codeserver-1.0.0-dev-0.0.4</code>
 suites PASS, 0 FAIL</strong> on the reviewed+hardened tree (evidence
 <code>qa-results/run_all/20260701T222753Z-2813294</code>), tag pushed to
 all 4 mirrors (no force, §11.4.113), GitHub + GitLab prereleases
-created. The batch's three hardened test-infra suites
+created. The batch’s three hardened test-infra suites
 (<code>race</code>, <code>extensions_ui_auth</code>,
 <code>extensions_popular_auth</code>) were fixed for shared-host
 <code>ulimit -u</code> fork-pressure <strong>environmental</strong>
@@ -227,8 +243,8 @@ default + durable edge + deep research) landed across these commits
 toward the release:</p>
 <ul>
 <li><code>75e2d9b</code> — login-redirect fix (an unauthenticated
-browser now lands on the login form instead of a bodyless "This page
-isn't working").</li>
+browser now lands on the login form instead of a bodyless “This page
+isn’t working”).</li>
 <li><code>e0519bf</code> — hardening: <strong>DURABLE</strong>
 <code>systemd</code> Quadlet edge that survives session crashes +
 full-host reboot, tarball code-server install (drops the fragile npm
@@ -248,13 +264,13 @@ gallery probe.</li>
 (+ pixel proof) + popular-extensions install/use/persist +
 auth-modernization deep-research report.</li>
 </ul>
-<p>The stack is LIVE + reachable at <strong><a
-href="https://192.168.0.213:52443">https://192.168.0.213:52443</a></strong>
-— every component is <code>systemd --user</code>-managed (Caddy edge
-Quadlet, <code>helix-auth</code>, <code>helix-code-server</code>). All
-standing operator requests have landed: extension install/use tests,
-login-form copy/paste buttons, popular-extensions install/use/persist,
-VS Code Dark default, and the first deep-research report.</p>
+<p>The stack is LIVE + reachable at
+<strong>https://192.168.0.213:52443</strong> — every component is
+<code>systemd --user</code>-managed (Caddy edge Quadlet,
+<code>helix-auth</code>, <code>helix-code-server</code>). All standing
+operator requests have landed: extension install/use tests, login-form
+copy/paste buttons, popular-extensions install/use/persist, VS Code Dark
+default, and the first deep-research report.</p>
 <ul>
 <li>Changelog (in progress):
 <code>docs/changelogs/codeserver-1.0.0-dev-0.0.4.md</code></li>
@@ -270,7 +286,7 @@ boot: <code>docs/guides/EDGE_BOOT.md</code></li>
 <code>docs/research/auth_modernization_20260701/FINDINGS.md</code>
 (first report → <strong>WebAuthn/passkeys recommended</strong>)</li>
 </ul>
-<h3 id="why-the-pivot-captured-facts-1146">Why the pivot (captured
+<h3 id="why-the-pivot-captured-facts-11.4.6">Why the pivot (captured
 facts, §11.4.6)</h3>
 <p>This host is ALT Linux with the <strong>tcb</strong> shadow scheme,
 so a <strong>non-root</strong> service cannot verify passwords via PAM
@@ -306,31 +322,28 @@ forward_auth; <strong>fails closed</strong>.</li>
 <li><strong>Stack directive adopted:</strong> Go + Gin + HTTP/3 (QUIC) +
 Brotli.</li>
 </ul>
-<h2 id="feature-status-1146--honest">Feature status (§11.4.6 —
+<h2 id="feature-status-11.4.6-honest">Feature status (§11.4.6 —
 honest)</h2>
 <p>The real-account + SSH-key rows in
 <code>docs/features/Status.md</code> are <strong>PASS with cited
 captured evidence</strong> (§11.4.169 matrix 23/23 PASS; Status.md
 Revision 2). Testing: Go unit/integration/race (<strong>70 tests,
 <code>-race</code>, 81.8% cover</strong>) + shell suites
-<code>tests/types/{e2e,security,stress_chaos,concurrency,load,memory,benchmark,challenges,helixqa}_auth.sh</code></p>
-<ul>
-<li>banks
+<code>tests/types/{e2e,security,stress_chaos,concurrency,load,memory,benchmark,challenges,helixqa}_auth.sh</code>
++ banks
 <code>tests/banks/helixcode-auth-{challenges,helixqa}.yaml</code>. The
-live aggregate is the conductor-filled placeholder in the
-changelog.</li>
-</ul>
+live aggregate is the conductor-filled placeholder in the changelog.</p>
 <h3 id="honest-boundaries-carried-into-the-release">Honest boundaries
 carried into the release</h3>
 <ul>
-<li>Editor "jail" is <strong>cosmetic</strong> (Explorer default only;
+<li>Editor “jail” is <strong>cosmetic</strong> (Explorer default only;
 terminal/Open-Folder/ extensions keep full host access by design).</li>
 <li><code>--auth none</code> on loopback:8080 is a
 <strong>residual</strong> — host firewall rule for loopback:8080
 recommended (all real auth is at the gate/edge).</li>
 <li>code-server pinned <strong>4.117.0</strong> (newest on npm at
 release time).</li>
-<li>Real public Let's Encrypt remains <strong>operator-gated</strong>
+<li>Real public Let’s Encrypt remains <strong>operator-gated</strong>
 (see <code>docs/guides/TLS.md</code>).</li>
 </ul>
 <h2 id="migration">Migration</h2>
@@ -342,24 +355,37 @@ helix-auth units; <code>deploy/up.sh</code> brings up the Caddy edge.
 <code>HELIX_AUTH_AUTHORIZED_KEYS</code>,
 <code>HELIX_AUTH_PRINCIPAL</code>, <code>PROJECTS_ROOT</code> (no
 password parameter).</p>
-<h2 id="immediate-next-to-close-codeserver-100-dev-004">Immediate NEXT
-(to close <code>codeserver-1.0.0-dev-0.0.4</code>)</h2>
+<h2
+id="immediate-next-post-release-idle-per-11.4.126-unless-a-new-operator-request">Immediate
+NEXT (post-release — idle per §11.4.126 unless a new operator
+request)</h2>
+<p><code>codeserver-1.0.0-dev-0.0.4</code> is RELEASED + published
+everywhere; the post-release credential-coverage promotion (above) is
+landed and matrix-proven. Open follow-ups (non-blocking, no new operator
+request required to be idle):</p>
 <ol type="1">
-<li>Full §11.4.169 test-type matrix release-gate — <strong>RUNNING
-NOW</strong> against the live host stack; capture evidence under
-<code>docs/qa/codeserver-1.0.0-dev-0.0.4/</code> (§11.4.6 — real
-PASS/FAIL/SKIP, never invented).</li>
-<li>Fill the live-validation aggregate in
-<code>docs/changelogs/codeserver-1.0.0-dev-0.0.4.md</code> from the
-gate's real counts.</li>
-<li>Tag <code>codeserver-1.0.0-dev-0.0.4</code> (§11.4.151 prefix) →
-push to all 4 mirrors via merge-onto-latest-main (no force-push,
-§11.4.113) → publish GitHub + GitLab releases.</li>
+<li><strong>C3 throwaway-gate variant</strong> — stand up an isolated
+throwaway <code>helix-auth</code> instance so
+<code>stress_chaos_auth</code> C3 (cookie-secret rotation → session
+invalidation) runs autonomously + non-destructively, promoting its last
+<code>credential_absent</code> SKIP (§11.4.52/§11.4.85). It is
+deliberately NOT run against the LIVE gate (rotating the live secret
+logs out the operator’s session, §11.4.101). Tracked.</li>
+<li><strong>(Optional) harness auto-resolve of an authorized
+key</strong> — make real auth coverage the out-of-the-box default even
+without <code>deploy/.env</code> wiring (scan <code>~/.ssh</code> for a
+key whose <code>.pub</code> is in the gate’s authorized_keys; honest
+SKIP if none). Needs the full review gauntlet + a paired §1.1 mutation;
+not required (the <code>deploy/.env</code> wiring already closes the gap
+durably on this host).</li>
 <li>Standing operator directive — <strong>frequent deep
 research</strong> (§11.4.150): keep producing reports; the first landed
 report recommends <strong>WebAuthn/passkeys</strong> as the
 auth-modernization path
-(<code>docs/research/auth_modernization_20260701/FINDINGS.md</code>).</li>
+(<code>docs/research/auth_modernization_20260701/FINDINGS.md</code>);
+the passkey-login spec at
+<code>docs/superpowers/specs/2026-07-01-webauthn-passkey-login.md</code>
+is drafted, NOT implemented, awaiting an operator decision.</li>
 </ol>
 <h2 id="binding-constraints-every-phase">Binding constraints (every
 phase)</h2>
@@ -379,7 +405,7 @@ retained)</h2>
 code-server stack on Podman; TLS1.3 edge on 52443, →301 on 52080;
 <code>$PROJECTS</code> bind-mounted). Owned submodules (8) at root carry
 the Constitution inheritance pointer; constitution pinned (see history).
-Prior release <code>codeserver-1.0.0-dev-0.0.2</code> shipped Let's
+Prior release <code>codeserver-1.0.0-dev-0.0.2</code> shipped Let’s
 Encrypt HTTPS (auto-renew + rotation) + the 14-suite §11.4.169
 matrix.</p>
 </body>

@@ -1,6 +1,6 @@
 # CONTINUATION — HelixCode web-IDE platform
 
-**Revision:** 6 · **Updated:** 2026-07-02 · **Status:** `codeserver-1.0.0-dev-0.0.4` **RELEASED** (`0e2f854`, tag on all 4 mirrors, GitHub+GitLab prereleases). Release gate: full §11.4.169 matrix **29/29 suites PASS, 0 FAIL** (61 checks PASS, 24 honest SKIP; evidence `qa-results/run_all/20260701T222753Z-2813294`). Ships: login-redirect fix + login-form copy/paste clipboard buttons + Open VSX marketplace install/use/persist/config + popular extensions + VS Code Dark default theme (host-rendered pixel proof) + durable `systemd --user` edge. Three test-infra suites hardened against shared-host `ulimit -u` fork-pressure false-FAILs (§11.4.1/§11.4.3/§11.4.174) + independently reviewed to a clean GO (§11.4.142/§11.4.134). Stack LIVE at https://192.168.0.213:52443 (all `systemd --user`).
+**Revision:** 7 · **Updated:** 2026-07-02 · **Status:** `codeserver-1.0.0-dev-0.0.4` **RELEASED** (`0e2f854`, tag on all 4 mirrors, GitHub+GitLab prereleases). Release gate: full §11.4.169 matrix **29/29 suites PASS, 0 FAIL** (61 checks PASS, 24 honest SKIP; evidence `qa-results/run_all/20260701T222753Z-2813294`). **Post-release coverage promotion (§11.4.52/§11.4.123):** wiring an authorized `HELIX_TEST_SSH_KEY` (gitignored `deploy/.env`; §11.4.10 never committed/logged) promoted the ~10 `credential_absent` auth SKIPs into **real authenticated-session PASSes** — matrix re-run **29/29 suites PASS, 0 FAIL, 71 checks PASS / 17 SKIP** (evidence `qa-results/run_all/20260701T231807Z-3364116`); the 17 remaining SKIPs are all honest (11 legacy-suite `topology_unsupported` retirements, 2 `operator_attended` with passing CLI siblings, 2 Chromium-contended pixel proofs, **1 `credential_absent`** = C3's destructive cookie-secret interlock — deliberately NOT run autonomously against the live gate per §11.4.101, throwaway-gate variant tracked — and 1 `feature_disabled_by_config` = `load_auth` L3 login-flood rate-limit inconclusive, where the limiter is nonetheless positively confirmed by `security_auth` #4's real 429). Ships: login-redirect fix + login-form copy/paste clipboard buttons + Open VSX marketplace install/use/persist/config + popular extensions + VS Code Dark default theme (host-rendered pixel proof) + durable `systemd --user` edge. Three test-infra suites hardened against shared-host `ulimit -u` fork-pressure false-FAILs (§11.4.1/§11.4.3/§11.4.174) + independently reviewed to a clean GO (§11.4.142/§11.4.134). Stack LIVE at https://192.168.0.213:52443 (all `systemd --user`).
 
 Read FIRST on any fresh session: this file, then `git fetch --all`, then the
 auth-pivot spec + AUTH guide + feature ledger below. This is the §12.10 /
@@ -108,20 +108,29 @@ code-server + helix-auth units; `deploy/up.sh` brings up the Caddy edge.
 `HELIX_AUTH_ACCOUNT`, `HELIX_AUTH_AUTHORIZED_KEYS`, `HELIX_AUTH_PRINCIPAL`,
 `PROJECTS_ROOT` (no password parameter).
 
-## Immediate NEXT (to close `codeserver-1.0.0-dev-0.0.4`)
+## Immediate NEXT (post-release — idle per §11.4.126 unless a new operator request)
 
-1. Full §11.4.169 test-type matrix release-gate — **RUNNING NOW** against the live
-   host stack; capture evidence under `docs/qa/codeserver-1.0.0-dev-0.0.4/`
-   (§11.4.6 — real PASS/FAIL/SKIP, never invented).
-2. Fill the live-validation aggregate in
-   `docs/changelogs/codeserver-1.0.0-dev-0.0.4.md` from the gate's real counts.
-3. Tag `codeserver-1.0.0-dev-0.0.4` (§11.4.151 prefix) → push to all 4 mirrors via
-   merge-onto-latest-main (no force-push, §11.4.113) → publish GitHub + GitLab
-   releases.
-4. Standing operator directive — **frequent deep research** (§11.4.150): keep
+`codeserver-1.0.0-dev-0.0.4` is RELEASED + published everywhere; the post-release
+credential-coverage promotion (above) is landed and matrix-proven. Open follow-ups
+(non-blocking, no new operator request required to be idle):
+
+1. **C3 throwaway-gate variant** — stand up an isolated throwaway `helix-auth`
+   instance so `stress_chaos_auth` C3 (cookie-secret rotation → session
+   invalidation) runs autonomously + non-destructively, promoting its last
+   `credential_absent` SKIP (§11.4.52/§11.4.85). It is deliberately NOT run against
+   the LIVE gate (rotating the live secret logs out the operator's session,
+   §11.4.101). Tracked.
+2. **(Optional) harness auto-resolve of an authorized key** — make real auth
+   coverage the out-of-the-box default even without `deploy/.env` wiring (scan
+   `~/.ssh` for a key whose `.pub` is in the gate's authorized_keys; honest SKIP if
+   none). Needs the full review gauntlet + a paired §1.1 mutation; not required
+   (the `deploy/.env` wiring already closes the gap durably on this host).
+3. Standing operator directive — **frequent deep research** (§11.4.150): keep
    producing reports; the first landed report recommends **WebAuthn/passkeys** as
    the auth-modernization path
-   (`docs/research/auth_modernization_20260701/FINDINGS.md`).
+   (`docs/research/auth_modernization_20260701/FINDINGS.md`); the passkey-login
+   spec at `docs/superpowers/specs/2026-07-01-webauthn-passkey-login.md` is drafted,
+   NOT implemented, awaiting an operator decision.
 
 ## Binding constraints (every phase)
 
