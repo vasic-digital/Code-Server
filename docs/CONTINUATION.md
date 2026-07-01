@@ -1,18 +1,23 @@
 # CONTINUATION — HelixCode web-IDE platform
 
-**Revision:** 3 · **Updated:** 2026-07-01 · **Status:** Releasing **`codeserver-1.0.0-dev-0.0.3`** (real-account SSH-key auth) — LIVE VALIDATION + RELEASE in progress
+**Revision:** 4 · **Updated:** 2026-07-01 · **Status:** RELEASED **`codeserver-1.0.0-dev-0.0.3`** (real-account SSH-key auth) — live-validated (§11.4.169 matrix 23/23 PASS, 0 FAIL), tagged + pushed to all 4 mirrors, GitHub + GitLab releases published; stack LIVE at https://192.168.0.213:52443
 
 Read FIRST on any fresh session: this file, then `git fetch --all`, then the
 auth-pivot spec + AUTH guide + feature ledger below. This is the §12.10 /
 §11.4.131 standing resumption anchor.
 
-## Current phase — live-validation + release of `codeserver-1.0.0-dev-0.0.3`
+## Current phase — `codeserver-1.0.0-dev-0.0.3` RELEASED (real-account SSH-key auth)
 
-This round pivots authentication to a **real-account, SSH-key challenge-response**
-model and ties each HelixCode session to the real host user (`milosvasic`),
-host-native. Release documentation is prepared; the remaining work is the **live
-validation run** (fill the changelog's `LIVE VALIDATION AGGREGATE` placeholder
-with real PASS/FAIL/SKIP counts) and then cutting + publishing the tag.
+This round pivoted authentication to a **real-account, SSH-key challenge-response**
+model tying each HelixCode session to the real host user (`milosvasic`),
+host-native. Live-validated end-to-end on this host (full edge journey +
+§11.4.169 matrix **23/23 PASS, 0 FAIL** + Go gate **70 tests `-race`**), committed
+(`2746e0e`), tagged, pushed to all 4 mirrors (no force, §11.4.113), and released
+on GitHub + GitLab. The stack is LIVE + reachable for operator testing at
+**https://192.168.0.213:52443** — sign the `/login` challenge with an
+`~/.ssh/authorized_keys` key (no password). Non-blocking follow-ups: edge-container
+reboot-persistence; publicly-trusted Let's Encrypt (operator-gated); the
+loopback:8080 host-firewall recommendation.
 
 - Changelog (this release): `docs/changelogs/codeserver-1.0.0-dev-0.0.3.md`
 - Auth pivot spec (authoritative): `docs/superpowers/specs/2026-07-01-auth-pivot-ssh-key.md`
