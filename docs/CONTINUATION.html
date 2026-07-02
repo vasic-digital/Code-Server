@@ -181,7 +181,7 @@
 </header>
 <h1 id="continuation-helixcode-web-ide-platform">CONTINUATION —
 HelixCode web-IDE platform</h1>
-<p><strong>Revision:</strong> 7 · <strong>Updated:</strong> 2026-07-02 ·
+<p><strong>Revision:</strong> 8 · <strong>Updated:</strong> 2026-07-02 ·
 <strong>Status:</strong> <code>codeserver-1.0.0-dev-0.0.4</code>
 <strong>RELEASED</strong> (<code>0e2f854</code>, tag on all 4 mirrors,
 GitHub+GitLab prereleases). Release gate: full §11.4.169 matrix
@@ -191,25 +191,27 @@ SKIP; evidence
 <strong>Post-release coverage promotion (§11.4.52/§11.4.123):</strong>
 wiring an authorized <code>HELIX_TEST_SSH_KEY</code> (gitignored
 <code>deploy/.env</code>; §11.4.10 never committed/logged) promoted the
-~10 <code>credential_absent</code> auth SKIPs into <strong>real
-authenticated-session PASSes</strong> — matrix re-run <strong>29/29
-suites PASS, 0 FAIL, 71 checks PASS / 17 SKIP</strong> (evidence
-<code>qa-results/run_all/20260701T231807Z-3364116</code>); the 17
-remaining SKIPs are all honest (11 legacy-suite
-<code>topology_unsupported</code> retirements, 2
-<code>operator_attended</code> with passing CLI siblings, 2
-Chromium-contended pixel proofs, <strong>1
-<code>credential_absent</code></strong> = C3’s destructive cookie-secret
-interlock — deliberately NOT run autonomously against the live gate per
-§11.4.101, throwaway-gate variant tracked — and 1
+credential-gated auth SKIPs into <strong>real authenticated-session
+PASSes</strong>, and a non-destructive <strong>isolated
+throwaway-gate</strong> C3 variant (§11.4.85/§11.4.101 — own loopback
+port, throwaway keypair/secret, no live-gate rotation, no real
+credential) closed the LAST <code>credential_absent</code> SKIP — matrix
+<strong>29/29 suites PASS, 0 FAIL, 72 checks PASS / 16 SKIP, ZERO
+<code>credential_absent</code></strong> (evidence
+<code>qa-results/run_all/20260702T000047Z-3718172</code>); the 16
+remaining SKIPs are all honest (13 <code>topology_unsupported</code> =
+11 legacy-suite retirements + 2 Chromium-contended pixel proofs, 2
+<code>operator_attended</code> with passing autonomous CLI siblings, 1
 <code>feature_disabled_by_config</code> = <code>load_auth</code> L3
-login-flood rate-limit inconclusive, where the limiter is nonetheless
-positively confirmed by <code>security_auth</code> #4’s real 429).
-Ships: login-redirect fix + login-form copy/paste clipboard buttons +
-Open VSX marketplace install/use/persist/config + popular extensions +
-VS Code Dark default theme (host-rendered pixel proof) + durable
-<code>systemd --user</code> edge. Three test-infra suites hardened
-against shared-host <code>ulimit -u</code> fork-pressure false-FAILs
+login-flood rate-limit inconclusive, where the limiter is positively
+confirmed by <code>security_auth</code> #4’s real 429). C3’s §1.1 pair
+binds: it PASSes on the real gate (200/200/401/200) and FAILs on a gate
+with the cookie HMAC check disabled. Ships: login-redirect fix +
+login-form copy/paste clipboard buttons + Open VSX marketplace
+install/use/persist/config + popular extensions + VS Code Dark default
+theme (host-rendered pixel proof) + durable <code>systemd --user</code>
+edge. Three test-infra suites hardened against shared-host
+<code>ulimit -u</code> fork-pressure false-FAILs
 (§11.4.1/§11.4.3/§11.4.174) + independently reviewed to a clean GO
 (§11.4.142/§11.4.134). Stack LIVE at https://192.168.0.213:52443 (all
 <code>systemd --user</code>).</p>
@@ -364,13 +366,13 @@ everywhere; the post-release credential-coverage promotion (above) is
 landed and matrix-proven. Open follow-ups (non-blocking, no new operator
 request required to be idle):</p>
 <ol type="1">
-<li><strong>C3 throwaway-gate variant</strong> — stand up an isolated
-throwaway <code>helix-auth</code> instance so
-<code>stress_chaos_auth</code> C3 (cookie-secret rotation → session
-invalidation) runs autonomously + non-destructively, promoting its last
-<code>credential_absent</code> SKIP (§11.4.52/§11.4.85). It is
-deliberately NOT run against the LIVE gate (rotating the live secret
-logs out the operator’s session, §11.4.101). Tracked.</li>
+<li><strong>C3 throwaway-gate variant — DONE</strong> (isolated
+<code>helix-auth</code> on its own loopback port + throwaway
+keypair/secret; <code>stress_chaos_auth</code> C3 now runs autonomously
++ non-destructively, closing the last <code>credential_absent</code>
+SKIP; §1.1 pair binds). Fixture helpers
+<code>hc_spawn/restart/stop_throwaway_gate</code> in
+<code>tests/lib/stack_fixture.sh</code>.</li>
 <li><strong>(Optional) harness auto-resolve of an authorized
 key</strong> — make real auth coverage the out-of-the-box default even
 without <code>deploy/.env</code> wiring (scan <code>~/.ssh</code> for a

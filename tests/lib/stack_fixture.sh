@@ -334,3 +334,94 @@ hc_sshkey_sign_smoke() {
   rm -rf "$d"
   [ "$armored" = 1 ] && [ "$verified" = 1 ] && [ "$wrong_rejected" = 1 ]
 }
+
+# ---- throwaway ISOLATED helix-auth gate (non-destructive C3 chaos, §11.4.85) --
+# A fully isolated helix-auth instance on its OWN loopback port with a THROWAWAY
+# ed25519 keypair / authorized_keys / cookie_secret — so a destructive
+# cookie-secret rotation test never touches the LIVE gate (rotating the live
+# secret would log the operator's session out, §11.4.101). Needs `go` (to build
+# the gate from source) + `ssh-keygen`. Uses NO real credential (the throwaway
+# gate trusts only its own throwaway key), so it runs fully autonomously.
+
+# hc_build_auth_gate <out>: `go build` the auth gate -> <out>. Builds from
+# $HC_AUTH_GATE_SRC when set (a §1.1 paired-mutation seam that lets a meta-test
+# build a deliberately-broken gate and prove C3 FAILs on it), else the tracked
+# services/auth_gate. 0 built · 2 go toolchain absent · 1 build failed.
+hc_build_auth_gate() {
+  local out="${1:?out}"
+  local src="${HC_AUTH_GATE_SRC:-$HC_ROOT/services/auth_gate}"
+  command -v go >/dev/null 2>&1 || return 2
+  ( cd "$src" && GOFLAGS=-mod=mod go build -o "$out" . ) >/dev/null 2>&1 || return 1
+  [ -x "$out" ]
+}
+
+# hc_tg_pick_port [base]: echo the first free loopback TCP port at/after base.
+hc_tg_pick_port() {
+  local p="${1:-52560}" i=0
+  while [ "$i" -lt 40 ]; do
+    if ! { ss -ltn 2>/dev/null || netstat -ltn 2>/dev/null; } | grep -qE ":${p}( |$)"; then
+      echo "$p"; return 0
+    fi
+    p=$((p+1)); i=$((i+1))
+  done
+  echo "$p"
+}
+
+# _hc_tg_launch: (re)launch the gate process with the stored HC_TG_* config. The
+# gate loads its cookie secret from HC_TG_SECRET at STARTUP (main.go), so a
+# relaunch after rotating that file makes the gate adopt the new secret.
+_hc_tg_launch() {
+  HELIX_AUTH_MODE=sshkey HELIX_AUTH_BIND="127.0.0.1:$HC_TG_PORT" \
+    HELIX_AUTH_COOKIE_SECRET="$HC_TG_SECRET" \
+    HELIX_AUTH_AUTHORIZED_KEYS="$HC_TG_DIR/authorized_keys" \
+    HELIX_AUTH_ACCOUNT="$HC_TG_PRINCIPAL" HELIX_AUTH_PRINCIPAL="$HC_TG_PRINCIPAL" \
+    "$HC_TG_BIN" >"$HC_TG_DIR/gate.log" 2>&1 &
+  HC_TG_PID=$!
+}
+
+# _hc_tg_wait_ready: poll /healthz until 200 (~12s) or the process dies. 0/1.
+_hc_tg_wait_ready() {
+  local i=0
+  while [ "$i" -lt 60 ]; do
+    [ "$(curl -s -o /dev/null -w '%{http_code}' --max-time 3 "$HC_TG_BASE/healthz" 2>/dev/null)" = 200 ] && return 0
+    kill -0 "$HC_TG_PID" 2>/dev/null || return 1
+    sleep 0.2; i=$((i+1))
+  done
+  return 1
+}
+
+# hc_spawn_throwaway_gate <workdir> [principal] [base_port]: build + launch an
+# isolated gate with a throwaway keypair. Sets HC_TG_{DIR,BIN,PORT,BASE,KEY,
+# SECRET,PRINCIPAL,PID}. 0 ready · 2 go/ssh-keygen absent (caller SKIPs topology)
+# · 1 build/launch failure. The caller MUST arrange hc_stop_throwaway_gate on
+# every exit path (§11.4.14).
+hc_spawn_throwaway_gate() {
+  local wd="${1:?workdir}" principal="${2:-milosvasic}" baseport="${3:-52560}"
+  command -v ssh-keygen >/dev/null 2>&1 || return 2
+  HC_TG_DIR="$(mktemp -d "$wd/hc_tg.XXXXXX")" || return 1
+  HC_TG_BIN="$HC_TG_DIR/helix-auth"
+  hc_build_auth_gate "$HC_TG_BIN"; local b=$?; [ "$b" -eq 0 ] || { rm -rf "$HC_TG_DIR"; HC_TG_DIR=""; return "$b"; }
+  ssh-keygen -q -t ed25519 -N '' -C 'hc-throwaway-gate' -f "$HC_TG_DIR/key" </dev/null >/dev/null 2>&1 || return 1
+  cp -f "$HC_TG_DIR/key.pub" "$HC_TG_DIR/authorized_keys" || return 1
+  HC_TG_KEY="$HC_TG_DIR/key"; HC_TG_SECRET="$HC_TG_DIR/cookie_secret"; HC_TG_PRINCIPAL="$principal"
+  HC_TG_PORT="$(hc_tg_pick_port "$baseport")"; HC_TG_BASE="http://127.0.0.1:$HC_TG_PORT"
+  _hc_tg_launch
+  _hc_tg_wait_ready || return 1
+  export HC_TG_DIR HC_TG_BIN HC_TG_PORT HC_TG_BASE HC_TG_KEY HC_TG_SECRET HC_TG_PRINCIPAL HC_TG_PID
+  return 0
+}
+
+# hc_restart_throwaway_gate: kill + relaunch so the gate reloads its (possibly
+# rotated) cookie secret from disk. 0 ready / 1 not.
+hc_restart_throwaway_gate() {
+  [ -n "${HC_TG_PID:-}" ] && { kill "$HC_TG_PID" 2>/dev/null; wait "$HC_TG_PID" 2>/dev/null; }
+  _hc_tg_launch
+  _hc_tg_wait_ready
+}
+
+# hc_stop_throwaway_gate: terminate + reap + remove the throwaway dir (idempotent).
+hc_stop_throwaway_gate() {
+  [ -n "${HC_TG_PID:-}" ] && { kill "$HC_TG_PID" 2>/dev/null; wait "$HC_TG_PID" 2>/dev/null; HC_TG_PID=""; }
+  [ -n "${HC_TG_DIR:-}" ] && [ -d "$HC_TG_DIR" ] && rm -rf "$HC_TG_DIR"
+  HC_TG_DIR=""
+}

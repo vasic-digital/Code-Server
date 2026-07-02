@@ -132,7 +132,7 @@ _cs_recover() {
 }
 
 # ---- master cleanup / restore trap (§11.4.14) — ALWAYS leave host healthy ---
-_SECRET_BAK=""; _SECRET_LIVE=""; _NEED_GATE_RECOVER=0; _NEED_CS_RECOVER=0
+_SECRET_BAK=""; _SECRET_LIVE=""; _NEED_GATE_RECOVER=0; _NEED_CS_RECOVER=0; _TG_ACTIVE=0
 cleanup() {
   if [ -n "$_SECRET_BAK" ] && [ -f "$_SECRET_BAK" ] && [ -n "$_SECRET_LIVE" ]; then
     cp -f "$_SECRET_BAK" "$_SECRET_LIVE" 2>/dev/null || true
@@ -140,6 +140,8 @@ cleanup() {
   fi
   [ "$_NEED_GATE_RECOVER" = 1 ] && { _gate_recover >/dev/null 2>&1 || true; }
   [ "$_NEED_CS_RECOVER"   = 1 ] && { _cs_recover   >/dev/null 2>&1 || true; }
+  # tear down the isolated throwaway gate (C3) if one is still running (§11.4.14)
+  [ "${_TG_ACTIVE:-0}" = 1 ] && { hc_stop_throwaway_gate 2>/dev/null || true; }
   rm -rf "$WORK" 2>/dev/null || true
 }
 trap cleanup EXIT
@@ -447,27 +449,21 @@ fi
 h_head "(C3) corrupt cookie secret -> existing session invalidated (NOT bypassed)"
 SECRET_FILE="${HELIX_AUTH_COOKIE_SECRET_FILE:-}"
 KEYFILE="${HELIX_TEST_SSH_KEY:-}"
-if [ "$STACK_UP" != 1 ]; then
-  _chaos_skip_down c3_secret "C3 corrupt cookie secret"
-elif [ "$CHAOS_LIVE" != 1 ]; then
-  ev="$(h_ev c3_secret)"; { echo "HC_CHAOS_LIVE!=1 — destructive secret rotation skipped (dry run)"; } > "$ev"
-  ab_skip_with_reason "C3 corrupt cookie secret skipped in dry-run (HC_CHAOS_LIVE=0)" feature_disabled_by_config
-elif [ -z "$KEYFILE" ] || [ ! -r "$KEYFILE" ] || ! h_require ssh-keygen; then
-  ev="$(h_ev c3_secret)"
-  { echo "need an authorized key (HELIX_TEST_SSH_KEY) to mint a REAL session before rotating the secret";
-    echo "a mock/forged session is forbidden (§11.4.27) — SKIP, never a faked PASS"; } > "$ev"
-  ab_skip_with_reason "C3 corrupt cookie secret: no authorized key to mint a real session" credential_absent
-elif [ -z "$SECRET_FILE" ] || [ ! -f "$SECRET_FILE" ] || [ ! -w "$SECRET_FILE" ]; then
-  ev="$(h_ev c3_secret)"
-  { echo "cookie-secret file location unknown/unwritable (HELIX_AUTH_COOKIE_SECRET_FILE unset or not writable)";
-    echo "the secret path is deployment-specific (§11.4.6 — never guessed); conductor injects it at live-validation";
-    echo "given='${SECRET_FILE:-<unset>}'"; } > "$ev"
-  ab_skip_with_reason "C3 corrupt cookie secret: cookie-secret file not provided (HELIX_AUTH_COOKIE_SECRET_FILE)" credential_absent
-else
+# C3 proves: rotating the cookie-signing secret INVALIDATES an already-issued
+# session (the gate loads the secret at startup, so old HMAC cookies fail after a
+# reload). DEFAULT path = an ISOLATED throwaway gate — autonomous, non-destructive,
+# needs NO real credential (it trusts only its own throwaway key). The LEGACY path
+# rotates the LIVE gate's secret and is DESTRUCTIVE (it logs the operator's live
+# session out), so it runs ONLY on an explicit opt-in (§11.4.101): HC_CHAOS_LIVE=1
+# + a writable HELIX_AUTH_COOKIE_SECRET_FILE + an authorized HELIX_TEST_SSH_KEY on
+# the live stack.
+if [ "$STACK_UP" = 1 ] && [ "$CHAOS_LIVE" = 1 ] \
+   && [ -n "$SECRET_FILE" ] && [ -f "$SECRET_FILE" ] && [ -w "$SECRET_FILE" ] \
+   && [ -n "$KEYFILE" ] && [ -r "$KEYFILE" ] && h_require ssh-keygen; then
   ev="$(h_ev c3_secret)"; JAR="$WORK/c3jar"
   _SECRET_LIVE="$SECRET_FILE"; _SECRET_BAK="$WORK/secret.bak"
   cp -f "$SECRET_FILE" "$_SECRET_BAK" 2>/dev/null || true
-  { echo "=== (C3) corrupt cookie secret -> invalidate existing session ===";
+  { echo "=== (C3) corrupt cookie secret -> invalidate existing session (LIVE gate, opt-in) ===";
     echo "secret file (path only, contents never printed §11.4.10): $SECRET_FILE"; } > "$ev"
   if hc_sshkey_login "$HC_BASE" "$KEYFILE" "$JAR" "$PRINCIPAL"; then
     pre_auth="$(curl -k -s -b "$JAR" -o /dev/null -w '%{http_code}' --max-time 15 "http://${HC_GATE_ADDR}/auth" 2>/dev/null || echo 000)"
@@ -484,7 +480,7 @@ else
     gate_final="$(hc_http_code "http://${HC_GATE_ADDR}/healthz")"
     echo "restored original secret + reloaded gate; final gate /healthz = $gate_final" >> "$ev"
     if [ "$pre_auth" = 200 ] && [ "$post_auth" = 401 ] && [ "$gate_final" = 200 ]; then
-      ab_pass_with_evidence "C3: valid session (pre=200) INVALIDATED after secret rotation (post=401, not bypassed); gate restored ($gate_final)" "$ev"
+      ab_pass_with_evidence "C3 (live gate): valid session (pre=200) INVALIDATED after secret rotation (post=401, not bypassed); gate restored ($gate_final)" "$ev"
     else
       ab_fail "C3: pre_auth=$pre_auth post_auth=$post_auth gate_final=$gate_final (want 200/401/200) [ev: ${ev#$HC_ROOT/}]"
     fi
@@ -492,6 +488,60 @@ else
     cp -f "$_SECRET_BAK" "$SECRET_FILE" 2>/dev/null || true; _SECRET_BAK=""; _SECRET_LIVE=""
     { echo "could not mint a real session with the provided key (POST /login=$HC_SSHKEY_CODE)"; } >> "$ev"
     ab_fail "C3: could not mint a real session to test secret invalidation (code=$HC_SSHKEY_CODE) [ev: ${ev#$HC_ROOT/}]"
+  fi
+else
+  # DEFAULT autonomous path: isolated throwaway gate (non-destructive, no credential).
+  ev="$(h_ev c3_secret)"
+  _tg_rc=2
+  if command -v go >/dev/null 2>&1 && command -v ssh-keygen >/dev/null 2>&1; then
+    hc_spawn_throwaway_gate "$WORK" "milosvasic"; _tg_rc=$?
+  fi
+  if [ "$_tg_rc" = 0 ]; then
+    _TG_ACTIVE=1; JAR="$WORK/c3jar_tg"; : > "$JAR"
+    { echo "=== (C3) corrupt cookie secret -> invalidate existing session (ISOLATED throwaway gate) ===";
+      echo "isolated gate (own loopback port, NON-destructive to the live gate): $HC_TG_BASE";
+      echo "throwaway cookie-secret (path only, contents never printed §11.4.10): $HC_TG_SECRET"; } > "$ev"
+    if hc_sshkey_login "$HC_TG_BASE" "$HC_TG_KEY" "$JAR" "$HC_TG_PRINCIPAL"; then
+      pre_auth="$(curl -s -b "$JAR" -o /dev/null -w '%{http_code}' --max-time 15 "$HC_TG_BASE/auth" 2>/dev/null || echo 000)"
+      echo "session minted (POST /login=$HC_SSHKEY_CODE); pre-rotation /auth with cookie = $pre_auth (want 200)" >> "$ev"
+      head -c 32 /dev/urandom 2>/dev/null | od -An -tx1 2>/dev/null | tr -d ' \n' > "$HC_TG_SECRET" 2>/dev/null || date +%s%N > "$HC_TG_SECRET"
+      # metamorphic anti-bluff control (§11.4.107 causality): rotating the file
+      # WITHOUT a reload must NOT invalidate (secret still in memory) -> proves the
+      # post-reload 401 is caused by the reload, not cookie expiry or a flat-401 gate.
+      norestart_auth="$(curl -s -b "$JAR" -o /dev/null -w '%{http_code}' --max-time 15 "$HC_TG_BASE/auth" 2>/dev/null || echo 000)"
+      echo "control: rotate WITHOUT reload -> /auth = $norestart_auth (want 200 — invalidation MUST require the reload)" >> "$ev"
+      hc_restart_throwaway_gate >/dev/null 2>&1 || true
+      post_auth="$(curl -s -b "$JAR" -o /dev/null -w '%{http_code}' --max-time 15 "$HC_TG_BASE/auth" 2>/dev/null || echo 000)"
+      echo "post-reload /auth with the SAME old cookie = $post_auth (want 401 — invalidated, NOT 200 bypass)" >> "$ev"
+      healthz="$(curl -s -o /dev/null -w '%{http_code}' --max-time 5 "$HC_TG_BASE/healthz" 2>/dev/null || echo 000)"
+      echo "isolated gate final /healthz = $healthz (want 200 — gate survived rotate+reload)" >> "$ev"
+      hc_stop_throwaway_gate; _TG_ACTIVE=0
+      if [ "$pre_auth" = 200 ] && [ "$norestart_auth" = 200 ] && [ "$post_auth" = 401 ] && [ "$healthz" = 200 ]; then
+        ab_pass_with_evidence "C3 (isolated gate): session (pre=200) INVALIDATED after secret rotation+reload (post=401); rotate-without-reload control=200 proves causality; gate healthy — non-destructive, no real credential" "$ev"
+      else
+        ab_fail "C3 (isolated gate): pre=$pre_auth norestart=$norestart_auth post=$post_auth healthz=$healthz (want 200/200/401/200) [ev: ${ev#$HC_ROOT/}]"
+      fi
+    else
+      hc_stop_throwaway_gate; _TG_ACTIVE=0
+      { echo "could not mint a session against the isolated throwaway gate (POST /login=$HC_SSHKEY_CODE)"; } >> "$ev"
+      ab_fail "C3 (isolated gate): could not mint a session (code=$HC_SSHKEY_CODE) [ev: ${ev#$HC_ROOT/}]"
+    fi
+  elif [ "$_tg_rc" = 1 ]; then
+    # go + ssh-keygen ARE present but building/launching the isolated gate FAILED
+    # (compile break / launch fault) — a REAL defect, NOT a topology gap. FAIL, never
+    # mask a gate-build breakage as a SKIP (§11.4.1 / §11.4.6 honesty).
+    hc_stop_throwaway_gate 2>/dev/null || true
+    { echo "isolated-gate C3: helix-auth build/launch FAILED (rc=1) with go+ssh-keygen present";
+      echo "— a real defect (compile break / launch fault), NOT a topology gap"; } > "$ev"
+    ab_fail "C3 (isolated gate): helix-auth build/launch failed (rc=1) with go present — real defect, not a topology SKIP [ev: ${ev#$HC_ROOT/}]"
+  else
+    # _tg_rc=2: go or ssh-keygen genuinely ABSENT -> cannot build an isolated gate,
+    # and the destructive live-gate rotation is opt-in only -> neither path available.
+    hc_stop_throwaway_gate 2>/dev/null || true
+    { echo "isolated-gate C3 needs the go toolchain to build helix-auth AND ssh-keygen (rc=$_tg_rc);";
+      echo "the LIVE-gate rotation is destructive and opt-in only (HC_CHAOS_LIVE=1 + writable";
+      echo "HELIX_AUTH_COOKIE_SECRET_FILE + authorized HELIX_TEST_SSH_KEY), so neither path is available."; } > "$ev"
+    ab_skip_with_reason "C3 corrupt cookie secret: go/ssh-keygen absent to build an isolated gate; destructive live-gate rotation not opted-in" topology_unsupported
   fi
 fi
 
